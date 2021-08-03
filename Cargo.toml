@@ -1,0 +1,19 @@
+cargo-features = ["strip"]
+
+[workspace]
+members = [
+    "src-wasm",
+]
+
+[profile]
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "z"
+strip = "symbols"
+panic = 'abort'
+
+[profile.dev]
+lto = true
+codegen-units = 1
+opt-level = "z"

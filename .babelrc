@@ -1,0 +1,30 @@
+{
+  "presets": [
+    [
+      "@babel/env",
+      {
+        "targets": {
+          "browsers": [
+            "edge >= 17",
+            "ff >= 61",
+            "chrome >= 63",
+            "safari >= 11.1"
+          ]
+        },
+        "useBuiltIns": "usage",
+        "modules": false,
+        "corejs": 3
+      }
+    ]
+  ],
+  "plugins": [
+    [
+      "@babel/plugin-transform-typescript",
+      {
+        "isTSX": true
+      }
+    ],
+    "@babel/plugin-transform-react-jsx",
+    "@babel/plugin-syntax-dynamic-import"
+  ]
+}
