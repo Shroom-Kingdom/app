@@ -1,5 +1,5 @@
 /target
 /node_modules
 /dist
-# stats.json
-# bundle-report.html
+stats.json
+bundle-report.html
