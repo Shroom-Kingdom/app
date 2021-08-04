@@ -1,9 +1,9 @@
 {
   "license": "MIT",
   "scripts": {
-    "build": "wasm-pack build --release --target browser",
-    "build:dev": "wasm-pack build --dev --target browser",
-    "watch": "cargo watch -w src -s 'wasm-pack build --dev --target=browser'",
+    "build": "wasm-pack build --release --target bundler",
+    "build:dev": "wasm-pack build --dev --target bundler",
+    "watch": "cargo watch -w src -s 'wasm-pack build --dev --target=bundler'",
     "clean": "rm -rf ./pkg"
   }
 }

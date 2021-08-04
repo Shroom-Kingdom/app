@@ -10,6 +10,11 @@ pub fn setup_panic_hook() {
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
+pub fn hello() -> js_sys::JsString {
+    "hello".into()
+}
+
+#[wasm_bindgen]
 pub fn main() {
     App::build()
         .add_plugins(bevy_webgl2::DefaultPlugins)

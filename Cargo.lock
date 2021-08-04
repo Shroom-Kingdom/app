@@ -110,6 +110,7 @@ dependencies = [
  "bevy_rapier2d",
  "bevy_webgl2",
  "console_error_panic_hook",
+ "js-sys",
  "wasm-bindgen",
  "wee_alloc",
 ]
