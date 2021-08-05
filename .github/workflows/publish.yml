@@ -24,7 +24,11 @@ jobs:
         name: Install Toolchain
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly-2021-06-09
+          override: true
+
+      - name: Install Rust WebAssembly
+        run: rustup target add wasm32-unknown-unknown
 
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
