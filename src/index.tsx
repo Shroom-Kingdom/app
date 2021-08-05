@@ -9,9 +9,22 @@ import ReactDOM from 'react-dom';
 
 export interface DebugState {
   stepTime: number;
+  collisionDetectionTime: number;
+  broadPhaseTime: number;
+  narrowPhaseTime: number;
+  islandConstructionTime: number;
 }
 
 import { App } from './app';
+
+const initialDebugState: DebugState = {
+  stepTime: 0,
+  collisionDetectionTime: 0,
+  broadPhaseTime: 0,
+  narrowPhaseTime: 0,
+  islandConstructionTime: 0
+};
+export const DebugContext = createContext<DebugState>(initialDebugState);
 
 async function main() {
   const shrm = await import('../src-wasm/pkg');
@@ -21,13 +34,11 @@ async function main() {
   let setDebugState: Dispatch<SetStateAction<DebugState>>;
 
   const WasmApp: FC = () => {
-    const initialDebugState: DebugState = { stepTime: 0 };
     [debugState, setDebugState] = useState<DebugState>(initialDebugState);
-    const DebugContext = createContext<DebugState>(initialDebugState);
     return (
       <React.StrictMode>
         <DebugContext.Provider value={debugState}>
-          <App debugState={debugState} />
+          <App />
         </DebugContext.Provider>
       </React.StrictMode>
     );

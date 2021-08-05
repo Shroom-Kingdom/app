@@ -1,24 +1,32 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useContext, useState } from 'react';
 
-import { DebugState } from '.';
+import { DebugContext } from '.';
 
-export const App: FC<{ debugState: DebugState }> = ({ debugState }) => {
-  const [count, setCount] = useState<number>(0);
+export const App: FC = () => {
+  const [showDebug, setShowDebug] = useState<boolean>(true);
+  const debugState = useContext(DebugContext);
   return (
     <div
       style={{
         position: 'relative'
       }}
     >
-      Hello WASM {count}
       <button
         onClick={() => {
-          setCount(count + 1);
+          setShowDebug(!showDebug);
         }}
       >
-        Increase
+        Toggle Debug Info
       </button>
-      <div>Total: {debugState.stepTime}</div>
+      {showDebug && (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div>Total: {debugState.stepTime}</div>
+          <div>Collision detection: {debugState.collisionDetectionTime}</div>
+          <div>Broad-phase: {debugState.broadPhaseTime}</div>
+          <div>Narrow-phase: {debugState.narrowPhaseTime}</div>
+          <div>Island computation: {debugState.islandConstructionTime}</div>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,8 +7,8 @@
   "scripts": {
     "start": "yarn clean && yarn --cwd src-wasm build:dev && run-p serve watch",
     "start:prod": "yarn clean && yarn --cwd src-wasm build:dev && run-p serve:prod watch:prod",
-    "serve": "webpack-dev-server -d --env=dev",
-    "serve:prod": "webpack-dev-server -p --env=prod",
+    "serve": "webpack-dev-server --host 0.0.0.0 -d --env=dev",
+    "serve:prod": "webpack-dev-server --host 0.0.0.0 -p --env=prod",
     "build": "yarn clean && yarn --cwd src-wasm build && webpack --env=prod",
     "watch": "yarn --cwd src-wasm watch",
     "watch:prod": "yarn --cwd src-wasm watch:prod",
