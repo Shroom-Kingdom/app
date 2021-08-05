@@ -1,4 +1,4 @@
-// use crate::plugins::DebugUiPlugin;
+use crate::plugins::{DebugUiPlugin, DebugUiState};
 use bevy::{prelude::*, render::pass::ClearColor};
 use bevy_rapier::prelude::*;
 use nalgebra::Isometry2;
@@ -6,7 +6,18 @@ use rapier::pipeline::PhysicsPipeline;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub fn main() {
+extern "C" {
+    pub type DebugState;
+
+    #[wasm_bindgen(method, getter, js_name = stepTime)]
+    pub fn step_time(this: &DebugState) -> f64;
+
+    #[wasm_bindgen(method, setter, js_name = stepTime)]
+    pub fn set_step_time(this: &DebugState, val: f64);
+}
+
+#[wasm_bindgen]
+pub fn main(debug_state: DebugState, set_debug_state: js_sys::Function) {
     App::new()
         .insert_resource(ClearColor(Color::rgb(
             0xF9 as f32 / 255.0,
@@ -14,14 +25,17 @@ pub fn main() {
             0xFF as f32 / 255.0,
         )))
         .insert_resource(Msaa::default())
+        .insert_non_send_resource(DebugUiState {
+            debug_state: debug_state.into(),
+            set_debug_state,
+        })
         .add_plugins(bevy_webgl2::DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierRenderPlugin)
-        // .add_plugin(DebugUiPlugin)
+        .add_plugin(DebugUiPlugin)
         .add_startup_system(setup_graphics.system())
         .add_startup_system(setup_physics.system())
-        // TODO enable once PhysicsPipeline can be queried
-        // .add_startup_system(enable_physics_profiling.system())
+        .add_startup_system(enable_physics_profiling.system())
         .run();
 }
 

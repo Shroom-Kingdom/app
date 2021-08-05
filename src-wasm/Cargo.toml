@@ -32,3 +32,11 @@ git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"
 version = "0.5"
 # path = "../../bevy_webgl2"
 git = "https://github.com/Shroom-Kingdom/bevy_webgl2.git"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  'Document',
+  'Element',
+  'Window',
+]

@@ -1,6 +1,8 @@
 import React, { FC, useState } from 'react';
 
-export const App: FC = () => {
+import { DebugState } from '.';
+
+export const App: FC<{ debugState: DebugState }> = ({ debugState }) => {
   const [count, setCount] = useState<number>(0);
   return (
     <div
@@ -16,6 +18,7 @@ export const App: FC = () => {
       >
         Increase
       </button>
+      <div>Total: {debugState.stepTime}</div>
     </div>
   );
 };

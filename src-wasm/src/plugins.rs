@@ -1,7 +1,14 @@
+use crate::rapier::DebugState;
 use bevy::prelude::*;
 use rapier::pipeline::PhysicsPipeline;
+use wasm_bindgen::{JsCast, JsValue};
 
 pub struct DebugUiPlugin;
+
+pub struct DebugUiState {
+    pub debug_state: JsValue,
+    pub set_debug_state: js_sys::Function,
+}
 
 impl Plugin for DebugUiPlugin {
     fn build(&self, app: &mut App) {
@@ -11,13 +18,7 @@ impl Plugin for DebugUiPlugin {
 }
 
 fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font_handle = asset_server.load(
-        format!(
-            "{}/../../assets/fonts/FiraSans-Bold.ttf",
-            env!("CARGO_MANIFEST_DIR")
-        )
-        .as_str(),
-    );
+    let font_handle = asset_server.load("fonts/FiraSans-Bold.ttf");
     commands
         // 2d camera
         .spawn()
@@ -43,7 +44,11 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-fn text_update_system(pipeline: Res<PhysicsPipeline>, mut query: Query<&mut Text>) {
+fn text_update_system(
+    pipeline: Res<PhysicsPipeline>,
+    state: NonSend<DebugUiState>,
+    mut query: Query<&mut Text>,
+) {
     let profile_string = format!(
         r#"Total: {:.2}ms
 Collision detection: {:.2}ms
@@ -80,6 +85,14 @@ CCD: {:.2}ms
         pipeline.counters.ccd.narrow_phase_time.time(),
         pipeline.counters.ccd.solver_time.time(),
     );
+    let debug_state: &DebugState = state.debug_state.unchecked_ref();
+    debug_state.set_step_time(pipeline.counters.step_time());
+    let new_debug_state = js_sys::Object::new();
+    js_sys::Object::assign(&new_debug_state, debug_state.unchecked_ref());
+    state
+        .set_debug_state
+        .call1(&JsValue::NULL, &new_debug_state)
+        .unwrap();
 
     for mut text in query.iter_mut() {
         text.sections[0].value = profile_string.clone();
