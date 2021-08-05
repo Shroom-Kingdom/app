@@ -1,5 +1,21 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 
 export const App: FC = () => {
-  return <>Hello WASM</>;
+  const [count, setCount] = useState<number>(0);
+  return (
+    <div
+      style={{
+        position: 'relative'
+      }}
+    >
+      Hello WASM {count}
+      <button
+        onClick={() => {
+          setCount(count + 1);
+        }}
+      >
+        Increase
+      </button>
+    </div>
+  );
 };

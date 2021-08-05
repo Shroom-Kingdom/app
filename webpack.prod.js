@@ -1,6 +1,7 @@
 /* eslint-disable */
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const webpack = require('webpack');
 
@@ -21,6 +22,11 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'src/index.html'
     }),
+    new CopyPlugin({
+      patterns: [
+          { from: './assets', to: './assets' },
+      ],
+    }),
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'production'
     }),
@@ -36,7 +42,7 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.wasm']
   },
   experiments: {
-    syncWebAssembly: true
+    asyncWebAssembly: true
   },
   module: {
     rules: [
