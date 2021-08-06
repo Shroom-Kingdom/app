@@ -1,4 +1,4 @@
-mod plugins;
+mod app;
 pub mod rapier;
 
 use wasm_bindgen::prelude::*;

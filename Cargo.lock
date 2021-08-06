@@ -106,11 +106,25 @@ checksum = "595d3cfa7a60d4555cb5067b99f07142a08ea778de5cf993f7b75c7d8fabc486"
 name = "app"
 version = "0.1.0"
 dependencies = [
+ "app-debug",
  "bevy",
  "bevy_rapier2d",
  "bevy_webgl2",
  "console_error_panic_hook",
- "debug",
+ "js-sys",
+ "rapier2d",
+ "wasm-bindgen",
+ "web-sys",
+ "wee_alloc",
+]
+
+[[package]]
+name = "app-debug"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_rapier2d",
+ "bevy_webgl2",
  "js-sys",
  "rapier2d",
  "wasm-bindgen",
@@ -1022,21 +1036,6 @@ dependencies = [
  "darling_core",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "debug"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_rapier2d",
- "bevy_webgl2",
- "console_error_panic_hook",
- "js-sys",
- "rapier2d",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
 ]
 
 [[package]]

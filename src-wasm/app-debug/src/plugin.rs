@@ -1,28 +1,28 @@
-use crate::rapier::DebugState;
+use crate::DebugState;
 use bevy::prelude::*;
 use rapier::pipeline::PhysicsPipeline;
 use wasm_bindgen::{JsCast, JsValue};
 
-pub struct DebugUiPlugin;
+pub struct DebugPlugin;
 
-struct DebugUiCount(u32);
+struct DebugPluginCount(u32);
 
-pub struct DebugUiState {
+pub struct DebugPluginState {
     pub debug_state: JsValue,
     pub set_debug_state: js_sys::Function,
 }
 
-impl Plugin for DebugUiPlugin {
+impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_to_stage(CoreStage::Update, text_update_system.system())
-            .insert_resource(DebugUiCount(0));
+            .insert_resource(DebugPluginCount(0));
     }
 }
 
 fn text_update_system(
     pipeline: Res<PhysicsPipeline>,
-    state: NonSend<DebugUiState>,
-    mut count: ResMut<DebugUiCount>,
+    state: NonSend<DebugPluginState>,
+    mut count: ResMut<DebugPluginCount>,
     // mut query: Query<&mut Text>,
 ) {
     if count.0 < 30 {
