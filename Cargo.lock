@@ -110,6 +110,7 @@ dependencies = [
  "bevy_rapier2d",
  "bevy_webgl2",
  "console_error_panic_hook",
+ "debug",
  "js-sys",
  "rapier2d",
  "wasm-bindgen",
@@ -1021,6 +1022,21 @@ dependencies = [
  "darling_core",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "debug"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_rapier2d",
+ "bevy_webgl2",
+ "console_error_panic_hook",
+ "js-sys",
+ "rapier2d",
+ "wasm-bindgen",
+ "web-sys",
+ "wee_alloc",
 ]
 
 [[package]]

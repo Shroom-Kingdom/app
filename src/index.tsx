@@ -34,7 +34,7 @@ export const DebugContext = createContext<DebugState>(initialDebugState);
 
 async function main() {
   if (hasWebGL2Support) {
-    const shrm = await import('../src-wasm/pkg');
+    const shrm = await import('../pkg');
     shrm.setupPanicHook();
 
     let debugState: DebugState;

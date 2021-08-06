@@ -5,16 +5,16 @@
   "author": "Mario Reder <mario.reder@pm.me>",
   "license": "MIT",
   "scripts": {
-    "start": "yarn clean && yarn --cwd src-wasm build:dev && run-p serve watch",
-    "start:prod": "yarn clean && yarn --cwd src-wasm build:dev && run-p serve:prod watch:prod",
+    "start": "yarn clean && yarn --cwd src-wasm/app build:dev && run-p serve watch",
+    "start:prod": "yarn clean && yarn --cwd src-wasm/app build:dev && run-p serve:prod watch:prod",
     "serve": "webpack-dev-server --host 0.0.0.0 -d --env=dev",
     "serve:prod": "webpack-dev-server --host 0.0.0.0 -p --env=prod",
-    "build": "yarn clean && yarn --cwd src-wasm build && webpack --env=prod",
-    "watch": "yarn --cwd src-wasm watch",
-    "watch:prod": "yarn --cwd src-wasm watch:prod",
+    "build": "yarn clean && yarn --cwd src-wasm/app build && webpack --env=prod",
+    "watch": "yarn --cwd src-wasm/app watch",
+    "watch:prod": "yarn --cwd src-wasm/app watch:prod",
     "deploy": "gh-pages --dist dist",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./dist && yarn --cwd src-wasm clean"
+    "clean": "rm -rf ./dist && yarn --cwd src-wasm/app clean"
   },
   "dependencies": {
     "detect-browser": "^5.2.0",

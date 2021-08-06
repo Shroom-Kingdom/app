@@ -1,0 +1,10 @@
+{
+  "license": "MIT",
+  "scripts": {
+    "build": "wasm-pack build --release --target bundler --out-dir ../../pkg",
+    "build:dev": "wasm-pack build --dev --target bundler --out-dir ../../pkg",
+    "watch": "cargo watch -w src -s 'wasm-pack build --dev --target=bundler --out-dir ../../pkg'",
+    "watch:prod": "cargo watch -w src -s 'wasm-pack build --release --target=bundler --out-dir ../../pkg'",
+    "clean": "rm -rf ./pkg"
+  }
+}
