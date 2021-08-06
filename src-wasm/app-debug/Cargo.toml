@@ -7,30 +7,9 @@ edition = "2018"
 js-sys = "0.3"
 rapier = { package = "rapier2d", version = "0.10" }
 wasm-bindgen = "0.2"
-wee_alloc = "0.4"
 
 [dependencies.bevy]
 version = "0.5"
 git = "https://github.com/bevyengine/bevy.git"
 branch = "main"
 default-features = false
-
-[dependencies.bevy_rapier]
-package = "bevy_rapier2d"
-version = "0.10"
-features = ["wasm-bindgen"]
-# path = "../../bevy_rapier/bevy_rapier2d"
-git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"
-
-[dependencies.bevy_webgl2]
-version = "0.5"
-# path = "../../bevy_webgl2"
-git = "https://github.com/Shroom-Kingdom/bevy_webgl2.git"
-
-[dependencies.web-sys]
-version = "0.3"
-features = [
-  'Document',
-  'Element',
-  'Window',
-]

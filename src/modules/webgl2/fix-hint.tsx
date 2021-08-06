@@ -1,11 +1,6 @@
 import React, { FC } from 'react';
 
-import type { Browser } from '.';
-
-export function checkWebGL2(): boolean {
-  const gl = document.createElement('canvas').getContext('webgl2');
-  return !!gl;
-}
+import type { Browser } from '../..';
 
 export const WebGL2FixHint: FC<{ browser: Browser }> = ({ browser }) => {
   const defaultMessage = (
@@ -31,5 +26,4 @@ export const WebGL2FixHint: FC<{ browser: Browser }> = ({ browser }) => {
     default:
       return defaultMessage;
   }
-  return <div></div>;
 };

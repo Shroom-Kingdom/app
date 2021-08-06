@@ -1,36 +1,15 @@
-import React, {
-  Dispatch,
-  FC,
-  SetStateAction,
-  createContext,
-  useState
-} from 'react';
+import React, { Dispatch, FC, SetStateAction, useState } from 'react';
 import ReactDOM from 'react-dom';
+import * as _ from 'styled-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { detect } from 'detect-browser';
 
-export interface DebugState {
-  stepTime: number;
-  collisionDetectionTime: number;
-  broadPhaseTime: number;
-  narrowPhaseTime: number;
-  islandConstructionTime: number;
-}
-
 import { App } from './app';
-import { WebGL2FixHint, checkWebGL2 } from './webgl2';
+import { WebGL2FixHint, checkWebGL2 } from './modules/webgl2';
+import { DebugContext, DebugState, initialDebugState } from './modules/debug';
 
 const hasWebGL2Support = checkWebGL2();
 const browser = detect();
 export type Browser = typeof browser;
-
-const initialDebugState: DebugState = {
-  stepTime: 0,
-  collisionDetectionTime: 0,
-  broadPhaseTime: 0,
-  narrowPhaseTime: 0,
-  islandConstructionTime: 0
-};
-export const DebugContext = createContext<DebugState>(initialDebugState);
 
 async function main() {
   if (hasWebGL2Support) {

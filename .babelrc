@@ -18,6 +18,7 @@
     ]
   ],
   "plugins": [
+    "styled-jsx/babel",
     [
       "@babel/plugin-transform-typescript",
       {
