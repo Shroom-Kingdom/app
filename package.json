@@ -17,6 +17,7 @@
     "clean": "rm -rf ./dist && yarn --cwd src-wasm clean"
   },
   "dependencies": {
+    "detect-browser": "^5.2.0",
     "react": "^17",
     "react-dom": "^17"
   },
