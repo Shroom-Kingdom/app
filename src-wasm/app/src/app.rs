@@ -1,4 +1,5 @@
 use crate::rapier::{enable_physics_profiling, setup_graphics, setup_physics};
+use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
 use app_debug::{DebugPlugin, DebugPluginState};
 use bevy::prelude::*;
 use bevy_rapier::{
@@ -20,7 +21,13 @@ pub fn main(debug_state: app_debug::DebugState, set_debug_state: js_sys::Functio
             debug_state: debug_state.into(),
             set_debug_state,
         })
-        .add_plugins(bevy_webgl2::DefaultPlugins)
+        .insert_resource(AssetIoTarConfig(
+            // TODO bytes from GUI
+            include_bytes!("../../../../../../shroom-assets/assets.tar").to_vec(),
+        ))
+        .add_plugins_with(bevy_webgl2::DefaultPlugins, |group| {
+            group.add_before::<bevy::asset::AssetPlugin, _>(AssetIoTarPlugin)
+        })
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierRenderPlugin)
         .add_plugin(DebugPlugin)

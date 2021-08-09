@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 console_error_panic_hook = "0.1"
+app-assets = { path = "../app-assets" }
 app-debug = { path = "../app-debug" }
 js-sys = "0.3"
 rapier = { package = "rapier2d", version = "0.10" }
@@ -18,6 +19,7 @@ wee_alloc = "0.4"
 
 [dependencies.bevy]
 version = "0.5"
+# path = "../../bevy"
 git = "https://github.com/bevyengine/bevy.git"
 branch = "main"
 default-features = false
@@ -26,7 +28,7 @@ default-features = false
 package = "bevy_rapier2d"
 version = "0.10"
 features = ["wasm-bindgen"]
-# path = "../../bevy_rapier/bevy_rapier2d"
+# path = "../../../bevy_rapier/bevy_rapier2d"
 git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"
 
 [dependencies.bevy_webgl2]

@@ -2,8 +2,7 @@ cargo-features = ["strip"]
 
 [workspace]
 members = [
-    "src-wasm/app",
-    "src-wasm/app-debug"
+    "src-wasm/*",
 ]
 
 [profile]
