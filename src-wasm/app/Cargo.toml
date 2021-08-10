@@ -15,6 +15,7 @@ app-debug = { path = "../app-debug" }
 js-sys = "0.3"
 rapier = { package = "rapier2d", version = "0.10" }
 wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
 wee_alloc = "0.4"
 
 [dependencies.bevy]
@@ -33,7 +34,7 @@ git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"
 
 [dependencies.bevy_webgl2]
 version = "0.5"
-# path = "../../bevy_webgl2"
+# path = "../../../bevy_webgl2"
 git = "https://github.com/Shroom-Kingdom/bevy_webgl2.git"
 
 [dependencies.web-sys]

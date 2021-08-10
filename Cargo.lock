@@ -115,6 +115,7 @@ dependencies = [
  "js-sys",
  "rapier2d",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "web-sys",
  "wee_alloc",
 ]
