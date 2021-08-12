@@ -49,7 +49,11 @@ module.exports = {
         use: ['babel-loader']
       },
       {
-        test: /\.(jpe?g|png|gif|svg)$/i, 
+        test: /\.svg$/,
+        use: ['@svgr/webpack'],
+      },
+      {
+        test: /\.(jpe?g|png|gif)$/i, 
         use: 'file-loader'
       }
     ]

@@ -12,7 +12,7 @@ import { detect } from 'detect-browser';
 import { App } from './app';
 import { WebGL2FixHint, checkWebGL2 } from './modules/webgl2';
 import { DebugContext, DebugState, initialDebugState } from './modules/debug';
-import { AssetContext, AssetState, initialAssetState } from './modules/assets';
+import { AssetContext, AssetState, initialAssetState } from './modules/asset';
 
 const hasWebGL2Support = checkWebGL2();
 const browser = detect();
@@ -63,6 +63,13 @@ async function main() {
       <React.StrictMode>
         <DebugContext.Provider value={debugState}>
           <AssetContext.Provider value={{ assetState, setAssetState }}>
+            <style jsx global>{`
+              a {
+                color: #00497e;
+                text-decoration: none;
+                font-weight: 500;
+              }
+            `}</style>
             <App />
           </AssetContext.Provider>
         </DebugContext.Provider>

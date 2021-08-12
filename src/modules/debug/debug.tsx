@@ -1,5 +1,7 @@
 import React, { FC, useContext, useState } from 'react';
 
+import { Button } from '../button';
+
 import { DebugContext } from '.';
 import { DebugRow } from './debug-row';
 
@@ -22,13 +24,13 @@ export const Debug: FC = () => {
           flex-direction: column;
         }
       `}</style>
-      <button
+      <Button
         onClick={() => {
           setShowDebug(!showDebug);
         }}
       >
         Toggle Debug Info
-      </button>
+      </Button>
       {showDebug && (
         <div className="table">
           <DebugRow title="Total" value={debugState.stepTime} />

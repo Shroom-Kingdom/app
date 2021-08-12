@@ -1,17 +1,19 @@
 import React, { FC, useContext } from 'react';
 
-import { AssetContext, AssetLoader } from './modules/assets';
+import { AssetContext, AssetLoader } from './modules/asset';
 import { Debug } from './modules/debug';
 
 export const App: FC = () => {
   const { assetState } = useContext(AssetContext);
   return (
     <>
-      <div
-        style={{
-          position: 'relative'
-        }}
-      >
+      <div className="app">
+        <style jsx>{`
+          .app {
+            position: relative;
+            display: grid;
+          }
+        `}</style>
         {assetState.data ? <Debug /> : <AssetLoader />}
       </div>
       <canvas id="canvas">
