@@ -1,10 +1,10 @@
 import React, { FC } from 'react';
-import css from 'styled-jsx/css';
+import { resolve } from 'styled-jsx/css';
 
 import { colorWarning } from '../color';
 import { Icon } from '../icon';
 
-const { className: iconClass, styles } = css.resolve`
+const { className: iconClass, styles } = resolve`
   div {
     flex: 0 0 36px;
   }

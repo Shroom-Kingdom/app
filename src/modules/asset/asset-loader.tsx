@@ -1,12 +1,12 @@
 import React, { FC, useContext, useState } from 'react';
-import css from 'styled-jsx/css';
+import { resolve } from 'styled-jsx/css';
 
-import { Button } from '../button';
 import { Alert } from '../alert';
+import { Button } from '../button';
 
 import { AssetContext } from '.';
 
-const { className: alertClass, styles } = css.resolve`
+const { className: alertClass, styles } = resolve`
   div {
     margin: 0 1rem 2rem 1rem;
   }

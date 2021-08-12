@@ -1,3 +1,4 @@
+import { detect } from 'detect-browser';
 import React, {
   Dispatch,
   FC,
@@ -7,12 +8,11 @@ import React, {
 } from 'react';
 import ReactDOM from 'react-dom';
 import * as _ from 'styled-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { detect } from 'detect-browser';
 
 import { App } from './app';
-import { WebGL2FixHint, checkWebGL2 } from './modules/webgl2';
-import { DebugContext, DebugState, initialDebugState } from './modules/debug';
 import { AssetContext, AssetState, initialAssetState } from './modules/asset';
+import { DebugContext, DebugState, initialDebugState } from './modules/debug';
+import { WebGL2FixHint, checkWebGL2 } from './modules/webgl2';
 
 const hasWebGL2Support = checkWebGL2();
 const browser = detect();
