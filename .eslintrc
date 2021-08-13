@@ -32,7 +32,6 @@
   },
   "rules": {
     "react/prop-types": "off",
-    // "sort-imports": "error"
     "import/order": [
       "error",
       {
