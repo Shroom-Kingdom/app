@@ -22,11 +22,11 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'src/index.html'
     }),
-    // new CopyPlugin({
-    //   patterns: [
-    //       { from: './assets', to: './assets' },
-    //   ],
-    // }),
+    new CopyPlugin({
+      patterns: [
+          { from: './src/static', to: '.' },
+      ],
+    }),
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'development'
     })
