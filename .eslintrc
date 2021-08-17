@@ -4,7 +4,6 @@
     "eslint:recommended",
     "plugin:import/recommended",
     "plugin:import/typescript",
-    // "plugin:ordered-imports/recommended",
     "plugin:prettier/recommended",
     "plugin:react/recommended",
     "plugin:@typescript-eslint/eslint-recommended",

@@ -12,11 +12,5 @@
     "jsx": "preserve",
     "typeRoots": ["node_modules/@types", "src/types"]
   },
-  "include": ["src/**/*"],
-  "ordered-imports": [
-    true,
-    {
-      "grouped-imports": true
-    }
-  ]
+  "include": ["src/**/*"]
 }

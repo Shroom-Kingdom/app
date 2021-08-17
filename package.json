@@ -41,7 +41,6 @@
     "eslint": "^7",
     "eslint-config-prettier": "^6",
     "eslint-plugin-import": "^2.24.0",
-    "eslint-plugin-ordered-imports": "^0",
     "eslint-plugin-prettier": "^3",
     "eslint-plugin-react": "^7",
     "file-loader": "^6",
