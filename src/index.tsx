@@ -41,7 +41,16 @@ async function main() {
     return;
   }
 
-  const shrm = await import('../pkg');
+  let loadedWasmModule = false;
+  while (!loadedWasmModule) {
+    if ((window as any).shrm) {
+      loadedWasmModule = true;
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+
+  const shrm = (window as any).shrm;
   shrm.setupPanicHook();
 
   let debugState: DebugState;

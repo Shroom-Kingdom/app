@@ -3,6 +3,16 @@
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
     <title>Shroom Kingdom App</title>
+    <script type="module">
+      import init, { main, setupPanicHook } from './app.js';
+
+      async function run() {
+        await init();
+        window.shrm = { main, setupPanicHook };
+      }
+
+      run();
+    </script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500&display=swap');
       body {

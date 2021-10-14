@@ -28,7 +28,9 @@ module.exports = {
     }),
     new CopyPlugin({
       patterns: [
-          { from: './src/static', to: '.' },
+        { from: './src/static', to: '.' },
+        { from: './pkg/app.js', to: '.' },
+        { from: './pkg/app_bg.wasm', to: '.' }
       ],
     }),
     new webpack.EnvironmentPlugin({
@@ -48,6 +50,14 @@ module.exports = {
   experiments: {
     asyncWebAssembly: true
   },
+  externals: [
+    ({ request }, callback) => {
+      if (/\.wasm$/.test(request)) {
+        return callback(null, "amd " + request);
+      }
+      callback();
+    }
+  ],
   module: {
     rules: [
       {
