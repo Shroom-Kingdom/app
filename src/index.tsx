@@ -86,7 +86,7 @@ async function main() {
     );
   };
 
-  ReactDOM.render(<WasmApp />, document.getElementById('root'));
+  // ReactDOM.render(<WasmApp />, document.getElementById('root'));
 }
 
 main();

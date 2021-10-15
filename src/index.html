@@ -9,6 +9,8 @@
       async function run() {
         await init();
         window.shrm = { main, setupPanicHook };
+        setupPanicHook();
+        main();
       }
 
       run();
@@ -84,6 +86,7 @@
     </style>
   </head>
   <body>
+    <canvas id="canvas"> </canvas>
     <div id="root">
       <div class="loading-indicator-wrapper">
         <div class="loading-indicator"></div>
