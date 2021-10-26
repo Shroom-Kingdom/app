@@ -18,14 +18,7 @@
     ]
   ],
   "plugins": [
-    "styled-jsx/babel",
-    [
-      "@babel/plugin-transform-typescript",
-      {
-        "isTSX": true
-      }
-    ],
-    "@babel/plugin-transform-react-jsx",
+    "@babel/plugin-transform-typescript",
     "@babel/plugin-syntax-dynamic-import"
   ]
 }

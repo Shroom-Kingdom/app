@@ -1,20 +1,11 @@
-import { Dispatch, SetStateAction, createContext } from 'react';
-
-export * from './asset-loader';
-
-export interface AssetState {
-  data?: Uint8Array;
-}
+import { Writable, writable } from 'svelte/store';
 
 export interface AssetContext {
-  assetState: AssetState;
-  setAssetState: Dispatch<SetStateAction<AssetState>>;
+  data: Writable<Uint8Array | null>;
 }
 
-export const initialAssetState: AssetState = { data: undefined };
+export const initialAssetState: AssetContext = {
+  data: writable<Uint8Array | null>(null)
+};
 
-export const AssetContext = createContext<AssetContext>({
-  assetState: initialAssetState,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  setAssetState: () => {}
-});
+export const assetKey = {};

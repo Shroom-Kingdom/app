@@ -2,6 +2,10 @@
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin');
+const SveltePreprocess = require('svelte-preprocess');
+const Autoprefixer = require('autoprefixer');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const webpack = require('webpack');
@@ -13,7 +17,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
 
 module.exports = {
   mode: 'production',
-  entry: './src/index.tsx',
+  entry: './src/main.js',
   output: {
     path: dist,
     filename: 'bundle.js'
@@ -36,6 +40,9 @@ module.exports = {
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'production'
     }),
+		new MiniCssExtractPlugin({
+			filename: '[name].css'
+		}),
     new BundleAnalyzerPlugin({
       analyzerMode: 'static',
       reportFilename: path.join(__dirname, 'bundle-report.html'),
@@ -45,7 +52,12 @@ module.exports = {
     })
   ],
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.wasm']
+		alias: {
+			// Note: Later in this config file, we'll automatically add paths from `tsconfig.compilerOptions.paths`
+			svelte: path.resolve('node_modules', 'svelte')
+		},
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.svelte', '.json', '.wasm'],
+		mainFields: ['svelte', 'browser', 'module', 'main']
   },
   experiments: {
     asyncWebAssembly: true
@@ -58,17 +70,81 @@ module.exports = {
       callback();
     }
   ],
+  optimization: {
+    minimizer: [
+      `...`,
+      new CssMinimizerPlugin(),
+    ],
+  },
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
+        test: /\.ts$/,
         exclude: /node_modules/,
         use: ['babel-loader']
       },
-      {
-        test: /\.svg$/,
-        use: ['@svgr/webpack'],
-      },
+			{
+				test: /\.svelte$/,
+				exclude: /node_modules/,
+				use: {
+					loader: 'svelte-loader',
+					options: {
+						compilerOptions: {
+							dev: true
+						},
+						hotReload: true,
+						hotOptions: {
+							// List of options and defaults: https://www.npmjs.com/package/svelte-loader-hot#usage
+							noPreserveState: false,
+							optimistic: true,
+						},
+						preprocess: SveltePreprocess({
+							scss: true,
+							sass: true,
+							postcss: {
+								plugins: [
+									Autoprefixer
+								]
+							}
+						})
+					}
+				}
+			},
+			{
+				test: /node_modules\/svelte\/.*\.mjs$/,
+				resolve: {
+					fullySpecified: false
+				}
+			},
+			{
+				test: /\.(scss|sass)$/,
+				use: [
+					{
+						loader: MiniCssExtractPlugin.loader
+					},
+					'css-loader',
+					{
+						loader: 'postcss-loader',
+						options: {
+							postcssOptions: {
+								plugins: [
+									Autoprefixer
+								]
+							}
+						}
+					},
+					'sass-loader'
+				]
+			},
+			{
+				test: /\.css$/,
+				use: [
+					{
+						loader: MiniCssExtractPlugin.loader
+					},
+					'css-loader',
+				]
+			},
       {
         test: /\.(jpe?g|png|gif)$/i, 
         use: 'file-loader'
