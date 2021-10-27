@@ -7,9 +7,9 @@
   "scripts": {
     "start": "yarn clean && yarn --cwd src-wasm/app build:dev && run-p serve watch",
     "start:prod": "yarn clean && yarn --cwd src-wasm/app build:dev && run-p serve:prod watch:prod",
-    "serve": "webpack-dev-server --host 0.0.0.0 -d --env=dev",
-    "serve:prod": "webpack-dev-server --host 0.0.0.0 -p --env=prod",
-    "build": "yarn clean && yarn --cwd src-wasm/app build && webpack --env=prod",
+    "serve": "webpack serve --host 0.0.0.0 --env=dev",
+    "serve:prod": "webpack serve --host 0.0.0.0 --env=prod --node-env production",
+    "build": "yarn clean && yarn --cwd src-wasm/app build && webpack --env=prod --node-env production",
     "watch": "yarn --cwd src-wasm/app watch",
     "watch:prod": "yarn --cwd src-wasm/app watch:prod",
     "deploy": "gh-pages --dist dist",
@@ -34,6 +34,7 @@
     "babel-loader": "^8",
     "copy-webpack-plugin": "^9",
     "core-js": "3",
+    "css-loader": "^6",
     "css-minimizer-webpack-plugin": "^3",
     "eslint": "^7",
     "eslint-config-prettier": "^6",
@@ -45,17 +46,19 @@
     "mini-css-extract-plugin": "^2",
     "node-sass": "^6",
     "npm-run-all": "^4",
+    "postcss": "^8",
+    "postcss-loader": "^6",
     "prettier": "^2",
     "prettier-plugin-svelte": "^2",
     "sass": "^1",
-    "script-ext-html-webpack-plugin": "^2",
+    "sass-loader": "^12",
     "svelte-check": "^2",
     "svelte-loader": "^3",
     "svelte-preprocess": "^4",
     "typescript": "4.1",
     "webpack": "^5",
     "webpack-bundle-analyzer": "^4",
-    "webpack-cli": "^3",
-    "webpack-dev-server": "^3"
+    "webpack-cli": "^4",
+    "webpack-dev-server": "^4"
   }
 }

@@ -1,34 +1,26 @@
 /* eslint-disable */
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin');
 const SveltePreprocess = require('svelte-preprocess');
 const Autoprefixer = require('autoprefixer');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const webpack = require('webpack');
 
 const dist = path.resolve(__dirname, 'dist');
 
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
-  .BundleAnalyzerPlugin;
-
 module.exports = {
-  mode: 'production',
+  mode: 'development',
   entry: './src/main.js',
   output: {
     path: dist,
     filename: 'bundle.js'
   },
-  devtool: 'source-map',
+  devtool: 'inline-source-map',
   plugins: [
     new HtmlWebpackPlugin({
       template: 'src/index.html'
-    }),
-    new ScriptExtHtmlWebpackPlugin({
-      defaultAttribute: 'defer'
     }),
     new CopyPlugin({
       patterns: [
@@ -38,18 +30,11 @@ module.exports = {
       ],
     }),
     new webpack.EnvironmentPlugin({
-      NODE_ENV: 'production'
+      NODE_ENV: 'development'
     }),
 		new MiniCssExtractPlugin({
 			filename: '[name].css'
-		}),
-    new BundleAnalyzerPlugin({
-      analyzerMode: 'static',
-      reportFilename: path.join(__dirname, 'bundle-report.html'),
-      openAnalyzer: false,
-      generateStatsFile: true,
-      statsFilename: path.join(__dirname, 'stats.json')
-    })
+		})
   ],
   resolve: {
 		alias: {
@@ -62,6 +47,10 @@ module.exports = {
   experiments: {
     asyncWebAssembly: true
   },
+  watchOptions: {
+    aggregateTimeout: 200,
+    ignored: ['./target/**', './src-wasm/**']
+  },
   externals: [
     ({ request }, callback) => {
       if (/\.wasm$/.test(request)) {
@@ -70,12 +59,6 @@ module.exports = {
       callback();
     }
   ],
-  optimization: {
-    minimizer: [
-      `...`,
-      new CssMinimizerPlugin(),
-    ],
-  },
   module: {
     rules: [
       {
@@ -93,11 +76,6 @@ module.exports = {
 							dev: true
 						},
 						hotReload: true,
-						hotOptions: {
-							// List of options and defaults: https://www.npmjs.com/package/svelte-loader-hot#usage
-							noPreserveState: false,
-							optimistic: true,
-						},
 						preprocess: SveltePreprocess({
 							scss: true,
 							sass: true,
