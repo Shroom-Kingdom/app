@@ -1,16 +1,40 @@
 <script lang="ts">
-  import { getContext } from 'svelte';
   import DebugRow from './DebugRow.svelte';
   import Button from '../button/Button.svelte';
-  import { debugKey, DebugContext, DebugState, initialDebugState } from '.';
+  import {
+    stepTime,
+    collisionDetectionTime,
+    broadPhaseTime,
+    narrowPhaseTime,
+    islandConstructionTime,
+    solverTime,
+    velocityAssemblyTime,
+    velocityResolutionTime,
+    velocityUpdateTime,
+    positionAssemblyTime,
+    positionResolutionTime,
+    ccdTime,
+    numSubsteps,
+    toiComputationTime,
+    ccdBroadPhaseTime,
+    ccdNarrowPhaseTime,
+    ccdSolverTime
+  } from '.';
+  import { writable } from 'svelte/store';
 
   let showDebug = false;
-  let debugState: DebugState;
-	const { state } = getContext<DebugContext>(debugKey);
-    state.subscribe(state => {
-		if (!state) return;
-		debugState = state;
-	});
+
+  let test = writable(12);
+
+  $: test.subscribe(asd => {
+    console.log('SUBSCRIBE', asd)
+  })
+
+  function increment () {
+    console.log('click');
+    test.update(a => a + 1);
+    // test += 1;
+  }
 </script>
 
 
@@ -22,62 +46,66 @@
   >
     Toggle Debug Info
   </Button>
+  <button on:click={increment}>
+    increment
+  </button>
+  <div>Value is {$test}</div>
   {#if showDebug}
     <div class="table">
-      <DebugRow title="Total" value={debugState.stepTime} />
+      <DebugRow title="Total" value={$stepTime} />
       <DebugRow
         title="Collision detection"
-        value={debugState.collisionDetectionTime}
+        value={$collisionDetectionTime}
       />
-      <DebugRow title="|_ Broad-phase" value={debugState.broadPhaseTime} />
+      <DebugRow title="|_ Broad-phase" value={$broadPhaseTime} />
       <DebugRow
         title="|_ Narrow-phase"
-        value={debugState.narrowPhaseTime}
+        value={$narrowPhaseTime}
       />
       <DebugRow
         title="Island computation"
-        value={debugState.islandConstructionTime}
+        value={$islandConstructionTime}
       />
-      <DebugRow title="Solver" value={debugState.solverTime} />
+      <DebugRow title="Solver" value={$solverTime} />
       <DebugRow
         title="|_ Velocity assembly"
-        value={debugState.velocityAssemblyTime}
+        value={$velocityAssemblyTime}
       />
       <DebugRow
         title="|_ Velocity resolution"
-        value={debugState.velocityResolutionTime}
+        value={$velocityResolutionTime}
       />
       <DebugRow
         title="|_ Velocity integration"
-        value={debugState.velocityUpdateTime}
+        value={$velocityUpdateTime}
       />
       <DebugRow
         title="|_ Position assembly"
-        value={debugState.positionAssemblyTime}
+        value={$positionAssemblyTime}
       />
       <DebugRow
         title="|_ Position resolution"
-        value={debugState.positionResolutionTime}
+        value={$positionResolutionTime}
       />
-      <DebugRow title="CCD" value={debugState.ccdTime} />
+      <DebugRow title="CCD" value={$ccdTime} />
       <DebugRow
         title="|_ # of substeps"
-        value={debugState.numSubsteps}
+        value={$numSubsteps}
         isInt
       />
       <DebugRow
         title="|_ TOI computation"
-        value={debugState.toiComputationTime}
+        value={$toiComputationTime}
       />
       <DebugRow
         title="|_ Broad-phase"
-        value={debugState.ccdBroadPhaseTime}
+        value={$ccdBroadPhaseTime}
       />
       <DebugRow
         title="|_ Narrow-phase"
-        value={debugState.ccdNarrowPhaseTime}
+        value={$ccdNarrowPhaseTime}
       />
-      <DebugRow title="|_ Solver" value={debugState.ccdSolverTime} />
+      <DebugRow title="|_ Solver" value={$ccdSolverTime} />
     </div>
   {/if}
 </div>

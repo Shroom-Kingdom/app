@@ -1,16 +1,11 @@
 <script lang="ts">
-	import { onMount, setContext } from 'svelte';
+	import { onMount } from 'svelte';
 	import AssetLoader from './modules/asset/AssetLoader.svelte';
 	import Debug from './modules/debug/Debug.svelte';
-	import { AssetContext, assetKey, initialAssetState } from './modules/asset'
-	import { DebugContext, debugKey, initialDebugState } from './modules/debug'
+	import { assets } from './modules/asset'
 	
-	setContext<AssetContext>(assetKey, initialAssetState);
-	setContext<DebugContext>(debugKey, initialDebugState);
-
 	let assetData: Uint8Array | null = null;
-	const { data } = initialAssetState;
-	data.subscribe(data => {
+	assets.subscribe(data => {
 		if (!data) return;
 		assetData = data;
 		shrm.main(assetData);

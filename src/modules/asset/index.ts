@@ -1,11 +1,3 @@
-import { Writable, writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 
-export interface AssetContext {
-  data: Writable<Uint8Array | null>;
-}
-
-export const initialAssetState: AssetContext = {
-  data: writable<Uint8Array | null>(null)
-};
-
-export const assetKey = {};
+export const assets = writable<Uint8Array | null>(null);

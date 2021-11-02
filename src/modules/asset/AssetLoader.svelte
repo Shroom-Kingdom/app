@@ -1,13 +1,10 @@
 <script lang="ts">
-  import { getContext } from 'svelte';
-
   import Alert from '../alert/Alert.svelte';
   import Button from '../button/Button.svelte';
 
-  import { AssetContext, assetKey } from '.';
+  import { assets } from '.';
 
   let loading = false;
-  const { data } = getContext<AssetContext>(assetKey);
   let assetInput: HTMLInputElement | undefined;
 
   const handleSelect = async (event: Event) => {
@@ -17,7 +14,7 @@
     loading = true;
     try {
       const newData = await parseFile(file);
-      data.set(newData);
+      assets.set(newData);
     } catch (err) {
       console.error(err);
       loading = false;
