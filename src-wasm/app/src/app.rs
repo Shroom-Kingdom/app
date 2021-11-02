@@ -1,6 +1,6 @@
 use crate::rapier::{enable_physics_profiling, setup_graphics, setup_physics};
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
-use app_debug::{DebugPlugin, DebugPluginState};
+// use app_debug::{DebugPlugin, DebugPluginState};
 use bevy::prelude::*;
 use bevy_rapier::{
     physics::{NoUserData, RapierPhysicsPlugin},
@@ -9,11 +9,7 @@ use bevy_rapier::{
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub fn main(// assets: Vec<u8>,
-    // debug_state: app_debug::DebugState,
-    // set_debug_state: js_sys::Function,
-) {
-    let assets = include_bytes!("../../../../../../shroom-assets/assets.tar").to_vec();
+pub fn main(assets: Vec<u8>) {
     App::new()
         .insert_resource(ClearColor(Color::rgb(
             0xF9 as f32 / 255.0,
