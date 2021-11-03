@@ -1,14 +1,30 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import AssetLoader from './modules/asset/AssetLoader.svelte';
-	import Debug from './modules/debug/Debug.svelte';
 	import { assets } from './modules/asset'
 	
+	let canvas: HTMLCanvasElement | null = null;
+
 	let assetData: Uint8Array | null = null;
 	assets.subscribe(data => {
 		if (!data) return;
 		assetData = data;
-		shrm.main(assetData);
+
+		if (canvas) {
+			canvas.onblur = () => {
+				setTimeout(() => {
+					canvas?.focus();
+				});
+			}
+			canvas.focus();
+			setInterval(() => {
+				if (document.activeElement !== canvas) {
+					canvas?.focus();
+				}
+			}, 1000)
+		}
+
+		shrm.main(data);
 	});
 
 	let shrm: any;
@@ -30,15 +46,15 @@
 	})
 </script>
 
-<div class="app">
-	{#if assetData}
-		<Debug />
-	{:else}
+{#if assetData == null}
+	<div class="app">
 		<AssetLoader />
-	{/if}
-</div>
-<canvas id="canvas">
-</canvas>
+	</div>
+{/if}
+<canvas
+	id="canvas"
+	bind:this={canvas}
+/>
 
 <style>
 	.app {
