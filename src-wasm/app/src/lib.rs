@@ -1,4 +1,5 @@
-mod app;
+pub mod app;
+pub mod character;
 pub mod rapier;
 
 use wasm_bindgen::prelude::*;

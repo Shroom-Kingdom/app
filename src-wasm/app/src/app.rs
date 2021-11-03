@@ -1,7 +1,10 @@
-use crate::rapier::{enable_physics_profiling, setup_graphics, setup_physics};
+use crate::{
+    character::{player_movement, setup_character},
+    rapier::{enable_physics_profiling, setup_graphics, setup_ground},
+};
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
 // use app_debug::{DebugPlugin, DebugPluginState};
-use bevy::prelude::*;
+use bevy::{input::keyboard::keyboard_input_system, prelude::*};
 use bevy_rapier::{
     physics::{NoUserData, RapierPhysicsPlugin},
     render::RapierRenderPlugin,
@@ -34,7 +37,11 @@ pub fn main(assets: Vec<u8>) {
         .add_plugin(RapierRenderPlugin)
         // .add_plugin(DebugPlugin)
         .add_startup_system(setup_graphics.system())
-        .add_startup_system(setup_physics.system())
+        .add_startup_system(setup_ground.system())
+        // .add_startup_system(setup_physics.system())
         .add_startup_system(enable_physics_profiling.system())
+        .add_startup_system(setup_character.system())
+        .add_startup_system(keyboard_input_system.system())
+        .add_system(player_movement.system())
         .run();
 }

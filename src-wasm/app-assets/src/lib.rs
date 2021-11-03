@@ -22,11 +22,6 @@ pub struct AssetIoTarConfig(pub Vec<u8>);
 impl AssetIo for AssetIoTar {
     fn load_path<'a>(&'a self, path: &'a Path) -> BoxedFuture<'a, Result<Vec<u8>, AssetIoError>> {
         Box::pin(async move {
-            web_sys::console::log_2(
-                &"LOAD RES".into(),
-                &path.to_string_lossy().to_string().into(),
-            );
-
             // TODO use resource for caching?
             // if let Some(index) = self.cached_name_map.get(&path.to_path_buf()) {
             //     if let Some(Ok(mut entry)) =
