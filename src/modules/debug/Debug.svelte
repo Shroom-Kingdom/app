@@ -20,21 +20,8 @@
     ccdNarrowPhaseTime,
     ccdSolverTime
   } from '.';
-  import { writable } from 'svelte/store';
 
   let showDebug = false;
-
-  let test = writable(12);
-
-  $: test.subscribe(asd => {
-    console.log('SUBSCRIBE', asd)
-  })
-
-  function increment () {
-    console.log('click');
-    test.update(a => a + 1);
-    // test += 1;
-  }
 </script>
 
 
@@ -46,10 +33,6 @@
   >
     Toggle Debug Info
   </Button>
-  <button on:click={increment}>
-    increment
-  </button>
-  <div>Value is {$test}</div>
   {#if showDebug}
     <div class="table">
       <DebugRow title="Total" value={$stepTime} />
