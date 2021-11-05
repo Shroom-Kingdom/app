@@ -22,16 +22,3 @@ pub fn setup_graphics(mut commands: Commands, mut configuration: ResMut<RapierCo
     });
     commands.spawn_bundle(camera);
 }
-
-pub fn setup_ground(mut commands: Commands) {
-    let ground_size = 50.0;
-
-    let collider = ColliderBundle {
-        shape: ColliderShape::cuboid(ground_size, 1.0),
-        ..Default::default()
-    };
-    commands
-        .spawn_bundle(collider)
-        .insert(ColliderDebugRender::default())
-        .insert(ColliderPositionSync::Discrete);
-}

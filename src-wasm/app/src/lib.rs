@@ -1,6 +1,7 @@
 pub mod app;
 pub mod character;
-pub mod rapier;
+pub mod graphics;
+pub mod ground;
 
 use wasm_bindgen::prelude::*;
 
