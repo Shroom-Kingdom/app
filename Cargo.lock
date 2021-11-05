@@ -107,6 +107,8 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "app-assets",
+ "app-character",
+ "app-core",
  "app-debug",
  "app-ground",
  "bevy",
@@ -127,6 +129,23 @@ dependencies = [
  "bevy",
  "tar",
  "web-sys",
+]
+
+[[package]]
+name = "app-character"
+version = "0.1.0"
+dependencies = [
+ "app-core",
+ "app-ground",
+ "bevy",
+ "bevy_rapier2d",
+]
+
+[[package]]
+name = "app-core"
+version = "0.1.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

@@ -1,5 +1,4 @@
 pub mod app;
-pub mod character;
 pub mod graphics;
 
 use wasm_bindgen::prelude::*;

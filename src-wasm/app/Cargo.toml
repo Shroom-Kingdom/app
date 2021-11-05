@@ -11,6 +11,8 @@ crate-type = ["cdylib"]
 [dependencies]
 console_error_panic_hook = "0.1"
 app-assets = { path = "../app-assets" }
+app-character = { path = "../app-character" }
+app-core = { path = "../app-core" }
 app-debug = { path = "../app-debug" }
 app-ground = { path = "../app-ground" }
 js-sys = "0.3"

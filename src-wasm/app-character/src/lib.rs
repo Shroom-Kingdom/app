@@ -1,3 +1,4 @@
+use app_core::AppState;
 use app_ground::Grounds;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
@@ -5,6 +6,18 @@ use bevy_rapier::{
     physics::{ColliderBundle, ColliderPositionSync, RapierConfiguration, RigidBodyBundle},
     prelude::*,
 };
+
+pub struct CharacterPlugin;
+
+impl Plugin for CharacterPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_event::<PlayerStateChangeEvent>()
+            .add_system(player_movement)
+            .add_system(set_sprite)
+            .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup_character))
+            .add_system_to_stage(CoreStage::PostUpdate, ground_intersect);
+    }
+}
 
 pub fn setup_character(
     mut commands: Commands,

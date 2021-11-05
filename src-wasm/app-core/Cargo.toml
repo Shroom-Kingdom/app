@@ -1,0 +1,12 @@
+[package]
+name = "app-core"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies.bevy]
+version = "0.5"
+# path = "../../bevy"
+git = "https://github.com/bevyengine/bevy.git"
+rev = "a89a954a1706bcffa497309388b993ff82016829"
+# branch = "main"
+default-features = false

@@ -1,0 +1,21 @@
+[package]
+name = "app-character"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+app-core = { path = "../app-core" }
+app-ground = { path = "../app-ground" }
+
+[dependencies.bevy]
+version = "0.5"
+git = "https://github.com/bevyengine/bevy.git"
+rev = "a89a954a1706bcffa497309388b993ff82016829"
+# branch = "main"
+default-features = false
+
+[dependencies.bevy_rapier]
+package = "bevy_rapier2d"
+version = "0.10"
+# path = "../../../bevy_rapier/bevy_rapier2d"
+git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"
