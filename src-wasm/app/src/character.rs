@@ -1,4 +1,4 @@
-use crate::ground::Grounds;
+use app_ground::Grounds;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
     na::Vector2,

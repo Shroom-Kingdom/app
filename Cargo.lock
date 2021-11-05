@@ -108,6 +108,7 @@ version = "0.1.0"
 dependencies = [
  "app-assets",
  "app-debug",
+ "app-ground",
  "bevy",
  "bevy_rapier2d",
  "bevy_webgl2",
@@ -136,6 +137,14 @@ dependencies = [
  "js-sys",
  "rapier2d",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "app-ground"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_rapier2d",
 ]
 
 [[package]]

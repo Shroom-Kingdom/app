@@ -19,6 +19,14 @@ impl Grounds {
     }
 }
 
+pub struct GroundPlugin;
+
+impl Plugin for GroundPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(setup_ground);
+    }
+}
+
 pub fn setup_ground(mut commands: Commands) {
     let ground_size = 50.0;
     let ground_height = 1.0;

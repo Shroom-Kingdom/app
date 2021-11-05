@@ -3,9 +3,9 @@ use crate::{
         ground_intersect, player_movement, set_sprite, setup_character, PlayerStateChangeEvent,
     },
     graphics::{enable_physics_profiling, setup_graphics},
-    ground::setup_ground,
 };
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
+use app_ground::GroundPlugin;
 // use app_debug::{DebugPlugin, DebugPluginState};
 use bevy::{asset::LoadState, input::keyboard::keyboard_input_system, prelude::*};
 use bevy_rapier::{
@@ -41,9 +41,9 @@ pub fn main(assets: Vec<u8>) {
         })
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierRenderPlugin)
+        .add_plugin(GroundPlugin)
         // .add_plugin(DebugPlugin)
         .add_startup_system(setup_graphics.system())
-        .add_startup_system(setup_ground.system())
         .add_startup_system(enable_physics_profiling.system())
         .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(load_textures))
         .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures))

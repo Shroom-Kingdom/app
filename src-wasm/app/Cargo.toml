@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 console_error_panic_hook = "0.1"
 app-assets = { path = "../app-assets" }
 app-debug = { path = "../app-debug" }
+app-ground = { path = "../app-ground" }
 js-sys = "0.3"
 rapier = { package = "rapier2d", version = "0.11" }
 wasm-bindgen = "0.2"
