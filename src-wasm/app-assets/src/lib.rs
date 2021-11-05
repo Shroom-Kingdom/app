@@ -1,8 +1,7 @@
 use std::{
-    // collections::HashMap,
+    collections::HashMap,
     io::{self, Read},
     path::{Path, PathBuf},
-    sync::RwLock,
 };
 
 use bevy::{
@@ -12,8 +11,7 @@ use bevy::{
 
 struct AssetIoTar {
     default_io: Box<dyn AssetIo>,
-    archive: RwLock<tar::Archive<io::Cursor<Vec<u8>>>>,
-    // cached_name_map: HashMap<PathBuf, usize>,
+    archive: HashMap<PathBuf, Vec<u8>>,
 }
 
 #[derive(Clone)]
@@ -22,30 +20,8 @@ pub struct AssetIoTarConfig(pub Vec<u8>);
 impl AssetIo for AssetIoTar {
     fn load_path<'a>(&'a self, path: &'a Path) -> BoxedFuture<'a, Result<Vec<u8>, AssetIoError>> {
         Box::pin(async move {
-            // TODO use resource for caching?
-            // if let Some(index) = self.cached_name_map.get(&path.to_path_buf()) {
-            //     if let Some(Ok(mut entry)) =
-            //         self.archive.write().unwrap().entries().unwrap().nth(*index)
-            //     {
-            //         let mut res = vec![0; entry.size() as usize];
-            //         entry.read_exact(&mut res).unwrap();
-            //         return Ok(res);
-            //     }
-            // }
-            if let Some((_index, mut entry)) = self
-                .archive
-                .write()
-                .unwrap()
-                .entries()
-                .unwrap()
-                .enumerate()
-                .filter_map(|(index, entry)| entry.ok().map(|e| (index, e)))
-                .find(|(_index, entry)| entry.path().unwrap() == path)
-            {
-                let mut res = vec![0; entry.size() as usize];
-                entry.read_exact(&mut res).unwrap();
-                // self.cached_name_map.insert(path.to_path_buf(), index);
-                Ok(res)
+            if let Some(res) = self.archive.get(path) {
+                Ok(res.clone())
             } else {
                 Err(AssetIoError::NotFound(path.to_owned()))
             }
@@ -60,7 +36,7 @@ impl AssetIo for AssetIoTar {
     }
 
     fn is_directory(&self, path: &Path) -> bool {
-        self.default_io.is_directory(path)
+        self.archive.keys().any(|k| k.starts_with(path))
     }
 
     fn watch_path_for_changes(&self, path: &Path) -> Result<(), AssetIoError> {
@@ -93,10 +69,18 @@ impl Plugin for AssetIoTarPlugin {
                 .map(|x| (*x).clone())
                 .unwrap();
 
+            let mut archive = HashMap::new();
+            let mut tar = tar::Archive::new(io::Cursor::new(config.0));
+            for entry in tar.entries().unwrap() {
+                let mut entry = entry.unwrap();
+                let mut res = vec![0; entry.size() as usize];
+                entry.read_exact(&mut res).unwrap();
+                archive.insert(entry.path().unwrap().into(), res);
+            }
+
             AssetIoTar {
                 default_io,
-                archive: RwLock::new(tar::Archive::new(io::Cursor::new(config.0))),
-                // cached_name_map: HashMap::new(),
+                archive,
             }
         };
 
