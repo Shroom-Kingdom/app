@@ -15,12 +15,29 @@ impl Plugin for CharacterPlugin {
         app.add_event::<PlayerStateChangeEvent>()
             .add_system(player_movement)
             .add_system(set_sprite)
+            .add_system(walk_animation)
             .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup_character))
             .add_system_to_stage(CoreStage::PostUpdate, ground::ground_intersect);
     }
 }
 
-pub fn setup_character(
+#[derive(Debug)]
+pub struct Player {
+    pub state: PlayerState,
+}
+
+#[derive(Clone, Debug)]
+pub enum PlayerState {
+    Wait,
+    Walk(u8),
+    Jump,
+}
+
+pub struct PlayerStateChangeEvent {
+    pub state: PlayerState,
+}
+
+fn setup_character(
     mut commands: Commands,
     assets: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -84,7 +101,8 @@ pub fn setup_character(
         .insert(Player {
             state: PlayerState::Jump,
         })
-        .insert(ColliderPositionSync::Discrete);
+        .insert(ColliderPositionSync::Discrete)
+        .insert(Timer::from_seconds(3., true));
 
     commands.spawn_bundle(SpriteBundle {
         material: materials.add(texture_atlas_texture.into()),
@@ -93,28 +111,12 @@ pub fn setup_character(
     });
 }
 
-#[derive(Debug)]
-pub struct Player {
-    pub state: PlayerState,
-}
-
-#[derive(Clone, Debug)]
-pub enum PlayerState {
-    Wait,
-    Walk,
-    Jump,
-}
-
-pub struct PlayerStateChangeEvent {
-    pub state: PlayerState,
-}
-
-pub fn player_movement(
+fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
     rapier_parameters: Res<RapierConfiguration>,
-    mut query: Query<(&Player, &mut RigidBodyVelocity, &RigidBodyMassProps)>,
+    mut query: Query<(&Player, &mut RigidBodyVelocity)>,
 ) {
-    for (_, mut rb_vels, rb_mprops) in query.iter_mut() {
+    for (player, mut rb_vels) in query.iter_mut() {
         let left = keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
         let right = keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
 
@@ -125,11 +127,15 @@ pub fn player_movement(
             move_delta /= move_delta.magnitude() * rapier_parameters.scale;
         }
 
-        rb_vels.apply_impulse(rb_mprops, move_delta * 400.);
+        let multiplier = match player.state {
+            PlayerState::Jump => 20.,
+            _ => 100.,
+        };
+        rb_vels.linvel.data.0[0][0] = move_delta.data.0[0][0] * multiplier;
     }
 }
 
-pub fn set_sprite(
+fn set_sprite(
     mut query: Query<(&Player, &mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
     mut events: EventReader<PlayerStateChangeEvent>,
     assets: Res<AssetServer>,
@@ -140,7 +146,8 @@ pub fn set_sprite(
             let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
             let asset_path = match event.state {
                 PlayerState::Wait => "MW_Player_MarioMdl_wait.0_0.png",
-                PlayerState::Walk => "MW_Player_MarioMdl_walk.0_0.png",
+                PlayerState::Walk(0) => "MW_Player_MarioMdl_walk.0_0.png",
+                PlayerState::Walk(_) => "MW_Player_MarioMdl_walk.1_0.png",
                 PlayerState::Jump => "MW_Player_MarioMdl_jump.0_0.png",
             };
             let handle = assets.load(asset_path);
@@ -150,4 +157,44 @@ pub fn set_sprite(
     }
 }
 
-pub fn walk_animation() {}
+fn walk_animation(
+    mut query: Query<(
+        &mut Player,
+        &mut Timer,
+        &RigidBodyVelocity,
+        &mut TextureAtlasSprite,
+        &Handle<TextureAtlas>,
+    )>,
+    time: Res<Time>,
+    mut psc_event: EventWriter<PlayerStateChangeEvent>,
+    assets: Res<AssetServer>,
+    texture_atlases: Res<Assets<TextureAtlas>>,
+) {
+    for (mut player, mut timer, rb_vel, mut sprite, texture_atlas_handle) in query.iter_mut() {
+        match player.state {
+            PlayerState::Walk(frame) => {
+                timer.tick(time.delta() * rb_vel.linvel.data.0[0][0].abs() as u32);
+                if timer.finished() {
+                    web_sys::console::log_1(&"timer finished".into());
+                    let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
+                    let (handle, state_index) = match frame {
+                        0 => (assets.load("MW_Player_MarioMdl_walk.1_0.png"), 1),
+                        _ => (assets.load("MW_Player_MarioMdl_walk.0_0.png"), 0),
+                    };
+                    let idx = texture_atlas.get_texture_index(&handle).unwrap_or_default();
+                    sprite.index = idx as u32;
+                    player.state = PlayerState::Walk(state_index);
+                }
+            }
+            PlayerState::Wait => {
+                if rb_vel.linvel.data.0[0][0] != 0. {
+                    player.state = PlayerState::Walk(0);
+                    psc_event.send(PlayerStateChangeEvent {
+                        state: PlayerState::Walk(0),
+                    });
+                }
+            }
+            _ => {}
+        }
+    }
+}

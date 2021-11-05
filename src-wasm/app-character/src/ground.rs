@@ -37,9 +37,9 @@ pub fn ground_intersect(
                                 state: PlayerState::Wait,
                             });
                         } else {
-                            player.state = PlayerState::Walk;
+                            player.state = PlayerState::Walk(0);
                             psc_event.send(PlayerStateChangeEvent {
-                                state: PlayerState::Walk,
+                                state: PlayerState::Walk(0),
                             });
                         };
                     }

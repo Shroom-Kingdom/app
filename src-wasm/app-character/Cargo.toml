@@ -6,6 +6,7 @@ edition = "2018"
 [dependencies]
 app-core = { path = "../app-core" }
 app-ground = { path = "../app-ground" }
+web-sys = "0.3"
 
 [dependencies.bevy]
 version = "0.5"

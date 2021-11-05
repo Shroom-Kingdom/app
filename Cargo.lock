@@ -139,6 +139,7 @@ dependencies = [
  "app-ground",
  "bevy",
  "bevy_rapier2d",
+ "web-sys",
 ]
 
 [[package]]
