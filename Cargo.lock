@@ -134,6 +134,9 @@ dependencies = [
 [[package]]
 name = "app-config"
 version = "0.1.0"
+dependencies = [
+ "bevy_rapier2d",
+]
 
 [[package]]
 name = "app-core"

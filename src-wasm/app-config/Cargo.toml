@@ -2,3 +2,9 @@
 name = "app-config"
 version = "0.1.0"
 edition = "2018"
+
+[dependencies.bevy_rapier]
+package = "bevy_rapier2d"
+version = "0.10"
+# path = "../../../bevy_rapier/bevy_rapier2d"
+git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"

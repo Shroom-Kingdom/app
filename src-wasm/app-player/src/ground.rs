@@ -4,12 +4,12 @@ use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 
 pub fn ground_intersect(
-    mut query: Query<(&mut Player, Entity, &RigidBodyVelocity)>,
+    query: Query<(&Player, Entity, &RigidBodyVelocity)>,
     grounds: Res<Grounds>,
     mut psc_event: EventWriter<PlayerStateChangeEvent>,
     mut intersection_events: EventReader<IntersectionEvent>,
 ) {
-    if let Ok((mut player, player_entity, rb_vel)) = query.single_mut() {
+    if let Ok((player, player_entity, rb_vel)) = query.single() {
         for intersection_event in intersection_events.iter() {
             match intersection_event {
                 IntersectionEvent {
@@ -32,12 +32,10 @@ pub fn ground_intersect(
                             .map(|x| x[0] == 0.)
                             .unwrap_or_default()
                         {
-                            player.state = PlayerState::Wait;
                             psc_event.send(PlayerStateChangeEvent {
                                 state: PlayerState::Wait,
                             });
                         } else {
-                            player.state = PlayerState::Walk(0);
                             psc_event.send(PlayerStateChangeEvent {
                                 state: PlayerState::Walk(0),
                             });
@@ -49,15 +47,21 @@ pub fn ground_intersect(
                     collider2,
                     intersecting: false,
                 } => {
+                    if let PlayerState::Jump { .. } = player.state {
+                        return;
+                    }
                     if !grounds.contains(&collider1.entity())
                         && !grounds.contains(&collider2.entity())
                     {
                         return;
                     }
                     if collider1.entity() == player_entity || collider2.entity() == player_entity {
-                        player.state = PlayerState::Jump;
                         psc_event.send(PlayerStateChangeEvent {
-                            state: PlayerState::Jump,
+                            // TODO PlayerState::Fall
+                            state: PlayerState::Jump {
+                                tick: 0,
+                                linvel_x: 0.,
+                            },
                         });
                     }
                 }
