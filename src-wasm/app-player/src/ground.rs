@@ -37,7 +37,10 @@ pub fn ground_intersect(
                             });
                         } else {
                             psc_event.send(PlayerStateChangeEvent {
-                                state: PlayerState::Walk(0),
+                                state: PlayerState::Walk {
+                                    frame: 0,
+                                    linvel_x: Some(rb_vel.linvel.data.0[0][0]),
+                                },
                             });
                         };
                     }
@@ -60,7 +63,7 @@ pub fn ground_intersect(
                             // TODO PlayerState::Fall
                             state: PlayerState::Jump {
                                 tick: 0,
-                                linvel_x: 0.,
+                                linvel_x: None,
                             },
                         });
                     }

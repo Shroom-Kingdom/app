@@ -60,10 +60,6 @@ pub fn setup_ground(mut commands: Commands) {
             parent
                 .spawn_bundle(ColliderBundle {
                     shape: ColliderShape::cuboid(ground_size, 1.0),
-                    material: ColliderMaterial {
-                        friction: 10.,
-                        ..Default::default()
-                    },
                     ..Default::default()
                 })
                 .insert(ColliderDebugRender::default())

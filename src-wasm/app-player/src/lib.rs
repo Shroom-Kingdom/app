@@ -2,7 +2,7 @@ mod debug;
 mod ground;
 mod walk;
 
-use app_config::{MOVE_DELTA_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE};
+use app_config::{JUMP_FORCE, MOVE_IMPULSE_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE};
 use app_core::AppState;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
@@ -20,13 +20,14 @@ impl Plugin for CharacterPlugin {
         app.add_event::<PlayerStateChangeEvent>()
             .add_startup_system(setup_ui)
             .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup_character))
+            .add_system_to_stage(CoreStage::First, player_movement_cap)
+            .add_system_to_stage(CoreStage::PreUpdate, jump)
             .add_system_to_stage(CoreStage::PreUpdate, player_state_change)
             .add_system_to_stage(CoreStage::Update, player_movement)
             .add_system_to_stage(CoreStage::Update, set_sprite)
             .add_system_to_stage(CoreStage::Update, walk_animation)
-            .add_system_to_stage(CoreStage::PostUpdate, jump)
             .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
-            .add_system_to_stage(CoreStage::PostUpdate, ground::ground_intersect);
+            .add_system_to_stage(CoreStage::Update, ground::ground_intersect);
     }
 }
 
@@ -38,8 +39,8 @@ pub struct Player {
 #[derive(Clone, Debug)]
 pub enum PlayerState {
     Wait,
-    Walk(u8),
-    Jump { tick: u8, linvel_x: f32 },
+    Walk { frame: u8, linvel_x: Option<f32> },
+    Jump { tick: u8, linvel_x: Option<f32> },
 }
 
 pub struct PlayerStateChangeEvent {
@@ -114,7 +115,7 @@ fn setup_character(
         .insert(Player {
             state: PlayerState::Jump {
                 tick: 0,
-                linvel_x: 0.,
+                linvel_x: None,
             },
         })
         .insert(ColliderPositionSync::Discrete)
@@ -134,33 +135,59 @@ fn player_state_change(
     if let Ok((mut player, mut rb_vel)) = query.single_mut() {
         for event in psc_events.iter() {
             player.state = event.state.clone();
-            if let PlayerState::Jump { linvel_x, .. } = player.state {
-                rb_vel.linvel.data.0[0][0] = linvel_x;
+            match player.state {
+                PlayerState::Jump {
+                    linvel_x: Some(linvel_x),
+                    ..
+                }
+                | PlayerState::Walk {
+                    linvel_x: Some(linvel_x),
+                    ..
+                } => {
+                    web_sys::console::log_1(&format!("{}", linvel_x).into());
+                    rb_vel.linvel.data.0[0][0] = linvel_x;
+                }
+                _ => {}
             }
         }
     }
 }
 
-fn player_movement(
-    mut query: Query<(&Player, &mut RigidBodyVelocity)>,
-    keyboard_input: Res<Input<KeyCode>>,
-    rapier_config: Res<RapierConfiguration>,
-) {
+fn player_movement_cap(mut query: Query<(&Player, &mut RigidBodyVelocity)>) {
     for (player, mut rb_vel) in query.iter_mut() {
+        let (x_cap, y_cap) = match player.state {
+            PlayerState::Jump { .. } => (100., 35.),
+            PlayerState::Wait | PlayerState::Walk { .. } => (15., 100.),
+        };
+        if rb_vel.linvel.data.0[0][0] > x_cap {
+            rb_vel.linvel.data.0[0][0] = x_cap;
+        } else if rb_vel.linvel.data.0[0][0] < -x_cap {
+            rb_vel.linvel.data.0[0][0] = -x_cap;
+        }
+        if rb_vel.linvel.data.0[0][1] > y_cap {
+            rb_vel.linvel.data.0[0][1] = y_cap;
+        } else if rb_vel.linvel.data.0[0][1] < -y_cap {
+            rb_vel.linvel.data.0[0][1] = -y_cap;
+        }
+    }
+}
+
+fn player_movement(
+    mut query: Query<(&Player, &mut RigidBodyVelocity, &RigidBodyMassProps)>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    for (player, mut rb_vel, rb_mprops) in query.iter_mut() {
         let left = keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
         let right = keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
 
         let x_axis = -(left as i8) + right as i8;
 
-        let mut move_delta = Vector2::new(x_axis as f32, 0.);
-        if move_delta != Vector2::zeros() {
-            move_delta /= move_delta.magnitude() * rapier_config.scale;
-        }
+        let move_delta = Vector2::new(x_axis as f32, 0.);
 
         match player.state {
             PlayerState::Jump { .. } => {}
             _ => {
-                rb_vel.linvel.data.0[0][0] = move_delta.data.0[0][0] * MOVE_DELTA_MULTIPLIER;
+                rb_vel.apply_impulse(rb_mprops, move_delta * MOVE_IMPULSE_MULTIPLIER);
             }
         }
     }
@@ -181,11 +208,11 @@ fn jump(
         match player.state {
             PlayerState::Jump { .. } => {}
             _ => {
-                rb_vel.linvel.data.0[0][1] = 60.;
+                rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
                 psc_event.send(PlayerStateChangeEvent {
                     state: PlayerState::Jump {
                         tick: 0,
-                        linvel_x: rb_vel.linvel.data.0[0][0],
+                        linvel_x: Some(rb_vel.linvel.data.0[0][0]),
                     },
                 })
             }
@@ -204,8 +231,8 @@ fn set_sprite(
             let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
             let asset_path = match event.state {
                 PlayerState::Wait => "MW_Player_MarioMdl_wait.0_0.png",
-                PlayerState::Walk(0) => "MW_Player_MarioMdl_walk.0_0.png",
-                PlayerState::Walk(_) => "MW_Player_MarioMdl_walk.1_0.png",
+                PlayerState::Walk { frame: 0, .. } => "MW_Player_MarioMdl_walk.0_0.png",
+                PlayerState::Walk { .. } => "MW_Player_MarioMdl_walk.1_0.png",
                 PlayerState::Jump { .. } => "MW_Player_MarioMdl_jump.0_0.png",
             };
             let handle = assets.load(asset_path);
