@@ -171,6 +171,11 @@ fn walk_animation(
     texture_atlases: Res<Assets<TextureAtlas>>,
 ) {
     for (mut player, mut timer, rb_vel, mut sprite, texture_atlas_handle) in query.iter_mut() {
+        if rb_vel.linvel.data.0[0][0] > 0. {
+            sprite.flip_x = false;
+        } else if rb_vel.linvel.data.0[0][0] < 0. {
+            sprite.flip_x = true;
+        }
         match player.state {
             PlayerState::Walk(frame) => {
                 timer.tick(time.delta() * rb_vel.linvel.data.0[0][0].abs() as u32);
