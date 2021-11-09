@@ -4,12 +4,12 @@ use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 
 pub fn ground_intersect(
-    query: Query<(&Player, Entity, &RigidBodyVelocity)>,
+    mut query: Query<(&Player, Entity, &mut Timer, &RigidBodyVelocity)>,
     grounds: Res<Grounds>,
     mut psc_event: EventWriter<PlayerStateChangeEvent>,
     mut intersection_events: EventReader<IntersectionEvent>,
 ) {
-    if let Ok((player, player_entity, rb_vel)) = query.single() {
+    if let Ok((player, player_entity, mut timer, rb_vel)) = query.single_mut() {
         for intersection_event in intersection_events.iter() {
             match intersection_event {
                 IntersectionEvent {
@@ -36,9 +36,10 @@ pub fn ground_intersect(
                                 state: PlayerState::Wait,
                             });
                         } else {
+                            timer.reset();
                             psc_event.send(PlayerStateChangeEvent {
                                 state: PlayerState::Walk {
-                                    frame: 0,
+                                    frame: 1,
                                     linvel_x: Some(rb_vel.linvel.data.0[0][0]),
                                 },
                             });

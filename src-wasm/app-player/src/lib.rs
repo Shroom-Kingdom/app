@@ -11,7 +11,7 @@ use bevy_rapier::{
     prelude::*,
 };
 use debug::setup_ui;
-use walk::walk_animation;
+use walk::{walk_animation, walk_start};
 
 pub struct CharacterPlugin;
 
@@ -21,13 +21,15 @@ impl Plugin for CharacterPlugin {
             .add_startup_system(setup_ui)
             .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup_character))
             .add_system_to_stage(CoreStage::First, player_movement_cap)
-            .add_system_to_stage(CoreStage::PreUpdate, jump)
+            .add_system_to_stage(CoreStage::First, jump)
             .add_system_to_stage(CoreStage::PreUpdate, player_state_change)
             .add_system_to_stage(CoreStage::Update, player_movement)
             .add_system_to_stage(CoreStage::Update, set_sprite)
-            .add_system_to_stage(CoreStage::Update, walk_animation)
             .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
-            .add_system_to_stage(CoreStage::Update, ground::ground_intersect);
+            .add_system_to_stage(CoreStage::PostUpdate, ground::ground_intersect)
+            .add_system_to_stage(CoreStage::PostUpdate, player_momentum)
+            .add_system_to_stage(CoreStage::Last, walk_animation)
+            .add_system_to_stage(CoreStage::Last, walk_start);
     }
 }
 
@@ -129,22 +131,33 @@ fn setup_character(
 }
 
 fn player_state_change(
+    mut query: Query<&mut Player>,
+    mut psc_events: EventReader<PlayerStateChangeEvent>,
+) {
+    if let Ok(mut player) = query.single_mut() {
+        for event in psc_events.iter() {
+            player.state = event.state.clone();
+        }
+    }
+}
+
+fn player_momentum(
     mut query: Query<(&mut Player, &mut RigidBodyVelocity)>,
     mut psc_events: EventReader<PlayerStateChangeEvent>,
 ) {
-    if let Ok((mut player, mut rb_vel)) = query.single_mut() {
-        for event in psc_events.iter() {
-            player.state = event.state.clone();
+    if let Ok((player, mut rb_vel)) = query.single_mut() {
+        if psc_events.iter().next().is_some() {
             match player.state {
                 PlayerState::Jump {
                     linvel_x: Some(linvel_x),
                     ..
+                } => {
+                    rb_vel.linvel.data.0[0][0] = linvel_x;
                 }
-                | PlayerState::Walk {
+                PlayerState::Walk {
                     linvel_x: Some(linvel_x),
                     ..
                 } => {
-                    web_sys::console::log_1(&format!("{}", linvel_x).into());
                     rb_vel.linvel.data.0[0][0] = linvel_x;
                 }
                 _ => {}
@@ -199,9 +212,9 @@ fn jump(
     mut psc_event: EventWriter<PlayerStateChangeEvent>,
 ) {
     for (player, mut rb_vel) in query.iter_mut() {
-        let jump = keyboard_input.pressed(KeyCode::Space)
-            || keyboard_input.pressed(KeyCode::Up)
-            || keyboard_input.pressed(KeyCode::W);
+        let jump = keyboard_input.just_pressed(KeyCode::Space)
+            || keyboard_input.just_pressed(KeyCode::Up)
+            || keyboard_input.just_pressed(KeyCode::W);
         if !jump {
             return;
         }
