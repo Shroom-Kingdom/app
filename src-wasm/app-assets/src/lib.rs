@@ -23,7 +23,7 @@ impl AssetIo for AssetIoTar {
             if let Some(res) = self.archive.get(path) {
                 Ok(res.clone())
             } else {
-                Err(AssetIoError::NotFound(path.to_owned()))
+                self.default_io.load_path(path).await
             }
         })
     }

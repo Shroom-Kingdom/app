@@ -25,6 +25,7 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { from: './src/static', to: '.' },
+        { from: './assets', to: './assets' },
         { from: './pkg/app.js', to: '.' },
         { from: './pkg/app_bg.wasm', to: '.' }
       ],
