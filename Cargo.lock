@@ -132,6 +132,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "app-config"
+version = "0.1.0"
+
+[[package]]
 name = "app-core"
 version = "0.1.0"
 dependencies = [
@@ -160,6 +164,7 @@ dependencies = [
 name = "app-player"
 version = "0.1.0"
 dependencies = [
+ "app-config",
  "app-core",
  "app-ground",
  "bevy",

@@ -1,0 +1,3 @@
+pub const MOVE_DELTA_MULTIPLIER: f32 = 100.;
+pub const MOVE_DELTA_MULTIPLIER_AIR: f32 = 20.;
+pub const RAPIER_SCALE: f32 = 10.;

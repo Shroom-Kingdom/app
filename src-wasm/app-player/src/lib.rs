@@ -1,5 +1,6 @@
 mod ground;
 
+use app_config::{MOVE_DELTA_MULTIPLIER, MOVE_DELTA_MULTIPLIER_AIR, RAPIER_SCALE};
 use app_core::AppState;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
@@ -45,7 +46,7 @@ fn setup_character(
     mut textures: ResMut<Assets<Texture>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    rapier_config.scale = 10.0;
+    rapier_config.scale = RAPIER_SCALE;
 
     let scale_size = 2.;
     let sprite_size_x = scale_size * 12.0;
@@ -128,8 +129,8 @@ fn player_movement(
         }
 
         let multiplier = match player.state {
-            PlayerState::Jump => 20.,
-            _ => 100.,
+            PlayerState::Jump => MOVE_DELTA_MULTIPLIER_AIR,
+            _ => MOVE_DELTA_MULTIPLIER,
         };
         rb_vels.linvel.data.0[0][0] = move_delta.data.0[0][0] * multiplier;
     }
@@ -171,16 +172,23 @@ fn walk_animation(
     texture_atlases: Res<Assets<TextureAtlas>>,
 ) {
     for (mut player, mut timer, rb_vel, mut sprite, texture_atlas_handle) in query.iter_mut() {
-        if rb_vel.linvel.data.0[0][0] > 0. {
+        if rb_vel.linvel.data.0[0][0] > f32::EPSILON {
             sprite.flip_x = false;
-        } else if rb_vel.linvel.data.0[0][0] < 0. {
+        } else if rb_vel.linvel.data.0[0][0] < -f32::EPSILON {
             sprite.flip_x = true;
         }
         match player.state {
             PlayerState::Walk(frame) => {
+                if rb_vel.linvel.data.0[0][0].abs() <= f32::EPSILON {
+                    timer.reset();
+                    player.state = PlayerState::Wait;
+                    psc_event.send(PlayerStateChangeEvent {
+                        state: PlayerState::Wait,
+                    });
+                    return;
+                }
                 timer.tick(time.delta() * rb_vel.linvel.data.0[0][0].abs() as u32);
                 if timer.finished() {
-                    web_sys::console::log_1(&"timer finished".into());
                     let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
                     let (handle, state_index) = match frame {
                         0 => (assets.load("MW_Player_MarioMdl_walk.1_0.png"), 1),
@@ -192,7 +200,7 @@ fn walk_animation(
                 }
             }
             PlayerState::Wait => {
-                if rb_vel.linvel.data.0[0][0] != 0. {
+                if rb_vel.linvel.data.0[0][0].abs() > f32::EPSILON {
                     player.state = PlayerState::Walk(0);
                     psc_event.send(PlayerStateChangeEvent {
                         state: PlayerState::Walk(0),

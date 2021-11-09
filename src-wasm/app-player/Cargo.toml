@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+app-config = { path = "../app-config" }
 app-core = { path = "../app-core" }
 app-ground = { path = "../app-ground" }
 web-sys = "0.3"
