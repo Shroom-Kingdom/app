@@ -1,6 +1,6 @@
 use crate::graphics::{enable_physics_profiling, setup_graphics};
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
-use app_character::CharacterPlugin;
+use app_player::CharacterPlugin;
 use app_core::{AppState, CorePlugin};
 use app_ground::GroundPlugin;
 // use app_debug::{DebugPlugin, DebugPluginState};

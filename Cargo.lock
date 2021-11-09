@@ -107,10 +107,10 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "app-assets",
- "app-character",
  "app-core",
  "app-debug",
  "app-ground",
+ "app-player",
  "bevy",
  "bevy_rapier2d",
  "bevy_webgl2",
@@ -128,17 +128,6 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "tar",
- "web-sys",
-]
-
-[[package]]
-name = "app-character"
-version = "0.1.0"
-dependencies = [
- "app-core",
- "app-ground",
- "bevy",
- "bevy_rapier2d",
  "web-sys",
 ]
 
@@ -165,6 +154,17 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_rapier2d",
+]
+
+[[package]]
+name = "app-player"
+version = "0.1.0"
+dependencies = [
+ "app-core",
+ "app-ground",
+ "bevy",
+ "bevy_rapier2d",
+ "web-sys",
 ]
 
 [[package]]
