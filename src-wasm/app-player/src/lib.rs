@@ -2,7 +2,10 @@ mod debug;
 mod ground;
 mod walk;
 
-use app_config::{JUMP_FORCE, MOVE_IMPULSE_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE};
+use app_config::{
+    JUMP_FORCE, LINVEL_CAP_AIR, LINVEL_CAP_GROUND, MAX_JUMP_TICK, MOVE_IMPULSE_MULTIPLIER,
+    RAPIER_GRAVITY, RAPIER_SCALE,
+};
 use app_core::AppState;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
@@ -22,12 +25,13 @@ impl Plugin for CharacterPlugin {
             .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup_character))
             .add_system_to_stage(CoreStage::First, player_movement_cap)
             .add_system_to_stage(CoreStage::First, jump)
+            .add_system_to_stage(CoreStage::First, high_jump)
             .add_system_to_stage(CoreStage::PreUpdate, player_state_change)
             .add_system_to_stage(CoreStage::Update, player_movement)
             .add_system_to_stage(CoreStage::Update, set_sprite)
             .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
             .add_system_to_stage(CoreStage::PostUpdate, ground::ground_intersect)
-            .add_system_to_stage(CoreStage::PostUpdate, player_momentum)
+            .add_system_to_stage(CoreStage::Last, player_momentum)
             .add_system_to_stage(CoreStage::Last, walk_animation)
             .add_system_to_stage(CoreStage::Last, walk_start);
     }
@@ -41,8 +45,16 @@ pub struct Player {
 #[derive(Clone, Debug)]
 pub enum PlayerState {
     Wait,
-    Walk { frame: u8, linvel_x: Option<f32> },
-    Jump { tick: u8, linvel_x: Option<f32> },
+    Walk {
+        frame: u8,
+        linvel_x: Option<f32>,
+    },
+    Jump {
+        tick: u8,
+        released: bool,
+        linvel_x: Option<f32>,
+    },
+    Fall,
 }
 
 pub struct PlayerStateChangeEvent {
@@ -117,6 +129,7 @@ fn setup_character(
         .insert(Player {
             state: PlayerState::Jump {
                 tick: 0,
+                released: true,
                 linvel_x: None,
             },
         })
@@ -169,8 +182,8 @@ fn player_momentum(
 fn player_movement_cap(mut query: Query<(&Player, &mut RigidBodyVelocity)>) {
     for (player, mut rb_vel) in query.iter_mut() {
         let (x_cap, y_cap) = match player.state {
-            PlayerState::Jump { .. } => (100., 35.),
-            PlayerState::Wait | PlayerState::Walk { .. } => (15., 100.),
+            PlayerState::Jump { .. } | PlayerState::Fall => LINVEL_CAP_AIR,
+            PlayerState::Wait | PlayerState::Walk { .. } => LINVEL_CAP_GROUND,
         };
         if rb_vel.linvel.data.0[0][0] > x_cap {
             rb_vel.linvel.data.0[0][0] = x_cap;
@@ -219,16 +232,54 @@ fn jump(
             return;
         }
         match player.state {
-            PlayerState::Jump { .. } => {}
-            _ => {
+            PlayerState::Wait | PlayerState::Walk { .. } => {
                 rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
                 psc_event.send(PlayerStateChangeEvent {
                     state: PlayerState::Jump {
                         tick: 0,
+                        released: false,
                         linvel_x: Some(rb_vel.linvel.data.0[0][0]),
                     },
                 })
             }
+            _ => {}
+        }
+    }
+}
+
+fn high_jump(
+    mut query: Query<(&mut Player, &mut RigidBodyVelocity)>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    for (mut player, mut rb_vel) in query.iter_mut() {
+        match player.state {
+            PlayerState::Jump {
+                tick,
+                released: false,
+                ..
+            } if tick < MAX_JUMP_TICK => {
+                let released = keyboard_input.just_released(KeyCode::Space)
+                    || keyboard_input.just_released(KeyCode::Up)
+                    || keyboard_input.just_released(KeyCode::W);
+                let jump = keyboard_input.pressed(KeyCode::Space)
+                    || keyboard_input.pressed(KeyCode::Up)
+                    || keyboard_input.pressed(KeyCode::W);
+                if released {
+                    player.state = PlayerState::Jump {
+                        tick: MAX_JUMP_TICK,
+                        released,
+                        linvel_x: None,
+                    };
+                } else if jump {
+                    rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
+                    player.state = PlayerState::Jump {
+                        tick: tick + 1,
+                        released: false,
+                        linvel_x: None,
+                    };
+                }
+            }
+            _ => {}
         }
     }
 }
@@ -247,6 +298,7 @@ fn set_sprite(
                 PlayerState::Walk { frame: 0, .. } => "MW_Player_MarioMdl_walk.0_0.png",
                 PlayerState::Walk { .. } => "MW_Player_MarioMdl_walk.1_0.png",
                 PlayerState::Jump { .. } => "MW_Player_MarioMdl_jump.0_0.png",
+                PlayerState::Fall => "MW_Player_MarioMdl_jump.0_0.png",
             };
             let handle = assets.load(asset_path);
             let index = texture_atlas.get_texture_index(&handle).unwrap();

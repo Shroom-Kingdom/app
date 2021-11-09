@@ -61,11 +61,7 @@ pub fn ground_intersect(
                     }
                     if collider1.entity() == player_entity || collider2.entity() == player_entity {
                         psc_event.send(PlayerStateChangeEvent {
-                            // TODO PlayerState::Fall
-                            state: PlayerState::Jump {
-                                tick: 0,
-                                linvel_x: None,
-                            },
+                            state: PlayerState::Fall,
                         });
                     }
                 }
