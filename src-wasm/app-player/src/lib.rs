@@ -4,8 +4,8 @@ mod jump;
 mod walk;
 
 use app_config::{
-    LINVEL_CAP_AIR, LINVEL_CAP_GROUND, MOVE_IMPULSE_MULTIPLIER_GROUND, RAPIER_GRAVITY_VECTOR,
-    RAPIER_SCALE,
+    LINVEL_CAP_AIR, LINVEL_CAP_GROUND, MOVE_IMPULSE_MULTIPLIER_AIR, MOVE_IMPULSE_MULTIPLIER_GROUND,
+    RAPIER_GRAVITY_VECTOR, RAPIER_SCALE,
 };
 use app_core::AppState;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
@@ -257,8 +257,10 @@ fn player_movement(
 ) {
     for (player, mut rb_vel, rb_mprops, mut sprite) in query.iter_mut() {
         match player.state {
-            PlayerState::Jump { .. } | PlayerState::Fall => {}
-            PlayerState::Wait | PlayerState::Walk { .. } => {
+            PlayerState::Jump { .. }
+            | PlayerState::Fall
+            | PlayerState::Wait
+            | PlayerState::Walk { .. } => {
                 let left =
                     keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
                 let right =
@@ -276,7 +278,13 @@ fn player_movement(
                 }
                 if x_axis != 0 {
                     let move_delta = Vector2::new(x_axis as f32, 0.);
-                    rb_vel.apply_impulse(rb_mprops, move_delta * MOVE_IMPULSE_MULTIPLIER_GROUND);
+                    let multiplier = match player.state {
+                        PlayerState::Jump { .. } | PlayerState::Fall => MOVE_IMPULSE_MULTIPLIER_AIR,
+                        PlayerState::Wait | PlayerState::Walk { .. } => {
+                            MOVE_IMPULSE_MULTIPLIER_GROUND
+                        }
+                    };
+                    rb_vel.apply_impulse(rb_mprops, move_delta * multiplier);
                 }
             }
         }

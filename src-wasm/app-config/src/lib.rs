@@ -1,10 +1,10 @@
 use bevy_rapier::na::Vector2;
 
 pub const MOVE_IMPULSE_MULTIPLIER_GROUND: f32 = 0.6 * GROUND_FRICTION_MULTIPLIER * RAPIER_GRAVITY;
-pub const MOVE_IMPULSE_MULTIPLIER_AIR: f32 = 30000.;
+pub const MOVE_IMPULSE_MULTIPLIER_AIR: f32 = 3000.;
 
 pub const LINVEL_CAP_GROUND: (f32, f32) = (17.5, 100.);
-pub const LINVEL_CAP_AIR: (f32, f32) = (100., JUMP_FORCE);
+pub const LINVEL_CAP_AIR: (f32, f32) = (17.5, JUMP_FORCE);
 
 pub const JUMP_FORCE: f32 = 37.;
 pub const HIGH_JUMP_TICK: u8 = 15;
