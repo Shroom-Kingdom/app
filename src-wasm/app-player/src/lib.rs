@@ -245,10 +245,15 @@ fn player_movement_cap(mut query: Query<(&Player, &mut RigidBodyVelocity)>) {
 }
 
 fn player_movement(
-    mut query: Query<(&Player, &mut RigidBodyVelocity, &RigidBodyMassProps)>,
+    mut query: Query<(
+        &Player,
+        &mut RigidBodyVelocity,
+        &RigidBodyMassProps,
+        &mut TextureAtlasSprite,
+    )>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    for (player, mut rb_vel, rb_mprops) in query.iter_mut() {
+    for (player, mut rb_vel, rb_mprops, mut sprite) in query.iter_mut() {
         match player.state {
             PlayerState::Jump { .. } | PlayerState::Fall => {}
             PlayerState::Wait | PlayerState::Walk { .. } => {
@@ -258,7 +263,15 @@ fn player_movement(
                     keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
 
                 let x_axis = -(left as i8) + right as i8;
-
+                match x_axis {
+                    _ if x_axis > 0 => {
+                        sprite.flip_x = false;
+                    }
+                    _ if x_axis < 0 => {
+                        sprite.flip_x = true;
+                    }
+                    _ => {}
+                }
                 if x_axis != 0 {
                     let move_delta = Vector2::new(x_axis as f32, 0.);
                     rb_vel.apply_impulse(rb_mprops, move_delta * MOVE_IMPULSE_MULTIPLIER_GROUND);
