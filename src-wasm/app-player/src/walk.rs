@@ -29,20 +29,10 @@ pub fn walk_animation(
 }
 
 pub fn walk_start(
-    mut query: Query<(
-        &Player,
-        &mut Timer,
-        &RigidBodyVelocity,
-        &mut TextureAtlasSprite,
-    )>,
+    mut query: Query<(&Player, &mut Timer, &RigidBodyVelocity)>,
     mut walk_event: EventWriter<WalkEvent>,
 ) {
-    for (player, mut timer, rb_vel, mut sprite) in query.iter_mut() {
-        if rb_vel.linvel.data.0[0][0] > f32::EPSILON {
-            sprite.flip_x = false;
-        } else if rb_vel.linvel.data.0[0][0] < -f32::EPSILON {
-            sprite.flip_x = true;
-        }
+    for (player, mut timer, rb_vel) in query.iter_mut() {
         if let PlayerState::Wait = player.state {
             if rb_vel.linvel.data.0[0][0].abs() > f32::EPSILON {
                 timer.reset();
