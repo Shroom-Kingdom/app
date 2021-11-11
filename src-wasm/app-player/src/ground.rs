@@ -1,15 +1,20 @@
-use crate::{Player, PlayerState, PlayerStateChangeEvent};
+use crate::{Player, PlayerState};
 use app_ground::Grounds;
 use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 
+pub enum GroundIntersectEvent {
+    Start,
+    Stop,
+}
+
 pub fn ground_intersect(
-    mut query: Query<(&Player, Entity, &mut Timer, &RigidBodyVelocity)>,
+    mut query: Query<(&Player, Entity, &mut Timer, &mut RigidBodyVelocity)>,
     grounds: Res<Grounds>,
-    mut psc_event: EventWriter<PlayerStateChangeEvent>,
+    mut ground_intersect_events: EventWriter<GroundIntersectEvent>,
     mut intersection_events: EventReader<IntersectionEvent>,
 ) {
-    if let Ok((player, player_entity, mut timer, rb_vel)) = query.single_mut() {
+    if let Ok((player, player_entity, mut timer, mut rb_vel)) = query.single_mut() {
         for intersection_event in intersection_events.iter() {
             match intersection_event {
                 IntersectionEvent {
@@ -24,26 +29,9 @@ pub fn ground_intersect(
                         return;
                     }
                     if collider1.entity() == player_entity || collider2.entity() == player_entity {
-                        if rb_vel
-                            .linvel
-                            .data
-                            .0
-                            .get(0)
-                            .map(|x| x[0] == 0.)
-                            .unwrap_or_default()
-                        {
-                            psc_event.send(PlayerStateChangeEvent {
-                                state: PlayerState::Wait,
-                            });
-                        } else {
-                            timer.reset();
-                            psc_event.send(PlayerStateChangeEvent {
-                                state: PlayerState::Walk {
-                                    frame: 1,
-                                    linvel_x: Some(rb_vel.linvel.data.0[0][0]),
-                                },
-                            });
-                        };
+                        timer.reset();
+                        rb_vel.linvel.data.0[0][1] = 0.;
+                        ground_intersect_events.send(GroundIntersectEvent::Start);
                     }
                 }
                 IntersectionEvent {
@@ -60,9 +48,7 @@ pub fn ground_intersect(
                         return;
                     }
                     if collider1.entity() == player_entity || collider2.entity() == player_entity {
-                        psc_event.send(PlayerStateChangeEvent {
-                            state: PlayerState::Fall,
-                        });
+                        ground_intersect_events.send(GroundIntersectEvent::Stop);
                     }
                 }
             }

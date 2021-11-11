@@ -1,7 +1,7 @@
 use bevy_rapier::na::Vector2;
 
-pub const MOVE_IMPULSE_MULTIPLIER: f32 = 20000.;
-pub const MOVE_DELTA_MULTIPLIER_AIR: f32 = 80.;
+pub const MOVE_IMPULSE_MULTIPLIER_GROUND: f32 = 20000.;
+pub const MOVE_IMPULSE_MULTIPLIER_AIR: f32 = 30000.;
 
 pub const LINVEL_CAP_GROUND: (f32, f32) = (17.5, 100.);
 pub const LINVEL_CAP_AIR: (f32, f32) = (100., 65.);

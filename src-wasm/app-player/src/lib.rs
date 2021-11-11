@@ -1,10 +1,10 @@
 mod debug;
 mod ground;
+mod jump;
 mod walk;
 
 use app_config::{
-    JUMP_FORCE, LINVEL_CAP_AIR, LINVEL_CAP_GROUND, MAX_JUMP_TICK, MOVE_IMPULSE_MULTIPLIER,
-    RAPIER_GRAVITY, RAPIER_SCALE,
+    LINVEL_CAP_AIR, LINVEL_CAP_GROUND, MOVE_IMPULSE_MULTIPLIER_GROUND, RAPIER_GRAVITY, RAPIER_SCALE,
 };
 use app_core::AppState;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
@@ -14,27 +14,48 @@ use bevy_rapier::{
     prelude::*,
 };
 use debug::setup_ui;
-use walk::{walk_animation, walk_start};
+use ground::GroundIntersectEvent;
+use jump::{high_jump, jump, JumpEvent};
+use walk::{walk_animation, walk_start, WalkEvent};
 
 pub struct CharacterPlugin;
 
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerStateChangeEvent>()
+            .add_event::<WalkEvent>()
+            .add_event::<JumpEvent>()
+            .add_event::<GroundIntersectEvent>()
             .add_startup_system(setup_ui)
+            .add_stage_after(
+                CoreStage::First,
+                PlayerStages::PostInput,
+                SystemStage::parallel(),
+            )
+            .add_stage_after(
+                CoreStage::PostUpdate,
+                PlayerStages::StateChange,
+                SystemStage::parallel(),
+            )
             .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup_character))
-            .add_system_to_stage(CoreStage::First, player_movement_cap)
             .add_system_to_stage(CoreStage::First, jump)
             .add_system_to_stage(CoreStage::First, high_jump)
-            .add_system_to_stage(CoreStage::PreUpdate, player_state_change)
-            .add_system_to_stage(CoreStage::Update, player_movement)
-            .add_system_to_stage(CoreStage::Update, set_sprite)
-            .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
+            .add_system_to_stage(CoreStage::First, walk_animation)
+            .add_system_to_stage(CoreStage::First, walk_start)
+            .add_system_to_stage(CoreStage::PreUpdate, player_movement)
+            .add_system_to_stage(PlayerStages::PostInput, player_movement_cap)
+            // .add_system_to_stage(CoreStage::PostUpdate, move_impulse_jump)
+            // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
             .add_system_to_stage(CoreStage::PostUpdate, ground::ground_intersect)
-            .add_system_to_stage(CoreStage::Last, player_momentum)
-            .add_system_to_stage(CoreStage::Last, walk_animation)
-            .add_system_to_stage(CoreStage::Last, walk_start);
+            .add_system_to_stage(PlayerStages::StateChange, player_state_change)
+            .add_system_to_stage(CoreStage::Last, set_sprite);
     }
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
+pub enum PlayerStages {
+    PostInput,
+    StateChange,
 }
 
 #[derive(Debug)]
@@ -47,12 +68,11 @@ pub enum PlayerState {
     Wait,
     Walk {
         frame: u8,
-        linvel_x: Option<f32>,
     },
     Jump {
         tick: u8,
         released: bool,
-        linvel_x: Option<f32>,
+        impulse: bool,
     },
     Fall,
 }
@@ -80,9 +100,9 @@ fn setup_character(
 
     let mut texture_atlas_builder = TextureAtlasBuilder::default();
 
-    let wait_handle = assets.load("MW_Player_MarioMdl_wait.0_0.png");
-    let texture = textures.get(&wait_handle).unwrap();
-    texture_atlas_builder.add_texture(wait_handle.clone(), texture);
+    let handle = assets.load("MW_Player_MarioMdl_wait.0_0.png");
+    let texture = textures.get(&handle).unwrap();
+    texture_atlas_builder.add_texture(handle.clone(), texture);
 
     let handle = assets.load("MW_Player_MarioMdl_walk.0_0.png");
     let texture = textures.get(&handle).unwrap();
@@ -93,6 +113,10 @@ fn setup_character(
     texture_atlas_builder.add_texture(handle, texture);
 
     let handle = assets.load("MW_Player_MarioMdl_jump.0_0.png");
+    let texture = textures.get(&handle).unwrap();
+    texture_atlas_builder.add_texture(handle, texture);
+
+    let handle = assets.load("MW_Player_MarioMdl_jump_fall.0_0.png");
     let texture = textures.get(&handle).unwrap();
     texture_atlas_builder.add_texture(handle.clone(), texture);
 
@@ -127,11 +151,7 @@ fn setup_character(
             ..Default::default()
         })
         .insert(Player {
-            state: PlayerState::Jump {
-                tick: 0,
-                released: true,
-                linvel_x: None,
-            },
+            state: PlayerState::Fall,
         })
         .insert(ColliderPositionSync::Discrete)
         .insert(Timer::from_seconds(3., true));
@@ -144,37 +164,58 @@ fn setup_character(
 }
 
 fn player_state_change(
-    mut query: Query<&mut Player>,
-    mut psc_events: EventReader<PlayerStateChangeEvent>,
+    mut query: Query<(&mut Player, &RigidBodyVelocity)>,
+    mut jump_events: EventReader<JumpEvent>,
+    mut ground_intersect_events: EventReader<GroundIntersectEvent>,
+    mut walk_events: EventReader<WalkEvent>,
+    mut psc_events: EventWriter<PlayerStateChangeEvent>,
 ) {
-    if let Ok(mut player) = query.single_mut() {
-        for event in psc_events.iter() {
-            player.state = event.state.clone();
-        }
-    }
-}
-
-fn player_momentum(
-    mut query: Query<(&mut Player, &mut RigidBodyVelocity)>,
-    mut psc_events: EventReader<PlayerStateChangeEvent>,
-) {
-    if let Ok((player, mut rb_vel)) = query.single_mut() {
-        if psc_events.iter().next().is_some() {
-            match player.state {
-                PlayerState::Jump {
-                    linvel_x: Some(linvel_x),
-                    ..
-                } => {
-                    rb_vel.linvel.data.0[0][0] = linvel_x;
+    if let Ok((mut player, rb_vel)) = query.single_mut() {
+        if let Some(state) = match (
+            jump_events.iter().next(),
+            ground_intersect_events.iter().next(),
+            walk_events.iter().next(),
+        ) {
+            (Some(_), _, _) => Some(PlayerState::Jump {
+                tick: 0,
+                impulse: false,
+                released: false,
+            }),
+            (_, Some(GroundIntersectEvent::Start), _) => {
+                if rb_vel
+                    .linvel
+                    .data
+                    .0
+                    .get(0)
+                    .map(|x| x[0] == 0.)
+                    .unwrap_or_default()
+                {
+                    Some(PlayerState::Wait)
+                } else {
+                    Some(PlayerState::Walk {
+                        frame: 1,
+                        // linvel_x: Some(rb_vel.linvel.data.0[0][0]),
+                    })
                 }
-                PlayerState::Walk {
-                    linvel_x: Some(linvel_x),
-                    ..
-                } => {
-                    rb_vel.linvel.data.0[0][0] = linvel_x;
-                }
-                _ => {}
             }
+            (_, Some(GroundIntersectEvent::Stop), _) => Some(PlayerState::Fall),
+            (_, _, Some(WalkEvent::Start)) => Some(PlayerState::Walk { frame: 0 }),
+            (_, _, Some(WalkEvent::Stop)) => Some(PlayerState::Wait),
+            (_, _, Some(WalkEvent::Advance)) => {
+                if let PlayerState::Walk { frame } = player.state {
+                    let frame = match frame {
+                        0 => 1,
+                        _ => 0,
+                    };
+                    Some(PlayerState::Walk { frame })
+                } else {
+                    None
+                }
+            }
+            (None, None, None) => None,
+        } {
+            player.state = state.clone();
+            psc_events.send(PlayerStateChangeEvent { state });
         }
     }
 }
@@ -203,83 +244,21 @@ fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
 ) {
     for (player, mut rb_vel, rb_mprops) in query.iter_mut() {
-        let left = keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
-        let right = keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
-
-        let x_axis = -(left as i8) + right as i8;
-
-        let move_delta = Vector2::new(x_axis as f32, 0.);
-
         match player.state {
-            PlayerState::Jump { .. } => {}
-            _ => {
-                rb_vel.apply_impulse(rb_mprops, move_delta * MOVE_IMPULSE_MULTIPLIER);
-            }
-        }
-    }
-}
-
-fn jump(
-    mut query: Query<(&Player, &mut RigidBodyVelocity)>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut psc_event: EventWriter<PlayerStateChangeEvent>,
-) {
-    for (player, mut rb_vel) in query.iter_mut() {
-        let jump = keyboard_input.just_pressed(KeyCode::Space)
-            || keyboard_input.just_pressed(KeyCode::Up)
-            || keyboard_input.just_pressed(KeyCode::W);
-        if !jump {
-            return;
-        }
-        match player.state {
+            PlayerState::Jump { .. } | PlayerState::Fall => {}
             PlayerState::Wait | PlayerState::Walk { .. } => {
-                rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
-                psc_event.send(PlayerStateChangeEvent {
-                    state: PlayerState::Jump {
-                        tick: 0,
-                        released: false,
-                        linvel_x: Some(rb_vel.linvel.data.0[0][0]),
-                    },
-                })
-            }
-            _ => {}
-        }
-    }
-}
+                let left =
+                    keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
+                let right =
+                    keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
 
-fn high_jump(
-    mut query: Query<(&mut Player, &mut RigidBodyVelocity)>,
-    keyboard_input: Res<Input<KeyCode>>,
-) {
-    for (mut player, mut rb_vel) in query.iter_mut() {
-        match player.state {
-            PlayerState::Jump {
-                tick,
-                released: false,
-                ..
-            } if tick < MAX_JUMP_TICK => {
-                let released = keyboard_input.just_released(KeyCode::Space)
-                    || keyboard_input.just_released(KeyCode::Up)
-                    || keyboard_input.just_released(KeyCode::W);
-                let jump = keyboard_input.pressed(KeyCode::Space)
-                    || keyboard_input.pressed(KeyCode::Up)
-                    || keyboard_input.pressed(KeyCode::W);
-                if released {
-                    player.state = PlayerState::Jump {
-                        tick: MAX_JUMP_TICK,
-                        released,
-                        linvel_x: None,
-                    };
-                } else if jump {
-                    rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
-                    player.state = PlayerState::Jump {
-                        tick: tick + 1,
-                        released: false,
-                        linvel_x: None,
-                    };
+                let x_axis = -(left as i8) + right as i8;
+
+                if x_axis != 0 {
+                    let move_delta = Vector2::new(x_axis as f32, 0.);
+                    rb_vel.apply_impulse(rb_mprops, move_delta * MOVE_IMPULSE_MULTIPLIER_GROUND);
                 }
             }
-            _ => {}
         }
     }
 }
@@ -291,14 +270,14 @@ fn set_sprite(
     texture_atlases: Res<Assets<TextureAtlas>>,
 ) {
     if let Ok((_, mut sprite, atlas_handle)) = query.single_mut() {
-        for event in psc_events.iter() {
+        if let Some(event) = psc_events.iter().last() {
             let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
             let asset_path = match event.state {
                 PlayerState::Wait => "MW_Player_MarioMdl_wait.0_0.png",
-                PlayerState::Walk { frame: 0, .. } => "MW_Player_MarioMdl_walk.0_0.png",
+                PlayerState::Walk { frame: 0 } => "MW_Player_MarioMdl_walk.0_0.png",
                 PlayerState::Walk { .. } => "MW_Player_MarioMdl_walk.1_0.png",
                 PlayerState::Jump { .. } => "MW_Player_MarioMdl_jump.0_0.png",
-                PlayerState::Fall => "MW_Player_MarioMdl_jump.0_0.png",
+                PlayerState::Fall => "MW_Player_MarioMdl_jump_fall.0_0.png",
             };
             let handle = assets.load(asset_path);
             let index = texture_atlas.get_texture_index(&handle).unwrap();
