@@ -1,3 +1,4 @@
+use app_config::GROUND_FRICTION;
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
@@ -60,6 +61,11 @@ pub fn setup_ground(mut commands: Commands) {
             parent
                 .spawn_bundle(ColliderBundle {
                     shape: ColliderShape::cuboid(ground_size, 1.0),
+                    material: ColliderMaterial {
+                        friction: GROUND_FRICTION,
+                        friction_combine_rule: CoefficientCombineRule::Multiply,
+                        ..Default::default()
+                    },
                     ..Default::default()
                 })
                 .insert(ColliderDebugRender::default())

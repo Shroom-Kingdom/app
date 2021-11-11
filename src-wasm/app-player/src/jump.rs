@@ -1,5 +1,5 @@
 use crate::{Player, PlayerState};
-use app_config::{JUMP_FORCE, MAX_JUMP_TICK};
+use app_config::{HIGH_JUMP_TICK, JUMP_FORCE};
 use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 
@@ -38,27 +38,40 @@ pub fn high_jump(
                 released: false,
                 impulse,
                 ..
-            } if tick < MAX_JUMP_TICK => {
+            } if tick < HIGH_JUMP_TICK => {
                 let released = keyboard_input.just_released(KeyCode::Space)
                     || keyboard_input.just_released(KeyCode::Up)
                     || keyboard_input.just_released(KeyCode::W);
                 let jump = keyboard_input.pressed(KeyCode::Space)
                     || keyboard_input.pressed(KeyCode::Up)
                     || keyboard_input.pressed(KeyCode::W);
+
+                rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
                 if released {
                     player.state = PlayerState::Jump {
-                        tick: MAX_JUMP_TICK,
+                        tick: 0,
                         released,
                         impulse,
                     };
                 } else if jump {
-                    rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
                     player.state = PlayerState::Jump {
                         tick: tick + 1,
                         released: false,
                         impulse,
                     };
                 }
+            }
+            PlayerState::Jump {
+                tick,
+                released: false,
+                impulse,
+            } if tick < HIGH_JUMP_TICK => {
+                rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
+                player.state = PlayerState::Jump {
+                    tick: 0,
+                    released: true,
+                    impulse,
+                };
             }
             _ => {}
         }

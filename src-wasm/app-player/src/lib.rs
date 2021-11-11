@@ -4,7 +4,8 @@ mod jump;
 mod walk;
 
 use app_config::{
-    LINVEL_CAP_AIR, LINVEL_CAP_GROUND, MOVE_IMPULSE_MULTIPLIER_GROUND, RAPIER_GRAVITY, RAPIER_SCALE,
+    LINVEL_CAP_AIR, LINVEL_CAP_GROUND, MOVE_IMPULSE_MULTIPLIER_GROUND, RAPIER_GRAVITY_VECTOR,
+    RAPIER_SCALE,
 };
 use app_core::AppState;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
@@ -90,7 +91,7 @@ fn setup_character(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     rapier_config.scale = RAPIER_SCALE;
-    rapier_config.gravity = RAPIER_GRAVITY;
+    rapier_config.gravity = RAPIER_GRAVITY_VECTOR;
 
     let scale_size = 2.;
     let sprite_size_x = scale_size * 12.0;
@@ -139,6 +140,10 @@ fn setup_character(
             mass_properties: ColliderMassProps::MassProperties(Box::new(
                 MassProperties::from_ball(10., 10.),
             )),
+            material: ColliderMaterial {
+                friction_combine_rule: CoefficientCombineRule::Multiply,
+                ..Default::default()
+            },
             ..Default::default()
         })
         .insert_bundle(SpriteSheetBundle {
@@ -154,7 +159,7 @@ fn setup_character(
             state: PlayerState::Fall,
         })
         .insert(ColliderPositionSync::Discrete)
-        .insert(Timer::from_seconds(3., true));
+        .insert(Timer::from_seconds(1.3, true));
 
     commands.spawn_bundle(SpriteBundle {
         material: materials.add(texture_atlas_texture.into()),

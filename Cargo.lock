@@ -159,6 +159,7 @@ dependencies = [
 name = "app-ground"
 version = "0.1.0"
 dependencies = [
+ "app-config",
  "bevy",
  "bevy_rapier2d",
 ]

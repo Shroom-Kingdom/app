@@ -3,6 +3,9 @@ name = "app-ground"
 version = "0.1.0"
 edition = "2018"
 
+[dependencies]
+app-config = { path = "../app-config" }
+
 [dependencies.bevy]
 version = "0.5"
 git = "https://github.com/bevyengine/bevy.git"
