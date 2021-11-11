@@ -15,8 +15,8 @@ use bevy_rapier::{
     prelude::*,
 };
 use debug::setup_ui;
-use ground::GroundIntersectEvent;
-use jump::{high_jump, jump, JumpEvent};
+use ground::{ground_intersect, GroundIntersectEvent};
+use jump::{high_jump, jump, jump_to_fall, FallEvent, JumpEvent};
 use walk::{walk_animation, walk_start, WalkEvent};
 
 pub struct CharacterPlugin;
@@ -25,6 +25,7 @@ impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerStateChangeEvent>()
             .add_event::<WalkEvent>()
+            .add_event::<FallEvent>()
             .add_event::<JumpEvent>()
             .add_event::<GroundIntersectEvent>()
             .add_startup_system(setup_ui)
@@ -47,7 +48,8 @@ impl Plugin for CharacterPlugin {
             .add_system_to_stage(PlayerStages::PostInput, player_movement_cap)
             // .add_system_to_stage(CoreStage::PostUpdate, move_impulse_jump)
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
-            .add_system_to_stage(CoreStage::PostUpdate, ground::ground_intersect)
+            .add_system_to_stage(CoreStage::PostUpdate, ground_intersect)
+            .add_system_to_stage(CoreStage::PostUpdate, jump_to_fall)
             .add_system_to_stage(PlayerStages::StateChange, player_state_change)
             .add_system_to_stage(CoreStage::Last, set_sprite);
     }
@@ -170,6 +172,7 @@ fn setup_character(
 
 fn player_state_change(
     mut query: Query<(&mut Player, &RigidBodyVelocity)>,
+    mut fall_events: EventReader<FallEvent>,
     mut jump_events: EventReader<JumpEvent>,
     mut ground_intersect_events: EventReader<GroundIntersectEvent>,
     mut walk_events: EventReader<WalkEvent>,
@@ -177,16 +180,18 @@ fn player_state_change(
 ) {
     if let Ok((mut player, rb_vel)) = query.single_mut() {
         if let Some(state) = match (
+            fall_events.iter().next(),
             jump_events.iter().next(),
             ground_intersect_events.iter().next(),
             walk_events.iter().next(),
         ) {
-            (Some(_), _, _) => Some(PlayerState::Jump {
+            (Some(_), _, _, _) => Some(PlayerState::Fall),
+            (_, Some(_), _, _) => Some(PlayerState::Jump {
                 tick: 0,
                 impulse: false,
                 released: false,
             }),
-            (_, Some(GroundIntersectEvent::Start), _) => {
+            (_, _, Some(GroundIntersectEvent::Start), _) => {
                 if rb_vel
                     .linvel
                     .data
@@ -197,16 +202,13 @@ fn player_state_change(
                 {
                     Some(PlayerState::Wait)
                 } else {
-                    Some(PlayerState::Walk {
-                        frame: 1,
-                        // linvel_x: Some(rb_vel.linvel.data.0[0][0]),
-                    })
+                    Some(PlayerState::Walk { frame: 1 })
                 }
             }
-            (_, Some(GroundIntersectEvent::Stop), _) => Some(PlayerState::Fall),
-            (_, _, Some(WalkEvent::Start)) => Some(PlayerState::Walk { frame: 0 }),
-            (_, _, Some(WalkEvent::Stop)) => Some(PlayerState::Wait),
-            (_, _, Some(WalkEvent::Advance)) => {
+            (_, _, Some(GroundIntersectEvent::Stop), _) => Some(PlayerState::Fall),
+            (_, _, _, Some(WalkEvent::Start)) => Some(PlayerState::Walk { frame: 0 }),
+            (_, _, _, Some(WalkEvent::Stop)) => Some(PlayerState::Wait),
+            (_, _, _, Some(WalkEvent::Advance)) => {
                 if let PlayerState::Walk { frame } = player.state {
                     let frame = match frame {
                         0 => 1,
@@ -217,7 +219,7 @@ fn player_state_change(
                     None
                 }
             }
-            (None, None, None) => None,
+            (None, None, None, None) => None,
         } {
             player.state = state.clone();
             psc_events.send(PlayerStateChangeEvent { state });

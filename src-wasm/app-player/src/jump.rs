@@ -3,6 +3,8 @@ use app_config::{HIGH_JUMP_TICK, JUMP_FORCE};
 use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 
+pub struct FallEvent;
+
 pub struct JumpEvent(f32);
 
 pub fn jump(
@@ -10,7 +12,7 @@ pub fn jump(
     keyboard_input: Res<Input<KeyCode>>,
     mut psc_event: EventWriter<JumpEvent>,
 ) {
-    for (player, mut rb_vel) in query.iter_mut() {
+    if let Ok((player, mut rb_vel)) = query.single_mut() {
         let jump = keyboard_input.just_pressed(KeyCode::Space)
             || keyboard_input.just_pressed(KeyCode::Up)
             || keyboard_input.just_pressed(KeyCode::W);
@@ -31,7 +33,7 @@ pub fn high_jump(
     mut query: Query<(&mut Player, &mut RigidBodyVelocity)>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    for (mut player, mut rb_vel) in query.iter_mut() {
+    if let Ok((mut player, mut rb_vel)) = query.single_mut() {
         match player.state {
             PlayerState::Jump {
                 tick,
@@ -74,6 +76,19 @@ pub fn high_jump(
                 };
             }
             _ => {}
+        }
+    }
+}
+
+pub fn jump_to_fall(
+    query: Query<(&Player, &RigidBodyVelocity)>,
+    mut fall_events: EventWriter<FallEvent>,
+) {
+    if let Ok((player, rb_vel)) = query.single() {
+        if let PlayerState::Jump { .. } = player.state {
+            if rb_vel.linvel.data.0[0][1] < 0. {
+                fall_events.send(FallEvent);
+            }
         }
     }
 }
