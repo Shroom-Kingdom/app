@@ -71,6 +71,7 @@ pub enum PlayerState {
     Wait,
     Walk {
         frame: u8,
+        is_turning: bool,
     },
     Jump {
         tick: u8,
@@ -202,19 +203,32 @@ fn player_state_change(
                 {
                     Some(PlayerState::Wait)
                 } else {
-                    Some(PlayerState::Walk { frame: 1 })
+                    Some(PlayerState::Walk {
+                        frame: 1,
+                        is_turning: false,
+                    })
                 }
             }
             (_, _, Some(GroundIntersectEvent::Stop), _) => Some(PlayerState::Fall),
-            (_, _, _, Some(WalkEvent::Start)) => Some(PlayerState::Walk { frame: 0 }),
+            (_, _, _, Some(WalkEvent::Start)) => Some(PlayerState::Walk {
+                frame: 0,
+                is_turning: false,
+            }),
             (_, _, _, Some(WalkEvent::Stop)) => Some(PlayerState::Wait),
             (_, _, _, Some(WalkEvent::Advance)) => {
-                if let PlayerState::Walk { frame } = player.state {
+                if let PlayerState::Walk {
+                    frame,
+                    is_turning: false,
+                } = player.state
+                {
                     let frame = match frame {
                         0 => 1,
                         _ => 0,
                     };
-                    Some(PlayerState::Walk { frame })
+                    Some(PlayerState::Walk {
+                        frame,
+                        is_turning: false,
+                    })
                 } else {
                     None
                 }
@@ -248,14 +262,15 @@ fn player_movement_cap(mut query: Query<(&Player, &mut RigidBodyVelocity)>) {
 
 fn player_movement(
     mut query: Query<(
-        &Player,
+        &mut Player,
         &mut RigidBodyVelocity,
         &RigidBodyMassProps,
+        &mut ColliderMaterial,
         &mut TextureAtlasSprite,
     )>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    for (player, mut rb_vel, rb_mprops, mut sprite) in query.iter_mut() {
+    for (mut player, mut rb_vel, rb_mprops, mut c_mat, mut sprite) in query.iter_mut() {
         match player.state {
             PlayerState::Jump { .. }
             | PlayerState::Fall
@@ -285,6 +300,37 @@ fn player_movement(
                         }
                     };
                     rb_vel.apply_impulse(rb_mprops, move_delta * multiplier);
+                    match player.state {
+                        PlayerState::Walk {
+                            is_turning: false,
+                            frame,
+                        } => {
+                            if (x_axis == 1 && rb_vel.linvel.data.0[0][0] < 0.)
+                                || (x_axis == -1 && rb_vel.linvel.data.0[0][0] > 0.)
+                            {
+                                player.state = PlayerState::Walk {
+                                    frame,
+                                    is_turning: true,
+                                };
+                                c_mat.friction = 0.
+                            }
+                        }
+                        PlayerState::Walk {
+                            is_turning: true,
+                            frame,
+                        } => {
+                            if (x_axis == 1 && rb_vel.linvel.data.0[0][0] > 0.)
+                                || (x_axis == -1 && rb_vel.linvel.data.0[0][0] < 0.)
+                            {
+                                player.state = PlayerState::Walk {
+                                    frame,
+                                    is_turning: false,
+                                };
+                                c_mat.friction = 1.
+                            }
+                        }
+                        _ => c_mat.friction = 1.,
+                    }
                 }
             }
         }
@@ -302,7 +348,7 @@ fn set_sprite(
             let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
             let asset_path = match event.state {
                 PlayerState::Wait => "MW_Player_MarioMdl_wait.0_0.png",
-                PlayerState::Walk { frame: 0 } => "MW_Player_MarioMdl_walk.0_0.png",
+                PlayerState::Walk { frame: 0, .. } => "MW_Player_MarioMdl_walk.0_0.png",
                 PlayerState::Walk { .. } => "MW_Player_MarioMdl_walk.1_0.png",
                 PlayerState::Jump { .. } => "MW_Player_MarioMdl_jump.0_0.png",
                 PlayerState::Fall => "MW_Player_MarioMdl_jump_fall.0_0.png",
