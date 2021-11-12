@@ -22,8 +22,9 @@ pub fn state_change(
             walk_events.iter().next(),
         ) {
             (Some(_), _, _, _) => Some(PlayerStateEnum::Fall),
-            (_, Some(_), _, _) => Some(PlayerStateEnum::Jump {
+            (_, Some(JumpEvent { high_jump_tick }), _, _) => Some(PlayerStateEnum::Jump {
                 tick: 0,
+                high_jump_tick: *high_jump_tick,
                 impulse: false,
                 released: false,
             }),

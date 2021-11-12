@@ -1,10 +1,19 @@
 use crate::{Player, PlayerState, PlayerStateEnum};
 use app_config::{
-    LINVEL_CAP_AIR, LINVEL_CAP_GROUND, LINVEL_CAP_STOOP, MOVE_IMPULSE_MULTIPLIER_AIR,
-    MOVE_IMPULSE_MULTIPLIER_GROUND,
+    LINVEL_CAP_RUN, LINVEL_CAP_STOOP, LINVEL_CAP_WALK, MOVE_IMPULSE_MULTIPLIER_AIR,
+    MOVE_IMPULSE_MULTIPLIER_AIR_RUN, MOVE_IMPULSE_MULTIPLIER_GROUND,
+    MOVE_IMPULSE_MULTIPLIER_GROUND_RUN,
 };
 use bevy::prelude::*;
 use bevy_rapier::{na::Vector2, prelude::*};
+
+pub fn run(mut query: Query<&mut Player>, keyboard_input: Res<Input<KeyCode>>) {
+    if let Ok(mut player) = query.single_mut() {
+        let run =
+            keyboard_input.pressed(KeyCode::LShift) || keyboard_input.pressed(KeyCode::RShift);
+        player.state.is_running = run;
+    }
+}
 
 pub fn movement(
     mut query: Query<(
@@ -20,6 +29,7 @@ pub fn movement(
         match player.state {
             PlayerState {
                 is_stooping: false,
+                is_running,
                 state:
                     PlayerStateEnum::Jump { .. }
                     | PlayerStateEnum::Fall
@@ -28,6 +38,7 @@ pub fn movement(
             }
             | PlayerState {
                 is_stooping: true,
+                is_running,
                 state: PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall,
             } => {
                 let left =
@@ -36,35 +47,40 @@ pub fn movement(
                     keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
 
                 let x_axis = -(left as i8) + right as i8;
+                let cap = match (player.state.is_stooping, is_running) {
+                    (true, _) => LINVEL_CAP_STOOP,
+                    (false, true) => LINVEL_CAP_RUN,
+                    (false, false) => LINVEL_CAP_WALK,
+                };
                 match x_axis {
-                    _ if x_axis > 0
-                        && player.state.is_stooping
-                        && rb_vel.linvel.data.0[0][0] > LINVEL_CAP_STOOP =>
-                    {
-                        return;
-                    }
                     _ if x_axis > 0 => {
                         sprite.flip_x = false;
-                    }
-                    _ if x_axis < 0
-                        && player.state.is_stooping
-                        && rb_vel.linvel.data.0[0][0] < -LINVEL_CAP_STOOP =>
-                    {
-                        return;
+                        if rb_vel.linvel.data.0[0][0] > cap {
+                            return;
+                        }
                     }
                     _ if x_axis < 0 => {
                         sprite.flip_x = true;
+                        if rb_vel.linvel.data.0[0][0] < -cap {
+                            return;
+                        }
                     }
                     _ => {}
                 }
                 if x_axis != 0 {
                     let move_delta = Vector2::new(x_axis as f32, 0.);
-                    let multiplier = match player.state.state {
-                        PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall => {
+                    let multiplier = match (&player.state.state, is_running) {
+                        (PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall, false) => {
                             MOVE_IMPULSE_MULTIPLIER_AIR
                         }
-                        PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. } => {
+                        (PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall, true) => {
+                            MOVE_IMPULSE_MULTIPLIER_AIR_RUN
+                        }
+                        (PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. }, false) => {
                             MOVE_IMPULSE_MULTIPLIER_GROUND
+                        }
+                        (PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. }, true) => {
+                            MOVE_IMPULSE_MULTIPLIER_GROUND_RUN
                         }
                     };
                     rb_vel.apply_impulse(rb_mprops, move_delta * multiplier);
@@ -100,26 +116,8 @@ pub fn movement(
             PlayerState {
                 is_stooping: true,
                 state: PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. },
+                ..
             } => {}
-        }
-    }
-}
-
-pub fn movement_cap(mut query: Query<(&Player, &mut RigidBodyVelocity)>) {
-    for (player, mut rb_vel) in query.iter_mut() {
-        let (x_cap, y_cap) = match player.state.state {
-            PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall => LINVEL_CAP_AIR,
-            PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. } => LINVEL_CAP_GROUND,
-        };
-        if rb_vel.linvel.data.0[0][0] > x_cap {
-            rb_vel.linvel.data.0[0][0] = x_cap;
-        } else if rb_vel.linvel.data.0[0][0] < -x_cap {
-            rb_vel.linvel.data.0[0][0] = -x_cap;
-        }
-        if rb_vel.linvel.data.0[0][1] > y_cap {
-            rb_vel.linvel.data.0[0][1] = y_cap;
-        } else if rb_vel.linvel.data.0[0][1] < -y_cap {
-            rb_vel.linvel.data.0[0][1] = -y_cap;
         }
     }
 }

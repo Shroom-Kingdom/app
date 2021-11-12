@@ -8,10 +8,11 @@ mod walk;
 
 use app_core::AppState;
 use bevy::prelude::*;
+use bevy_rapier::prelude::RigidBodyVelocity;
 use debug::setup_ui;
 use ground::ground_intersect;
 use jump::{high_jump, jump, jump_to_fall};
-use movement::{movement, movement_cap};
+use movement::{movement, run};
 use setup::setup;
 use state_change::state_change;
 use walk::{walk_animation, walk_start};
@@ -42,13 +43,13 @@ impl Plugin for CharacterPlugin {
                 SystemStage::parallel(),
             )
             .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup))
+            .add_system_to_stage(CoreStage::First, run)
             .add_system_to_stage(CoreStage::First, jump)
             .add_system_to_stage(CoreStage::First, high_jump)
             .add_system_to_stage(CoreStage::First, walk_animation)
             .add_system_to_stage(CoreStage::First, walk_start)
             .add_system_to_stage(CoreStage::PreUpdate, movement)
             .add_system_to_stage(CoreStage::PreUpdate, stoop)
-            .add_system_to_stage(PlayerStages::PostInput, movement_cap)
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
             .add_system_to_stage(CoreStage::PostUpdate, ground_intersect)
             .add_system_to_stage(CoreStage::PostUpdate, jump_to_fall)
@@ -71,6 +72,7 @@ pub struct Player {
 #[derive(Clone, Debug)]
 pub struct PlayerState {
     state: PlayerStateEnum,
+    is_running: bool,
     is_stooping: bool,
 }
 
@@ -83,6 +85,7 @@ pub enum PlayerStateEnum {
     },
     Jump {
         tick: u8,
+        high_jump_tick: u8,
         released: bool,
         impulse: bool,
     },
@@ -118,12 +121,17 @@ fn stoop(
 }
 
 fn set_sprite(
-    mut query: Query<(&Player, &mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
+    mut query: Query<(
+        &Player,
+        &RigidBodyVelocity,
+        &mut TextureAtlasSprite,
+        &Handle<TextureAtlas>,
+    )>,
     mut psc_events: EventReader<PlayerStateChangeEvent>,
     assets: Res<AssetServer>,
     texture_atlases: Res<Assets<TextureAtlas>>,
 ) {
-    if let Ok((_, mut sprite, atlas_handle)) = query.single_mut() {
+    if let Ok((_, rb_vel, mut sprite, atlas_handle)) = query.single_mut() {
         if let Some(event) = psc_events.iter().last() {
             let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
             let asset_path = match &event.state {
@@ -133,6 +141,7 @@ fn set_sprite(
                 PlayerState {
                     is_stooping: false,
                     state,
+                    ..
                 } => match state {
                     PlayerStateEnum::Wait { .. } => "MW_Player_MarioMdl_wait.0_0.png",
                     PlayerStateEnum::Walk { frame: 0, .. } => "MW_Player_MarioMdl_walk.0_0.png",

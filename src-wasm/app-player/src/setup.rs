@@ -87,6 +87,7 @@ pub fn setup(
             state: PlayerState {
                 state: PlayerStateEnum::Fall,
                 is_stooping: false,
+                is_running: false,
             },
         })
         .insert(ColliderPositionSync::Discrete)
