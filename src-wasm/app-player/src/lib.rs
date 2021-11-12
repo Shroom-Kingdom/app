@@ -2,20 +2,23 @@ mod debug;
 mod ground;
 mod jump;
 mod movement;
+mod setup;
+mod state_change;
 mod walk;
 
-use app_config::{RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
 use app_core::AppState;
-use bevy::{prelude::*, sprite::TextureAtlasBuilder};
-use bevy_rapier::{
-    physics::{ColliderBundle, ColliderPositionSync, RapierConfiguration, RigidBodyBundle},
-    prelude::*,
-};
+use bevy::prelude::*;
 use debug::setup_ui;
-use ground::{ground_intersect, GroundIntersectEvent};
-use jump::{high_jump, jump, jump_to_fall, FallEvent, JumpEvent};
+use ground::ground_intersect;
+use jump::{high_jump, jump, jump_to_fall};
 use movement::{movement, movement_cap};
-use walk::{walk_animation, walk_start, WalkEvent};
+use setup::setup;
+use state_change::state_change;
+use walk::{walk_animation, walk_start};
+
+pub use ground::GroundIntersectEvent;
+pub use jump::{FallEvent, JumpEvent};
+pub use walk::WalkEvent;
 
 pub struct CharacterPlugin;
 
@@ -38,7 +41,7 @@ impl Plugin for CharacterPlugin {
                 PlayerStages::StateChange,
                 SystemStage::parallel(),
             )
-            .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup_character))
+            .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup))
             .add_system_to_stage(CoreStage::First, jump)
             .add_system_to_stage(CoreStage::First, high_jump)
             .add_system_to_stage(CoreStage::First, walk_animation)
@@ -49,7 +52,7 @@ impl Plugin for CharacterPlugin {
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
             .add_system_to_stage(CoreStage::PostUpdate, ground_intersect)
             .add_system_to_stage(CoreStage::PostUpdate, jump_to_fall)
-            .add_system_to_stage(PlayerStages::StateChange, player_state_change)
+            .add_system_to_stage(PlayerStages::StateChange, state_change)
             .add_system_to_stage(CoreStage::Last, set_sprite);
     }
 }
@@ -92,194 +95,6 @@ pub struct PlayerStateChangeEvent {
 
 pub struct StoopEvent {
     is_stooping: bool,
-}
-
-fn setup_character(
-    mut commands: Commands,
-    assets: Res<AssetServer>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    mut rapier_config: ResMut<RapierConfiguration>,
-    mut textures: ResMut<Assets<Texture>>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-) {
-    rapier_config.scale = RAPIER_SCALE;
-    rapier_config.gravity = RAPIER_GRAVITY_VECTOR;
-
-    let scale_size = 2.;
-    let sprite_size_x = scale_size * 12.0;
-    let sprite_size_y = scale_size * 16.0;
-    let collider_size_x = sprite_size_x / rapier_config.scale;
-    let collider_size_y = sprite_size_y / rapier_config.scale;
-
-    let mut texture_atlas_builder = TextureAtlasBuilder::default();
-
-    let handle = assets.load("MW_Player_MarioMdl_wait.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle.clone(), texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_walk.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_walk.1_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_stoop.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_jump.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_jump_fall.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle.clone(), texture);
-
-    let texture_atlas = texture_atlas_builder.finish(&mut textures).unwrap();
-    let wait_index = texture_atlas.get_texture_index(&handle).unwrap();
-    let texture_atlas_texture = texture_atlas.texture.clone();
-    let atlas_handle = texture_atlases.add(texture_atlas);
-
-    commands
-        .spawn_bundle(RigidBodyBundle {
-            position: [0., 10.].into(),
-            mass_properties: RigidBodyMassProps {
-                flags: RigidBodyMassPropsFlags::ROTATION_LOCKED,
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(collider_size_x, collider_size_y),
-            mass_properties: ColliderMassProps::MassProperties(Box::new(
-                MassProperties::from_ball(10., 10.),
-            )),
-            material: ColliderMaterial {
-                friction_combine_rule: CoefficientCombineRule::Multiply,
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert_bundle(SpriteSheetBundle {
-            transform: Transform {
-                scale: Vec3::new(scale_size, scale_size, 1.),
-                ..Default::default()
-            },
-            sprite: TextureAtlasSprite::new(wait_index as u32),
-            texture_atlas: atlas_handle,
-            ..Default::default()
-        })
-        .insert(Player {
-            state: PlayerState {
-                state: PlayerStateEnum::Fall,
-                is_stooping: false,
-            },
-        })
-        .insert(ColliderPositionSync::Discrete)
-        .insert(Timer::from_seconds(1.3, true));
-
-    commands.spawn_bundle(SpriteBundle {
-        material: materials.add(texture_atlas_texture.into()),
-        transform: Transform::from_xyz(-300.0, 0.0, 0.0),
-        ..Default::default()
-    });
-}
-
-fn player_state_change(
-    mut query: Query<(&mut Player, &RigidBodyVelocity)>,
-    mut fall_events: EventReader<FallEvent>,
-    mut jump_events: EventReader<JumpEvent>,
-    mut ground_intersect_events: EventReader<GroundIntersectEvent>,
-    mut walk_events: EventReader<WalkEvent>,
-    mut stoop_events: EventReader<StoopEvent>,
-    mut psc_events: EventWriter<PlayerStateChangeEvent>,
-) {
-    if let Ok((mut player, rb_vel)) = query.single_mut() {
-        let state = match (
-            fall_events.iter().next(),
-            jump_events.iter().next(),
-            ground_intersect_events.iter().next(),
-            walk_events.iter().next(),
-        ) {
-            (Some(_), _, _, _) => Some(PlayerStateEnum::Fall),
-            (_, Some(_), _, _) => Some(PlayerStateEnum::Jump {
-                tick: 0,
-                impulse: false,
-                released: false,
-            }),
-            (_, _, Some(GroundIntersectEvent::Start), _) => {
-                if rb_vel
-                    .linvel
-                    .data
-                    .0
-                    .get(0)
-                    .map(|x| x[0] == 0.)
-                    .unwrap_or_default()
-                {
-                    Some(PlayerStateEnum::Wait)
-                } else {
-                    Some(PlayerStateEnum::Walk {
-                        frame: 1,
-                        is_turning: false,
-                    })
-                }
-            }
-            (_, _, Some(GroundIntersectEvent::Stop), _) => Some(PlayerStateEnum::Fall),
-            (_, _, _, Some(WalkEvent::Start)) => Some(PlayerStateEnum::Walk {
-                frame: 0,
-                is_turning: false,
-            }),
-            (_, _, _, Some(WalkEvent::Stop)) => Some(PlayerStateEnum::Wait),
-            (_, _, _, Some(WalkEvent::Advance)) => {
-                if let PlayerStateEnum::Walk {
-                    frame,
-                    is_turning: false,
-                } = player.state.state
-                {
-                    let frame = match frame {
-                        0 => 1,
-                        _ => 0,
-                    };
-                    Some(PlayerStateEnum::Walk {
-                        frame,
-                        is_turning: false,
-                    })
-                } else {
-                    None
-                }
-            }
-            (None, None, None, None) => None,
-        };
-        let mut send_state_update = false;
-        match (stoop_events.iter().next(), &player.state.state) {
-            (
-                Some(StoopEvent { is_stooping }),
-                PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. },
-            ) => {
-                send_state_update = true;
-                player.state.is_stooping = *is_stooping;
-            }
-            (Some(StoopEvent { is_stooping: false }), PlayerStateEnum::Fall) => {
-                send_state_update = true;
-                player.state.is_stooping = false;
-            }
-            (Some(StoopEvent { is_stooping: true }), PlayerStateEnum::Fall)
-            | (Some(StoopEvent { .. }), PlayerStateEnum::Jump { .. })
-            | (None, _) => {}
-        }
-        if let Some(state) = state {
-            send_state_update = true;
-            player.state.state = state
-        }
-
-        if send_state_update {
-            psc_events.send(PlayerStateChangeEvent {
-                state: player.state.clone(),
-            });
-        }
-    }
 }
 
 fn stoop(
