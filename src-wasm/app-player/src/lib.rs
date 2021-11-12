@@ -365,37 +365,33 @@ fn player_movement(
                         }
                     };
                     rb_vel.apply_impulse(rb_mprops, move_delta * multiplier);
-                    match player.state.state {
-                        PlayerStateEnum::Walk {
-                            is_turning: false,
+                }
+                match player.state.state {
+                    PlayerStateEnum::Walk {
+                        is_turning: false,
+                        frame,
+                    } if (x_axis == 1 && rb_vel.linvel.data.0[0][0] < 0.)
+                        || (x_axis == -1 && rb_vel.linvel.data.0[0][0] > 0.) =>
+                    {
+                        player.state.state = PlayerStateEnum::Walk {
                             frame,
-                        } => {
-                            if (x_axis == 1 && rb_vel.linvel.data.0[0][0] < 0.)
-                                || (x_axis == -1 && rb_vel.linvel.data.0[0][0] > 0.)
-                            {
-                                player.state.state = PlayerStateEnum::Walk {
-                                    frame,
-                                    is_turning: true,
-                                };
-                                c_mat.friction = 0.
-                            }
-                        }
-                        PlayerStateEnum::Walk {
                             is_turning: true,
-                            frame,
-                        } => {
-                            if (x_axis == 1 && rb_vel.linvel.data.0[0][0] > 0.)
-                                || (x_axis == -1 && rb_vel.linvel.data.0[0][0] < 0.)
-                            {
-                                player.state.state = PlayerStateEnum::Walk {
-                                    frame,
-                                    is_turning: false,
-                                };
-                                c_mat.friction = 1.
-                            }
-                        }
-                        _ => c_mat.friction = 1.,
+                        };
+                        c_mat.friction = 0.
                     }
+                    PlayerStateEnum::Walk {
+                        is_turning: true,
+                        frame,
+                    } if (x_axis == 1 && rb_vel.linvel.data.0[0][0] > 0.)
+                        || (x_axis == -1 && rb_vel.linvel.data.0[0][0] < 0.) =>
+                    {
+                        player.state.state = PlayerStateEnum::Walk {
+                            frame,
+                            is_turning: false,
+                        };
+                        c_mat.friction = 1.
+                    }
+                    _ => c_mat.friction = 1.,
                 }
             }
             PlayerState {
