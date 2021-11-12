@@ -1,4 +1,4 @@
-use crate::{Player, PlayerState};
+use crate::{Player, PlayerStateEnum};
 use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 
@@ -14,7 +14,7 @@ pub fn walk_animation(
     mut walk_event: EventWriter<WalkEvent>,
 ) {
     for (player, mut timer, rb_vel) in query.iter_mut() {
-        if let PlayerState::Walk { .. } = player.state {
+        if let PlayerStateEnum::Walk { .. } = player.state.state {
             if rb_vel.linvel.data.0[0][0].abs() <= f32::EPSILON {
                 timer.reset();
                 walk_event.send(WalkEvent::Stop);
@@ -33,7 +33,7 @@ pub fn walk_start(
     mut walk_event: EventWriter<WalkEvent>,
 ) {
     for (player, mut timer, rb_vel) in query.iter_mut() {
-        if let PlayerState::Wait = player.state {
+        if let PlayerStateEnum::Wait = player.state.state {
             if rb_vel.linvel.data.0[0][0].abs() > f32::EPSILON {
                 timer.reset();
                 walk_event.send(WalkEvent::Start);

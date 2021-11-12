@@ -5,6 +5,7 @@ pub const MOVE_IMPULSE_MULTIPLIER_AIR: f32 = 3000.;
 
 pub const LINVEL_CAP_GROUND: (f32, f32) = (17.5, 100.);
 pub const LINVEL_CAP_AIR: (f32, f32) = (17.5, JUMP_FORCE);
+pub const LINVEL_CAP_STOOP: f32 = 10.;
 
 pub const JUMP_FORCE: f32 = 37.;
 pub const HIGH_JUMP_TICK: u8 = 15;

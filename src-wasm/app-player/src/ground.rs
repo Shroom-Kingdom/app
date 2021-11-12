@@ -1,4 +1,4 @@
-use crate::{Player, PlayerState};
+use crate::{Player, PlayerStateEnum};
 use app_ground::Grounds;
 use bevy::prelude::*;
 use bevy_rapier::prelude::*;
@@ -39,7 +39,7 @@ pub fn ground_intersect(
                     collider2,
                     intersecting: false,
                 } => {
-                    if let PlayerState::Jump { .. } = player.state {
+                    if let PlayerStateEnum::Jump { .. } = player.state.state {
                         return;
                     }
                     if !grounds.contains(&collider1.entity())
