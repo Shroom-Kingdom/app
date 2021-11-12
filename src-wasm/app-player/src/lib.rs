@@ -1,22 +1,20 @@
 mod debug;
 mod ground;
 mod jump;
+mod movement;
 mod walk;
 
-use app_config::{
-    LINVEL_CAP_AIR, LINVEL_CAP_GROUND, LINVEL_CAP_STOOP, MOVE_IMPULSE_MULTIPLIER_AIR,
-    MOVE_IMPULSE_MULTIPLIER_GROUND, RAPIER_GRAVITY_VECTOR, RAPIER_SCALE,
-};
+use app_config::{RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
 use app_core::AppState;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
-    na::Vector2,
     physics::{ColliderBundle, ColliderPositionSync, RapierConfiguration, RigidBodyBundle},
     prelude::*,
 };
 use debug::setup_ui;
 use ground::{ground_intersect, GroundIntersectEvent};
 use jump::{high_jump, jump, jump_to_fall, FallEvent, JumpEvent};
+use movement::{movement, movement_cap};
 use walk::{walk_animation, walk_start, WalkEvent};
 
 pub struct CharacterPlugin;
@@ -45,9 +43,9 @@ impl Plugin for CharacterPlugin {
             .add_system_to_stage(CoreStage::First, high_jump)
             .add_system_to_stage(CoreStage::First, walk_animation)
             .add_system_to_stage(CoreStage::First, walk_start)
-            .add_system_to_stage(CoreStage::PreUpdate, player_movement)
+            .add_system_to_stage(CoreStage::PreUpdate, movement)
             .add_system_to_stage(CoreStage::PreUpdate, stoop)
-            .add_system_to_stage(PlayerStages::PostInput, player_movement_cap)
+            .add_system_to_stage(PlayerStages::PostInput, movement_cap)
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
             .add_system_to_stage(CoreStage::PostUpdate, ground_intersect)
             .add_system_to_stage(CoreStage::PostUpdate, jump_to_fall)
@@ -280,124 +278,6 @@ fn player_state_change(
             psc_events.send(PlayerStateChangeEvent {
                 state: player.state.clone(),
             });
-        }
-    }
-}
-
-fn player_movement_cap(mut query: Query<(&Player, &mut RigidBodyVelocity)>) {
-    for (player, mut rb_vel) in query.iter_mut() {
-        let (x_cap, y_cap) = match player.state.state {
-            PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall => LINVEL_CAP_AIR,
-            PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. } => LINVEL_CAP_GROUND,
-        };
-        if rb_vel.linvel.data.0[0][0] > x_cap {
-            rb_vel.linvel.data.0[0][0] = x_cap;
-        } else if rb_vel.linvel.data.0[0][0] < -x_cap {
-            rb_vel.linvel.data.0[0][0] = -x_cap;
-        }
-        if rb_vel.linvel.data.0[0][1] > y_cap {
-            rb_vel.linvel.data.0[0][1] = y_cap;
-        } else if rb_vel.linvel.data.0[0][1] < -y_cap {
-            rb_vel.linvel.data.0[0][1] = -y_cap;
-        }
-    }
-}
-
-fn player_movement(
-    mut query: Query<(
-        &mut Player,
-        &mut RigidBodyVelocity,
-        &RigidBodyMassProps,
-        &mut ColliderMaterial,
-        &mut TextureAtlasSprite,
-    )>,
-    keyboard_input: Res<Input<KeyCode>>,
-) {
-    if let Ok((mut player, mut rb_vel, rb_mprops, mut c_mat, mut sprite)) = query.single_mut() {
-        match player.state {
-            PlayerState {
-                is_stooping: false,
-                state:
-                    PlayerStateEnum::Jump { .. }
-                    | PlayerStateEnum::Fall
-                    | PlayerStateEnum::Wait
-                    | PlayerStateEnum::Walk { .. },
-            }
-            | PlayerState {
-                is_stooping: true,
-                state: PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall,
-            } => {
-                let left =
-                    keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
-                let right =
-                    keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
-
-                let x_axis = -(left as i8) + right as i8;
-                match x_axis {
-                    _ if x_axis > 0
-                        && player.state.is_stooping
-                        && rb_vel.linvel.data.0[0][0] > LINVEL_CAP_STOOP =>
-                    {
-                        return;
-                    }
-                    _ if x_axis > 0 => {
-                        sprite.flip_x = false;
-                    }
-                    _ if x_axis < 0
-                        && player.state.is_stooping
-                        && rb_vel.linvel.data.0[0][0] < -LINVEL_CAP_STOOP =>
-                    {
-                        return;
-                    }
-                    _ if x_axis < 0 => {
-                        sprite.flip_x = true;
-                    }
-                    _ => {}
-                }
-                if x_axis != 0 {
-                    let move_delta = Vector2::new(x_axis as f32, 0.);
-                    let multiplier = match player.state.state {
-                        PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall => {
-                            MOVE_IMPULSE_MULTIPLIER_AIR
-                        }
-                        PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. } => {
-                            MOVE_IMPULSE_MULTIPLIER_GROUND
-                        }
-                    };
-                    rb_vel.apply_impulse(rb_mprops, move_delta * multiplier);
-                }
-                match player.state.state {
-                    PlayerStateEnum::Walk {
-                        is_turning: false,
-                        frame,
-                    } if (x_axis == 1 && rb_vel.linvel.data.0[0][0] < 0.)
-                        || (x_axis == -1 && rb_vel.linvel.data.0[0][0] > 0.) =>
-                    {
-                        player.state.state = PlayerStateEnum::Walk {
-                            frame,
-                            is_turning: true,
-                        };
-                        c_mat.friction = 0.
-                    }
-                    PlayerStateEnum::Walk {
-                        is_turning: true,
-                        frame,
-                    } if (x_axis == 1 && rb_vel.linvel.data.0[0][0] > 0.)
-                        || (x_axis == -1 && rb_vel.linvel.data.0[0][0] < 0.) =>
-                    {
-                        player.state.state = PlayerStateEnum::Walk {
-                            frame,
-                            is_turning: false,
-                        };
-                        c_mat.friction = 1.
-                    }
-                    _ => c_mat.friction = 1.,
-                }
-            }
-            PlayerState {
-                is_stooping: true,
-                state: PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. },
-            } => {}
         }
     }
 }
