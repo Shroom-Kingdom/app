@@ -41,6 +41,22 @@ pub fn setup(
     let texture = textures.get(&handle).unwrap();
     texture_atlas_builder.add_texture(handle, texture);
 
+    let handle = assets.load("MW_Player_MarioMdl_b_dash.0_0.png");
+    let texture = textures.get(&handle).unwrap();
+    texture_atlas_builder.add_texture(handle, texture);
+
+    let handle = assets.load("MW_Player_MarioMdl_b_dash.1_0.png");
+    let texture = textures.get(&handle).unwrap();
+    texture_atlas_builder.add_texture(handle, texture);
+
+    let handle = assets.load("MW_Player_MarioMdl_b_dash_jump.0_0.png");
+    let texture = textures.get(&handle).unwrap();
+    texture_atlas_builder.add_texture(handle, texture);
+
+    let handle = assets.load("MW_Player_MarioMdl_b_dash_jump_fall.0_0.png");
+    let texture = textures.get(&handle).unwrap();
+    texture_atlas_builder.add_texture(handle, texture);
+
     let handle = assets.load("MW_Player_MarioMdl_jump.0_0.png");
     let texture = textures.get(&handle).unwrap();
     texture_atlas_builder.add_texture(handle, texture);
@@ -86,8 +102,9 @@ pub fn setup(
         .insert(Player {
             state: PlayerState {
                 state: PlayerStateEnum::Fall,
-                is_stooping: false,
                 is_running: false,
+                is_dashing: false,
+                is_stooping: false,
             },
         })
         .insert(ColliderPositionSync::Discrete)

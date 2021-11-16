@@ -8,7 +8,6 @@ mod walk;
 
 use app_core::AppState;
 use bevy::prelude::*;
-use bevy_rapier::prelude::RigidBodyVelocity;
 use debug::setup_ui;
 use ground::ground_intersect;
 use jump::{high_jump, jump, jump_to_fall};
@@ -73,6 +72,7 @@ pub struct Player {
 pub struct PlayerState {
     state: PlayerStateEnum,
     is_running: bool,
+    is_dashing: bool,
     is_stooping: bool,
 }
 
@@ -121,17 +121,12 @@ fn stoop(
 }
 
 fn set_sprite(
-    mut query: Query<(
-        &Player,
-        &RigidBodyVelocity,
-        &mut TextureAtlasSprite,
-        &Handle<TextureAtlas>,
-    )>,
+    mut query: Query<(&Player, &mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
     mut psc_events: EventReader<PlayerStateChangeEvent>,
     assets: Res<AssetServer>,
     texture_atlases: Res<Assets<TextureAtlas>>,
 ) {
-    if let Ok((_, rb_vel, mut sprite, atlas_handle)) = query.single_mut() {
+    if let Ok((_, mut sprite, atlas_handle)) = query.single_mut() {
         if let Some(event) = psc_events.iter().last() {
             let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
             let asset_path = match &event.state {
@@ -140,14 +135,38 @@ fn set_sprite(
                 } => "MW_Player_MarioMdl_stoop.0_0.png",
                 PlayerState {
                     is_stooping: false,
+                    is_dashing,
                     state,
                     ..
                 } => match state {
                     PlayerStateEnum::Wait { .. } => "MW_Player_MarioMdl_wait.0_0.png",
-                    PlayerStateEnum::Walk { frame: 0, .. } => "MW_Player_MarioMdl_walk.0_0.png",
-                    PlayerStateEnum::Walk { .. } => "MW_Player_MarioMdl_walk.1_0.png",
-                    PlayerStateEnum::Jump { .. } => "MW_Player_MarioMdl_jump.0_0.png",
-                    PlayerStateEnum::Fall { .. } => "MW_Player_MarioMdl_jump_fall.0_0.png",
+                    PlayerStateEnum::Walk { frame: 0, .. } if !is_dashing => {
+                        "MW_Player_MarioMdl_walk.0_0.png"
+                    }
+                    PlayerStateEnum::Walk { frame: 0, .. } if *is_dashing => {
+                        "MW_Player_MarioMdl_b_dash.0_0.png"
+                    }
+                    PlayerStateEnum::Walk { .. } => {
+                        if !is_dashing {
+                            "MW_Player_MarioMdl_walk.1_0.png"
+                        } else {
+                            "MW_Player_MarioMdl_b_dash.1_0.png"
+                        }
+                    }
+                    PlayerStateEnum::Jump { .. } => {
+                        if !is_dashing {
+                            "MW_Player_MarioMdl_jump.0_0.png"
+                        } else {
+                            "MW_Player_MarioMdl_b_dash_jump.0_0.png"
+                        }
+                    }
+                    PlayerStateEnum::Fall { .. } => {
+                        if !is_dashing {
+                            "MW_Player_MarioMdl_jump_fall.0_0.png"
+                        } else {
+                            "MW_Player_MarioMdl_b_dash_jump_fall.0_0.png"
+                        }
+                    }
                 },
             };
             let handle = assets.load(asset_path);

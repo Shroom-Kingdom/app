@@ -2,7 +2,7 @@ use crate::{Player, PlayerState, PlayerStateEnum};
 use app_config::{
     LINVEL_CAP_RUN, LINVEL_CAP_STOOP, LINVEL_CAP_WALK, MOVE_IMPULSE_MULTIPLIER_AIR,
     MOVE_IMPULSE_MULTIPLIER_AIR_RUN, MOVE_IMPULSE_MULTIPLIER_GROUND,
-    MOVE_IMPULSE_MULTIPLIER_GROUND_RUN,
+    MOVE_IMPULSE_MULTIPLIER_GROUND_RUN, RUN_THRESHOLD,
 };
 use bevy::prelude::*;
 use bevy_rapier::{na::Vector2, prelude::*};
@@ -35,12 +35,22 @@ pub fn movement(
                     | PlayerStateEnum::Fall
                     | PlayerStateEnum::Wait
                     | PlayerStateEnum::Walk { .. },
+                ..
             }
             | PlayerState {
                 is_stooping: true,
                 is_running,
                 state: PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall,
+                ..
             } => {
+                if let PlayerState {
+                    state: PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. },
+                    ..
+                } = player.state
+                {
+                    player.state.is_dashing = rb_vel.linvel.data.0[0][0].abs() > RUN_THRESHOLD;
+                }
+
                 let left =
                     keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
                 let right =

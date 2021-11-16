@@ -29,6 +29,10 @@ fn load_textures(mut sprite_handles: ResMut<SpriteHandles>, asset_server: Res<As
         asset_server.load_untyped("MW_Player_MarioMdl_jump.0_0.png"),
         asset_server.load_untyped("MW_Player_MarioMdl_jump_fall.0_0.png"),
         asset_server.load_untyped("MW_Player_MarioMdl_stoop.0_0.png"),
+        asset_server.load_untyped("MW_Player_MarioMdl_b_dash.0_0.png"),
+        asset_server.load_untyped("MW_Player_MarioMdl_b_dash.1_0.png"),
+        asset_server.load_untyped("MW_Player_MarioMdl_b_dash_jump.0_0.png"),
+        asset_server.load_untyped("MW_Player_MarioMdl_b_dash_jump_fall.0_0.png"),
     ];
 }
 
