@@ -60,7 +60,7 @@ pub fn high_jump(
                 rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
                 if released {
                     player.state.state = PlayerStateEnum::Jump {
-                        tick: 0,
+                        tick: tick + 1,
                         high_jump_tick,
                         released,
                         impulse,
@@ -82,7 +82,7 @@ pub fn high_jump(
             } if tick < high_jump_tick => {
                 rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
                 player.state.state = PlayerStateEnum::Jump {
-                    tick: 0,
+                    tick: tick + 1,
                     high_jump_tick,
                     released: true,
                     impulse,

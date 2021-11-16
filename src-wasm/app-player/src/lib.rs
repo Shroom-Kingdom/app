@@ -18,6 +18,7 @@ use walk::{walk_animation, walk_start};
 
 pub use ground::GroundIntersectEvent;
 pub use jump::{FallEvent, JumpEvent};
+pub use movement::{DashTurnEvent, MovementEvent};
 pub use walk::WalkEvent;
 
 pub struct CharacterPlugin;
@@ -26,6 +27,8 @@ impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerStateChangeEvent>()
             .add_event::<WalkEvent>()
+            .add_event::<MovementEvent>()
+            .add_event::<DashTurnEvent>()
             .add_event::<FallEvent>()
             .add_event::<JumpEvent>()
             .add_event::<GroundIntersectEvent>()
@@ -70,10 +73,18 @@ pub struct Player {
 
 #[derive(Clone, Debug)]
 pub struct PlayerState {
+    facing_direction: FacingDirection,
     state: PlayerStateEnum,
     is_running: bool,
     is_dashing: bool,
     is_stooping: bool,
+    is_dash_turning: bool,
+}
+
+#[derive(Clone, Debug)]
+pub enum FacingDirection {
+    Left,
+    Right,
 }
 
 #[derive(Clone, Debug)]
@@ -136,24 +147,38 @@ fn set_sprite(
                 PlayerState {
                     is_stooping: false,
                     is_dashing,
+                    is_dash_turning,
+                    facing_direction,
                     state,
                     ..
                 } => match state {
                     PlayerStateEnum::Wait { .. } => "MW_Player_MarioMdl_wait.0_0.png",
-                    PlayerStateEnum::Walk { frame: 0, .. } if !is_dashing => {
-                        "MW_Player_MarioMdl_walk.0_0.png"
-                    }
-                    PlayerStateEnum::Walk { frame: 0, .. } if *is_dashing => {
-                        "MW_Player_MarioMdl_b_dash.0_0.png"
-                    }
-                    PlayerStateEnum::Walk { .. } => {
-                        if !is_dashing {
+                    PlayerStateEnum::Walk { frame, .. } => {
+                        sprite.flip_x = match *facing_direction {
+                            FacingDirection::Left => !is_dash_turning,
+                            FacingDirection::Right => *is_dash_turning,
+                        };
+                        if *is_dash_turning {
+                            "MW_Player_MarioMdl_turn.0_0.png"
+                        } else if *is_dashing {
+                            if *frame == 1 {
+                                "MW_Player_MarioMdl_b_dash.1_0.png"
+                            } else {
+                                "MW_Player_MarioMdl_b_dash.0_0.png"
+                            }
+                        } else if *frame == 1 {
                             "MW_Player_MarioMdl_walk.1_0.png"
                         } else {
-                            "MW_Player_MarioMdl_b_dash.1_0.png"
+                            "MW_Player_MarioMdl_walk.0_0.png"
                         }
                     }
-                    PlayerStateEnum::Jump { .. } => {
+                    PlayerStateEnum::Jump { tick, .. } => {
+                        if *tick == 0 {
+                            sprite.flip_x = match *facing_direction {
+                                FacingDirection::Left => true,
+                                FacingDirection::Right => false,
+                            };
+                        }
                         if !is_dashing {
                             "MW_Player_MarioMdl_jump.0_0.png"
                         } else {

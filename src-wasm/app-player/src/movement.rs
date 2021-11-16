@@ -7,6 +7,15 @@ use app_config::{
 use bevy::prelude::*;
 use bevy_rapier::{na::Vector2, prelude::*};
 
+pub enum MovementEvent {
+    Left,
+    Right,
+}
+
+pub struct DashTurnEvent {
+    pub is_dash_turning: bool,
+}
+
 pub fn run(mut query: Query<&mut Player>, keyboard_input: Res<Input<KeyCode>>) {
     if let Ok(mut player) = query.single_mut() {
         let run =
@@ -21,11 +30,12 @@ pub fn movement(
         &mut RigidBodyVelocity,
         &RigidBodyMassProps,
         &mut ColliderMaterial,
-        &mut TextureAtlasSprite,
     )>,
     keyboard_input: Res<Input<KeyCode>>,
+    mut movement_events: EventWriter<MovementEvent>,
+    mut dash_turn_events: EventWriter<DashTurnEvent>,
 ) {
-    if let Ok((mut player, mut rb_vel, rb_mprops, mut c_mat, mut sprite)) = query.single_mut() {
+    if let Ok((mut player, mut rb_vel, rb_mprops, mut c_mat)) = query.single_mut() {
         match player.state {
             PlayerState {
                 is_stooping: false,
@@ -62,15 +72,45 @@ pub fn movement(
                     (false, true) => LINVEL_CAP_RUN,
                     (false, false) => LINVEL_CAP_WALK,
                 };
+                match (&player.state, rb_vel.linvel.data.0[0][0]) {
+                    (
+                        PlayerState {
+                            is_dashing: true,
+                            is_dash_turning: false,
+                            state: PlayerStateEnum::Walk { .. },
+                            ..
+                        },
+                        linvel,
+                    ) if (linvel > 0. && x_axis < 0) || (linvel < 0. && x_axis > 0) => {
+                        dash_turn_events.send(DashTurnEvent {
+                            is_dash_turning: true,
+                        });
+                    }
+                    (
+                        PlayerState {
+                            is_dash_turning: true,
+                            ..
+                        },
+                        linvel,
+                    ) if x_axis == 0
+                        || (linvel > 0. && x_axis > 0)
+                        || (linvel < 0. && x_axis < 0) =>
+                    {
+                        dash_turn_events.send(DashTurnEvent {
+                            is_dash_turning: false,
+                        });
+                    }
+                    _ => {}
+                }
                 match x_axis {
                     _ if x_axis > 0 => {
-                        sprite.flip_x = false;
+                        movement_events.send(MovementEvent::Right);
                         if rb_vel.linvel.data.0[0][0] > cap {
                             return;
                         }
                     }
                     _ if x_axis < 0 => {
-                        sprite.flip_x = true;
+                        movement_events.send(MovementEvent::Left);
                         if rb_vel.linvel.data.0[0][0] < -cap {
                             return;
                         }

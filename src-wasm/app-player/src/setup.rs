@@ -1,4 +1,4 @@
-use crate::{Player, PlayerState, PlayerStateEnum};
+use crate::{FacingDirection, Player, PlayerState, PlayerStateEnum};
 use app_config::{RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
@@ -57,6 +57,10 @@ pub fn setup(
     let texture = textures.get(&handle).unwrap();
     texture_atlas_builder.add_texture(handle, texture);
 
+    let handle = assets.load("MW_Player_MarioMdl_turn.0_0.png");
+    let texture = textures.get(&handle).unwrap();
+    texture_atlas_builder.add_texture(handle, texture);
+
     let handle = assets.load("MW_Player_MarioMdl_jump.0_0.png");
     let texture = textures.get(&handle).unwrap();
     texture_atlas_builder.add_texture(handle, texture);
@@ -101,10 +105,12 @@ pub fn setup(
         })
         .insert(Player {
             state: PlayerState {
+                facing_direction: FacingDirection::Right,
                 state: PlayerStateEnum::Fall,
                 is_running: false,
                 is_dashing: false,
                 is_stooping: false,
+                is_dash_turning: false,
             },
         })
         .insert(ColliderPositionSync::Discrete)

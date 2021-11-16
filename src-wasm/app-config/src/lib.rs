@@ -10,7 +10,7 @@ pub const LINVEL_CAP_WALK: f32 = 20.;
 pub const LINVEL_CAP_RUN: f32 = 35.;
 pub const LINVEL_CAP_STOOP: f32 = 10.;
 
-pub const RUN_THRESHOLD: f32 = LINVEL_CAP_RUN - 2.;
+pub const RUN_THRESHOLD: f32 = LINVEL_CAP_RUN - 4.;
 pub const HIGH_JUMP_WALK_THRESHOLD: f32 = 7.;
 
 pub const JUMP_FORCE: f32 = 37.;
@@ -23,5 +23,3 @@ pub const RAPIER_GRAVITY_VECTOR: Vector2<f32> = Vector2::new(0., -RAPIER_GRAVITY
 
 const GROUND_FRICTION_MULTIPLIER: f32 = 30.;
 pub const GROUND_FRICTION: f32 = GROUND_FRICTION_MULTIPLIER / RAPIER_GRAVITY;
-
-// TODO run turn animation
