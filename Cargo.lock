@@ -111,6 +111,7 @@ dependencies = [
  "app-debug",
  "app-ground",
  "app-player",
+ "app-tile",
  "bevy",
  "bevy_rapier2d",
  "bevy_webgl2",
@@ -174,6 +175,19 @@ dependencies = [
  "bevy",
  "bevy_rapier2d",
  "web-sys",
+]
+
+[[package]]
+name = "app-tile"
+version = "0.1.0"
+dependencies = [
+ "app-config",
+ "app-ground",
+ "bevy",
+ "bevy_rapier2d",
+ "wasm-bindgen",
+ "web-sys",
+ "winit",
 ]
 
 [[package]]

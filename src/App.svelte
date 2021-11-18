@@ -11,6 +11,7 @@
 		assetData = data;
 
 		if (canvas) {
+			canvas.style.zIndex = '0';
 			canvas.onblur = () => {
 				setTimeout(() => {
 					canvas?.focus();
@@ -54,6 +55,7 @@
 <canvas
 	id="canvas"
 	bind:this={canvas}
+	on:contextmenu={(e) => { e.preventDefault(); }}
 />
 
 <style>

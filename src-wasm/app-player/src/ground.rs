@@ -28,7 +28,10 @@ pub fn ground_intersect(
                     {
                         return;
                     }
-                    if collider1.entity() == player_entity || collider2.entity() == player_entity {
+                    if rb_vel.linvel.data.0[0][1] <= 0.
+                        && (collider1.entity() == player_entity
+                            || collider2.entity() == player_entity)
+                    {
                         timer.reset();
                         rb_vel.linvel.data.0[0][1] = 0.;
                         ground_intersect_events.send(GroundIntersectEvent::Start);

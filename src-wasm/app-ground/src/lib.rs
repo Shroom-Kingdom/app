@@ -18,6 +18,10 @@ impl Grounds {
     pub fn contains(&self, value: &Entity) -> bool {
         self.0.contains(value)
     }
+
+    pub fn insert(&mut self, value: Entity) {
+        self.0.insert(value);
+    }
 }
 
 pub struct GroundPlugin;

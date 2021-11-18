@@ -132,12 +132,15 @@ fn stoop(
 }
 
 fn set_sprite(
-    mut query: Query<(&Player, &mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
+    mut query: Query<(&Player, &Children)>,
+    mut child_query: Query<(&mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
     mut psc_events: EventReader<PlayerStateChangeEvent>,
     assets: Res<AssetServer>,
     texture_atlases: Res<Assets<TextureAtlas>>,
 ) {
-    if let Ok((_, mut sprite, atlas_handle)) = query.single_mut() {
+    if let Ok((_, children)) = query.single_mut() {
+        let child = children.first().unwrap();
+        let (mut sprite, atlas_handle) = child_query.get_mut(*child).unwrap();
         if let Some(event) = psc_events.iter().last() {
             let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
             let asset_path = match &event.state {

@@ -1,8 +1,9 @@
 use crate::graphics::{enable_physics_profiling, setup_graphics};
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
-use app_player::CharacterPlugin;
 use app_core::{AppState, CorePlugin};
 use app_ground::GroundPlugin;
+use app_player::CharacterPlugin;
+use app_tile::TilePlugin;
 // use app_debug::{DebugPlugin, DebugPluginState};
 use bevy::{input::keyboard::keyboard_input_system, prelude::*};
 use bevy_rapier::{
@@ -39,6 +40,7 @@ pub fn main(assets: Vec<u8>) {
         .add_plugin(CorePlugin)
         .add_plugin(CharacterPlugin)
         .add_plugin(GroundPlugin)
+        .add_plugin(TilePlugin)
         // .add_plugin(DebugPlugin)
         .add_startup_system(setup_graphics.system())
         .add_startup_system(enable_physics_profiling.system())

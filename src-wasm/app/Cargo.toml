@@ -15,6 +15,7 @@ app-core = { path = "../app-core" }
 app-debug = { path = "../app-debug" }
 app-ground = { path = "../app-ground" }
 app-player = { path = "../app-player" }
+app-tile = { path = "../app-tile" }
 js-sys = "0.3"
 rapier = { package = "rapier2d", version = "0.11" }
 wasm-bindgen = "0.2"

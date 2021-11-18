@@ -4,8 +4,8 @@ pub struct CorePlugin;
 
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<SpriteHandles>()
-            .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(load_textures))
+        app.init_resource::<PlayerSpriteHandles>()
+            .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(load_player_sprites))
             .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures));
     }
 }
@@ -17,11 +17,14 @@ pub enum AppState {
 }
 
 #[derive(Default)]
-struct SpriteHandles {
+struct PlayerSpriteHandles {
     handles: Vec<HandleUntyped>,
 }
 
-fn load_textures(mut sprite_handles: ResMut<SpriteHandles>, asset_server: Res<AssetServer>) {
+fn load_player_sprites(
+    mut sprite_handles: ResMut<PlayerSpriteHandles>,
+    asset_server: Res<AssetServer>,
+) {
     sprite_handles.handles = vec![
         asset_server.load_untyped("MW_Player_MarioMdl_wait.0_0.png"),
         asset_server.load_untyped("MW_Player_MarioMdl_walk.0_0.png"),
@@ -39,11 +42,11 @@ fn load_textures(mut sprite_handles: ResMut<SpriteHandles>, asset_server: Res<As
 
 fn check_textures(
     mut state: ResMut<State<AppState>>,
-    sprite_handles: ResMut<SpriteHandles>,
+    player_sprite_handles: ResMut<PlayerSpriteHandles>,
     asset_server: Res<AssetServer>,
 ) {
-    if let LoadState::Loaded =
-        asset_server.get_group_load_state(sprite_handles.handles.iter().map(|handle| handle.id))
+    if let LoadState::Loaded = asset_server
+        .get_group_load_state(player_sprite_handles.handles.iter().map(|handle| handle.id))
     {
         state.set(AppState::Finished).unwrap();
     }

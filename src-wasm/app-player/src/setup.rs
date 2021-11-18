@@ -18,8 +18,8 @@ pub fn setup(
     rapier_config.gravity = RAPIER_GRAVITY_VECTOR;
 
     let scale_size = 2.;
-    let sprite_size_x = scale_size * 12.0;
-    let sprite_size_y = scale_size * 16.0;
+    let sprite_size_x = scale_size * 7.0;
+    let sprite_size_y = scale_size * 11.0;
     let collider_size_x = sprite_size_x / rapier_config.scale;
     let collider_size_y = sprite_size_y / rapier_config.scale;
 
@@ -94,14 +94,17 @@ pub fn setup(
             },
             ..Default::default()
         })
-        .insert_bundle(SpriteSheetBundle {
-            transform: Transform {
-                scale: Vec3::new(scale_size, scale_size, 1.),
+        .with_children(|parent| {
+            parent.spawn_bundle(SpriteSheetBundle {
+                transform: Transform {
+                    scale: Vec3::new(scale_size, scale_size, 1.),
+                    translation: Vec3::new(0., 5. * scale_size, 1.),
+                    ..Default::default()
+                },
+                sprite: TextureAtlasSprite::new(wait_index as u32),
+                texture_atlas: atlas_handle,
                 ..Default::default()
-            },
-            sprite: TextureAtlasSprite::new(wait_index as u32),
-            texture_atlas: atlas_handle,
-            ..Default::default()
+            });
         })
         .insert(Player {
             state: PlayerState {
