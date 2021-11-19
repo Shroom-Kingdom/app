@@ -3,8 +3,6 @@ use app_config::{HIGH_JUMP_TICK, HIGH_JUMP_TICK_WALK, HIGH_JUMP_WALK_THRESHOLD, 
 use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 
-pub struct FallEvent;
-
 pub struct JumpEvent {
     pub high_jump_tick: u8,
 }
@@ -95,12 +93,12 @@ pub fn high_jump(
 
 pub fn jump_to_fall(
     query: Query<(&Player, &RigidBodyVelocity)>,
-    mut fall_events: EventWriter<FallEvent>,
+    mut fall_events: EventWriter<JumpEvent>,
 ) {
     if let Ok((player, rb_vel)) = query.single() {
         if let PlayerStateEnum::Jump { .. } = player.state.state {
-            if rb_vel.linvel.data.0[0][1] < 0. {
-                fall_events.send(FallEvent);
+            if rb_vel.linvel.data.0[0][1] <= 0. {
+                fall_events.send(JumpEvent { high_jump_tick: 0 });
             }
         }
     }

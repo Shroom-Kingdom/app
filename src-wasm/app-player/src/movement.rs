@@ -41,16 +41,13 @@ pub fn movement(
                 is_stooping: false,
                 is_running,
                 state:
-                    PlayerStateEnum::Jump { .. }
-                    | PlayerStateEnum::Fall
-                    | PlayerStateEnum::Wait
-                    | PlayerStateEnum::Walk { .. },
+                    PlayerStateEnum::Jump { .. } | PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. },
                 ..
             }
             | PlayerState {
                 is_stooping: true,
                 is_running,
-                state: PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall,
+                state: PlayerStateEnum::Jump { .. },
                 ..
             } => {
                 if let PlayerState {
@@ -120,12 +117,8 @@ pub fn movement(
                 if x_axis != 0 {
                     let move_delta = Vector2::new(x_axis as f32, 0.);
                     let multiplier = match (&player.state.state, is_running) {
-                        (PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall, false) => {
-                            MOVE_IMPULSE_MULTIPLIER_AIR
-                        }
-                        (PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall, true) => {
-                            MOVE_IMPULSE_MULTIPLIER_AIR_RUN
-                        }
+                        (PlayerStateEnum::Jump { .. }, false) => MOVE_IMPULSE_MULTIPLIER_AIR,
+                        (PlayerStateEnum::Jump { .. }, true) => MOVE_IMPULSE_MULTIPLIER_AIR_RUN,
                         (PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. }, false) => {
                             MOVE_IMPULSE_MULTIPLIER_GROUND
                         }

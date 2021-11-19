@@ -19,7 +19,7 @@ pub fn setup(
 
     let scale_size = 2.;
     let sprite_size_x = scale_size * 7.0;
-    let sprite_size_y = scale_size * 11.0;
+    let sprite_size_y = scale_size * 10.0;
     let collider_size_x = sprite_size_x / rapier_config.scale;
     let collider_size_y = sprite_size_y / rapier_config.scale;
 
@@ -98,7 +98,7 @@ pub fn setup(
             parent.spawn_bundle(SpriteSheetBundle {
                 transform: Transform {
                     scale: Vec3::new(scale_size, scale_size, 1.),
-                    translation: Vec3::new(0., 5. * scale_size, 1.),
+                    translation: Vec3::new(0., 6. * scale_size, 1.),
                     ..Default::default()
                 },
                 sprite: TextureAtlasSprite::new(wait_index as u32),
@@ -109,7 +109,12 @@ pub fn setup(
         .insert(Player {
             state: PlayerState {
                 facing_direction: FacingDirection::Right,
-                state: PlayerStateEnum::Fall,
+                state: PlayerStateEnum::Jump {
+                    tick: 0,
+                    high_jump_tick: 0,
+                    impulse: false,
+                    released: true,
+                },
                 is_touching_ground: None,
                 is_running: false,
                 is_dashing: false,

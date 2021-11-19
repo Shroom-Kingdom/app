@@ -8,6 +8,7 @@ mod walk;
 
 use app_core::AppState;
 use bevy::prelude::*;
+use bevy_rapier::prelude::*;
 use debug::setup_ui;
 use ground::ground_intersect;
 use jump::{high_jump, jump, jump_to_fall};
@@ -17,7 +18,7 @@ use state_change::state_change;
 use walk::{walk_animation, walk_start};
 
 pub use ground::GroundIntersectEvent;
-pub use jump::{FallEvent, JumpEvent};
+pub use jump::JumpEvent;
 pub use movement::{DashTurnEvent, MovementEvent};
 pub use walk::WalkEvent;
 
@@ -29,7 +30,6 @@ impl Plugin for CharacterPlugin {
             .add_event::<WalkEvent>()
             .add_event::<MovementEvent>()
             .add_event::<DashTurnEvent>()
-            .add_event::<FallEvent>()
             .add_event::<JumpEvent>()
             .add_event::<GroundIntersectEvent>()
             .add_event::<StoopEvent>()
@@ -101,7 +101,6 @@ pub enum PlayerStateEnum {
         released: bool,
         impulse: bool,
     },
-    Fall,
 }
 
 pub struct PlayerStateChangeEvent {
@@ -133,13 +132,13 @@ fn stoop(
 }
 
 fn set_sprite(
-    mut query: Query<(&Player, &Children)>,
+    mut query: Query<(&Player, &Children, &RigidBodyVelocity)>,
     mut child_query: Query<(&mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
     mut psc_events: EventReader<PlayerStateChangeEvent>,
     assets: Res<AssetServer>,
     texture_atlases: Res<Assets<TextureAtlas>>,
 ) {
-    if let Ok((_, children)) = query.single_mut() {
+    if let Ok((_, children, rb_vel)) = query.single_mut() {
         let child = children.first().unwrap();
         let (mut sprite, atlas_handle) = child_query.get_mut(*child).unwrap();
         if let Some(event) = psc_events.iter().last() {
@@ -177,20 +176,19 @@ fn set_sprite(
                         }
                     }
                     PlayerStateEnum::Jump { tick, .. } => {
-                        if *tick == 0 {
-                            sprite.flip_x = match *facing_direction {
-                                FacingDirection::Left => true,
-                                FacingDirection::Right => false,
-                            };
-                        }
-                        if !is_dashing {
-                            "MW_Player_MarioMdl_jump.0_0.png"
-                        } else {
-                            "MW_Player_MarioMdl_b_dash_jump.0_0.png"
-                        }
-                    }
-                    PlayerStateEnum::Fall { .. } => {
-                        if !is_dashing {
+                        if rb_vel.linvel.data.0[0][1] > 0. {
+                            if *tick == 0 {
+                                sprite.flip_x = match *facing_direction {
+                                    FacingDirection::Left => true,
+                                    FacingDirection::Right => false,
+                                };
+                            }
+                            if !is_dashing {
+                                "MW_Player_MarioMdl_jump.0_0.png"
+                            } else {
+                                "MW_Player_MarioMdl_b_dash_jump.0_0.png"
+                            }
+                        } else if !is_dashing {
                             "MW_Player_MarioMdl_jump_fall.0_0.png"
                         } else {
                             "MW_Player_MarioMdl_b_dash_jump_fall.0_0.png"
