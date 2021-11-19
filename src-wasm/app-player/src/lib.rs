@@ -17,7 +17,7 @@ use setup::setup;
 use state_change::state_change;
 use walk::{walk_animation, walk_start};
 
-pub use ground::GroundIntersectEvent;
+pub use ground::{GroundIntersectEvent, GroundIntersections};
 pub use jump::JumpEvent;
 pub use movement::{DashTurnEvent, MovementEvent};
 pub use walk::WalkEvent;

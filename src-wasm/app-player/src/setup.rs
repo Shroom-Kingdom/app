@@ -1,4 +1,4 @@
-use crate::{FacingDirection, Player, PlayerState, PlayerStateEnum};
+use crate::{FacingDirection, GroundIntersections, Player, PlayerState, PlayerStateEnum};
 use app_config::{RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
@@ -123,6 +123,7 @@ pub fn setup(
             },
         })
         .insert(ColliderPositionSync::Discrete)
+        .insert(GroundIntersections::default())
         .insert(Timer::from_seconds(1.3, true));
 
     commands.spawn_bundle(SpriteBundle {
