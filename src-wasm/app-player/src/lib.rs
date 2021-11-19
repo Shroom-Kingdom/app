@@ -75,6 +75,7 @@ pub struct Player {
 pub struct PlayerState {
     facing_direction: FacingDirection,
     state: PlayerStateEnum,
+    is_touching_ground: Option<u8>,
     is_running: bool,
     is_dashing: bool,
     is_stooping: bool,

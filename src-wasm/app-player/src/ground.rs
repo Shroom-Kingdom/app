@@ -9,12 +9,12 @@ pub enum GroundIntersectEvent {
 }
 
 pub fn ground_intersect(
-    mut query: Query<(&Player, Entity, &mut Timer, &mut RigidBodyVelocity)>,
+    mut query: Query<(&mut Player, Entity, &mut Timer, &mut RigidBodyVelocity)>,
     grounds: Res<Grounds>,
     mut ground_intersect_events: EventWriter<GroundIntersectEvent>,
     mut intersection_events: EventReader<IntersectionEvent>,
 ) {
-    if let Ok((player, player_entity, mut timer, mut rb_vel)) = query.single_mut() {
+    if let Ok((mut player, player_entity, mut timer, mut rb_vel)) = query.single_mut() {
         for intersection_event in intersection_events.iter() {
             match intersection_event {
                 IntersectionEvent {
@@ -35,6 +35,7 @@ pub fn ground_intersect(
                         timer.reset();
                         rb_vel.linvel.data.0[0][1] = 0.;
                         ground_intersect_events.send(GroundIntersectEvent::Start);
+                        player.state.is_touching_ground = Some(0);
                     }
                 }
                 IntersectionEvent {
@@ -52,6 +53,7 @@ pub fn ground_intersect(
                     }
                     if collider1.entity() == player_entity || collider2.entity() == player_entity {
                         ground_intersect_events.send(GroundIntersectEvent::Stop);
+                        player.state.is_touching_ground = None;
                     }
                 }
             }

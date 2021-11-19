@@ -110,6 +110,7 @@ pub fn setup(
             state: PlayerState {
                 facing_direction: FacingDirection::Right,
                 state: PlayerStateEnum::Fall,
+                is_touching_ground: None,
                 is_running: false,
                 is_dashing: false,
                 is_stooping: false,

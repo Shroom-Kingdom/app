@@ -18,7 +18,7 @@ pub fn state_change(
     mut psc_events: EventWriter<PlayerStateChangeEvent>,
 ) {
     if let Ok((mut player, rb_vel)) = query.single_mut() {
-        let state = match (
+        let mut state = match (
             fall_events.iter().next(),
             jump_events.iter().next(),
             ground_intersect_events.iter().next(),
@@ -32,14 +32,7 @@ pub fn state_change(
                 released: false,
             }),
             (_, _, Some(GroundIntersectEvent::Start), _) => {
-                if rb_vel
-                    .linvel
-                    .data
-                    .0
-                    .get(0)
-                    .map(|x| x[0] == 0.)
-                    .unwrap_or_default()
-                {
+                if rb_vel.linvel.data.0[0][0] == 0. {
                     Some(PlayerStateEnum::Wait)
                 } else {
                     Some(PlayerStateEnum::Walk {
@@ -74,6 +67,24 @@ pub fn state_change(
             }
             (None, None, None, None) => None,
         };
+        if let PlayerStateEnum::Jump { .. } | PlayerStateEnum::Fall = player.state.state {
+            if let Some(is_touching_ground) = player.state.is_touching_ground {
+                let is_touching_ground = is_touching_ground + 1;
+                if is_touching_ground > 5 {
+                    state = if rb_vel.linvel.data.0[0][0] == 0. {
+                        Some(PlayerStateEnum::Wait)
+                    } else {
+                        Some(PlayerStateEnum::Walk {
+                            frame: 1,
+                            is_turning: false,
+                        })
+                    };
+                } else {
+                    player.state.is_touching_ground = Some(is_touching_ground);
+                }
+            }
+        }
+
         let mut send_state_update = false;
         match (stoop_events.iter().next(), &player.state.state) {
             (
