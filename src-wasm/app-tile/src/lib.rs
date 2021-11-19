@@ -114,7 +114,7 @@ fn cursor_to_world(
 ) -> Vec2 {
     web_sys::console::log_1(&format!("cursor {:?}", cursor).into());
     let diff = Vec2::new(
-        (body.offset_width() - canvas.offset_width()) as f32,
+        0.,
         (body.offset_height() - canvas.offset_height() - 5) as f32,
     );
     let cursor =
