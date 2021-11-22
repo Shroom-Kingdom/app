@@ -40,18 +40,17 @@ pub fn movement(
             PlayerState {
                 is_stooping: false,
                 is_running,
-                state:
-                    PlayerStateEnum::Jump { .. } | PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. },
+                state: PlayerStateEnum::Air { .. } | PlayerStateEnum::Ground { .. },
                 ..
             }
             | PlayerState {
                 is_stooping: true,
                 is_running,
-                state: PlayerStateEnum::Jump { .. },
+                state: PlayerStateEnum::Air { .. },
                 ..
             } => {
                 if let PlayerState {
-                    state: PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. },
+                    state: PlayerStateEnum::Ground { .. },
                     ..
                 } = player.state
                 {
@@ -74,7 +73,7 @@ pub fn movement(
                         PlayerState {
                             is_dashing: true,
                             is_dash_turning: false,
-                            state: PlayerStateEnum::Walk { .. },
+                            state: PlayerStateEnum::Ground { .. },
                             ..
                         },
                         linvel,
@@ -117,38 +116,40 @@ pub fn movement(
                 if x_axis != 0 {
                     let move_delta = Vector2::new(x_axis as f32, 0.);
                     let multiplier = match (&player.state.state, is_running) {
-                        (PlayerStateEnum::Jump { .. }, false) => MOVE_IMPULSE_MULTIPLIER_AIR,
-                        (PlayerStateEnum::Jump { .. }, true) => MOVE_IMPULSE_MULTIPLIER_AIR_RUN,
-                        (PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. }, false) => {
-                            MOVE_IMPULSE_MULTIPLIER_GROUND
-                        }
-                        (PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. }, true) => {
+                        (PlayerStateEnum::Air { .. }, false) => MOVE_IMPULSE_MULTIPLIER_AIR,
+                        (PlayerStateEnum::Air { .. }, true) => MOVE_IMPULSE_MULTIPLIER_AIR_RUN,
+                        (PlayerStateEnum::Ground { .. }, false) => MOVE_IMPULSE_MULTIPLIER_GROUND,
+                        (PlayerStateEnum::Ground { .. }, true) => {
                             MOVE_IMPULSE_MULTIPLIER_GROUND_RUN
                         }
                     };
                     rb_vel.apply_impulse(rb_mprops, move_delta * multiplier);
                 }
                 match player.state.state {
-                    PlayerStateEnum::Walk {
+                    PlayerStateEnum::Ground {
                         is_turning: false,
+                        is_walking,
                         frame,
                     } if (x_axis == 1 && rb_vel.linvel.data.0[0][0] < 0.)
                         || (x_axis == -1 && rb_vel.linvel.data.0[0][0] > 0.) =>
                     {
-                        player.state.state = PlayerStateEnum::Walk {
+                        player.state.state = PlayerStateEnum::Ground {
                             frame,
+                            is_walking,
                             is_turning: true,
                         };
                         c_mat.friction = 0.
                     }
-                    PlayerStateEnum::Walk {
+                    PlayerStateEnum::Ground {
                         is_turning: true,
+                        is_walking,
                         frame,
                     } if (x_axis == 1 && rb_vel.linvel.data.0[0][0] > 0.)
                         || (x_axis == -1 && rb_vel.linvel.data.0[0][0] < 0.) =>
                     {
-                        player.state.state = PlayerStateEnum::Walk {
+                        player.state.state = PlayerStateEnum::Ground {
                             frame,
+                            is_walking,
                             is_turning: false,
                         };
                         c_mat.friction = 1.
@@ -158,7 +159,7 @@ pub fn movement(
             }
             PlayerState {
                 is_stooping: true,
-                state: PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. },
+                state: PlayerStateEnum::Ground { .. },
                 ..
             } => {}
         }

@@ -75,7 +75,6 @@ pub struct Player {
 pub struct PlayerState {
     facing_direction: FacingDirection,
     state: PlayerStateEnum,
-    is_touching_ground: Option<u8>,
     is_running: bool,
     is_dashing: bool,
     is_stooping: bool,
@@ -90,16 +89,17 @@ pub enum FacingDirection {
 
 #[derive(Clone, Debug)]
 pub enum PlayerStateEnum {
-    Wait,
-    Walk {
+    Ground {
         frame: u8,
+        is_walking: bool,
         is_turning: bool,
     },
-    Jump {
+    Air {
         tick: u8,
         high_jump_tick: u8,
         released: bool,
         impulse: bool,
+        fall: bool,
     },
 }
 
@@ -155,8 +155,12 @@ fn set_sprite(
                     state,
                     ..
                 } => match state {
-                    PlayerStateEnum::Wait { .. } => "MW_Player_MarioMdl_wait.0_0.png",
-                    PlayerStateEnum::Walk { frame, .. } => {
+                    PlayerStateEnum::Ground { .. }
+                        if rb_vel.linvel.data.0[0][0].abs() < f32::EPSILON =>
+                    {
+                        "MW_Player_MarioMdl_wait.0_0.png"
+                    }
+                    PlayerStateEnum::Ground { frame, .. } => {
                         sprite.flip_x = match *facing_direction {
                             FacingDirection::Left => !is_dash_turning,
                             FacingDirection::Right => *is_dash_turning,
@@ -175,7 +179,7 @@ fn set_sprite(
                             "MW_Player_MarioMdl_walk.0_0.png"
                         }
                     }
-                    PlayerStateEnum::Jump { tick, .. } => {
+                    PlayerStateEnum::Air { tick, .. } => {
                         if rb_vel.linvel.data.0[0][1] > 0. {
                             if *tick == 0 {
                                 sprite.flip_x = match *facing_direction {

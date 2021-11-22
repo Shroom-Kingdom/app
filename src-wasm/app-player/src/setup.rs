@@ -109,13 +109,13 @@ pub fn setup(
         .insert(Player {
             state: PlayerState {
                 facing_direction: FacingDirection::Right,
-                state: PlayerStateEnum::Jump {
+                state: PlayerStateEnum::Air {
                     tick: 0,
                     high_jump_tick: 0,
                     impulse: false,
                     released: true,
+                    fall: true,
                 },
-                is_touching_ground: None,
                 is_running: false,
                 is_dashing: false,
                 is_stooping: false,

@@ -3,6 +3,7 @@ use app_ground::Grounds;
 use bevy::{prelude::*, utils::HashSet};
 use bevy_rapier::prelude::*;
 
+#[derive(Debug)]
 pub enum GroundIntersectEvent {
     Start(Entity),
     Stop(Entity),
@@ -12,12 +13,12 @@ pub enum GroundIntersectEvent {
 pub struct GroundIntersections(pub HashSet<Entity>);
 
 pub fn ground_intersect(
-    mut query: Query<(&mut Player, Entity, &mut Timer, &mut RigidBodyVelocity)>,
+    mut query: Query<(&Player, Entity, &mut Timer, &mut RigidBodyVelocity)>,
     grounds: Res<Grounds>,
     mut ground_intersect_events: EventWriter<GroundIntersectEvent>,
     mut intersection_events: EventReader<IntersectionEvent>,
 ) {
-    if let Ok((mut player, player_entity, mut timer, mut rb_vel)) = query.single_mut() {
+    if let Ok((player, player_entity, mut timer, mut rb_vel)) = query.single_mut() {
         for intersection_event in intersection_events.iter() {
             match intersection_event {
                 IntersectionEvent {
@@ -38,9 +39,10 @@ pub fn ground_intersect(
                             collider2.entity()
                         };
                         timer.reset();
-                        rb_vel.linvel.data.0[0][1] = 0.;
+                        if rb_vel.linvel.data.0[0][1] < 0. {
+                            rb_vel.linvel.data.0[0][1] = 0.;
+                        }
                         ground_intersect_events.send(GroundIntersectEvent::Start(collider_entity));
-                        player.state.is_touching_ground = Some(0);
                     }
                 }
                 IntersectionEvent {
@@ -48,7 +50,7 @@ pub fn ground_intersect(
                     collider2,
                     intersecting: false,
                 } => {
-                    if let PlayerStateEnum::Jump { .. } = player.state.state {
+                    if let PlayerStateEnum::Air { .. } = player.state.state {
                         return;
                     }
                     if !grounds.contains(&collider1.entity())
@@ -63,7 +65,6 @@ pub fn ground_intersect(
                             collider2.entity()
                         };
                         ground_intersect_events.send(GroundIntersectEvent::Stop(collider_entity));
-                        player.state.is_touching_ground = None;
                     }
                 }
             }

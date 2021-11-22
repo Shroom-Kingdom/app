@@ -68,7 +68,11 @@ fn place_tile(
         .unwrap()
         .body()
         .unwrap();
-    let cursor_position = window.cursor_position().unwrap();
+    let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
+        cursor_pointer
+    } else {
+        return;
+    };
 
     let position = cursor_to_world(cursor_position, camera_query, &body, canvas);
 

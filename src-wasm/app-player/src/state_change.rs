@@ -20,6 +20,7 @@ pub fn state_change(
         let mut state = handle_walk_events(&mut player, walk_events);
 
         state = handle_ground_intersect_events(
+            &player,
             state,
             rb_vel,
             ground_intersect_events,
@@ -27,51 +28,34 @@ pub fn state_change(
         );
 
         state = if let Some(jump_event) = jump_events.iter().next() {
-            let JumpEvent { high_jump_tick } = jump_event;
-            Some(PlayerStateEnum::Jump {
+            let JumpEvent {
+                high_jump_tick,
+                fall,
+            } = jump_event;
+            Some(PlayerStateEnum::Air {
                 tick: 0,
                 high_jump_tick: *high_jump_tick,
                 impulse: false,
                 released: false,
+                fall: *fall,
             })
         } else {
             state
         };
 
-        if let PlayerStateEnum::Jump { .. } = player.state.state {
-            if let Some(is_touching_ground) = player.state.is_touching_ground {
-                let is_touching_ground = is_touching_ground + 1;
-                if is_touching_ground > 5 {
-                    state = if rb_vel.linvel.data.0[0][0] == 0. {
-                        Some(PlayerStateEnum::Wait)
-                    } else {
-                        Some(PlayerStateEnum::Walk {
-                            frame: 1,
-                            is_turning: false,
-                        })
-                    };
-                } else {
-                    player.state.is_touching_ground = Some(is_touching_ground);
-                }
-            }
-        }
-
         let mut send_state_update = false;
         match (stoop_events.iter().next(), &player.state.state) {
-            (
-                Some(StoopEvent { is_stooping }),
-                PlayerStateEnum::Wait | PlayerStateEnum::Walk { .. },
-            ) => {
+            (Some(StoopEvent { is_stooping }), PlayerStateEnum::Ground { .. }) => {
                 send_state_update = true;
                 player.state.is_stooping = *is_stooping;
             }
-            (Some(StoopEvent { is_stooping: false }), PlayerStateEnum::Jump { .. })
+            (Some(StoopEvent { is_stooping: false }), PlayerStateEnum::Air { .. })
                 if rb_vel.linvel.data.0[0][1] <= 0. =>
             {
                 send_state_update = true;
                 player.state.is_stooping = false;
             }
-            (Some(StoopEvent { .. }), PlayerStateEnum::Jump { .. }) | (None, _) => {}
+            (Some(StoopEvent { .. }), PlayerStateEnum::Air { .. }) | (None, _) => {}
         }
         if let Some(DashTurnEvent { is_dash_turning }) = dash_turn_events.iter().next() {
             send_state_update = true;
@@ -107,14 +91,20 @@ fn handle_walk_events(
 ) -> Option<PlayerStateEnum> {
     if let Some(walk_event) = walk_events.iter().next() {
         match walk_event {
-            WalkEvent::Start => Some(PlayerStateEnum::Walk {
+            WalkEvent::Start => Some(PlayerStateEnum::Ground {
                 frame: 0,
+                is_walking: true,
                 is_turning: false,
             }),
-            WalkEvent::Stop => Some(PlayerStateEnum::Wait),
+            WalkEvent::Stop => Some(PlayerStateEnum::Ground {
+                frame: 0,
+                is_walking: false,
+                is_turning: false,
+            }),
             WalkEvent::Advance => {
-                if let PlayerStateEnum::Walk {
+                if let PlayerStateEnum::Ground {
                     frame,
+                    is_walking,
                     is_turning: false,
                 } = player.state.state
                 {
@@ -122,8 +112,9 @@ fn handle_walk_events(
                         0 => 1,
                         _ => 0,
                     };
-                    Some(PlayerStateEnum::Walk {
+                    Some(PlayerStateEnum::Ground {
                         frame,
+                        is_walking,
                         is_turning: false,
                     })
                 } else {
@@ -137,6 +128,7 @@ fn handle_walk_events(
 }
 
 fn handle_ground_intersect_events(
+    player: &Player,
     prev_state: Option<PlayerStateEnum>,
     rb_vel: &RigidBodyVelocity,
     mut ground_intersect_events: EventReader<GroundIntersectEvent>,
@@ -152,22 +144,25 @@ fn handle_ground_intersect_events(
             }
         }
     }
-    if ground_intersect_events.iter().next().is_some() {
+    if rb_vel.linvel.data.0[0][1] <= 0. {
         if !ground_intersections.0.is_empty() {
-            if rb_vel.linvel.data.0[0][0] == 0. {
-                Some(PlayerStateEnum::Wait)
-            } else {
-                Some(PlayerStateEnum::Walk {
+            match player.state.state {
+                PlayerStateEnum::Ground { .. } => prev_state,
+                _ => Some(PlayerStateEnum::Ground {
                     frame: 1,
+                    is_walking: rb_vel.linvel.data.0[0][0].abs() >= f32::EPSILON,
                     is_turning: false,
-                })
+                }),
             }
+        } else if let PlayerStateEnum::Air { .. } = player.state.state {
+            prev_state
         } else {
-            Some(PlayerStateEnum::Jump {
+            Some(PlayerStateEnum::Air {
                 tick: 0,
                 high_jump_tick: 0,
                 impulse: true,
                 released: true,
+                fall: true,
             })
         }
     } else {

@@ -5,6 +5,7 @@ use bevy_rapier::prelude::*;
 
 pub struct JumpEvent {
     pub high_jump_tick: u8,
+    pub fall: bool,
 }
 
 pub fn jump(
@@ -19,18 +20,17 @@ pub fn jump(
         if !jump {
             return;
         }
-        match player.state.state {
-            PlayerStateEnum::Wait { .. } | PlayerStateEnum::Walk { .. } => {
-                rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
-                let high_jump_tick = if rb_vel.linvel.data.0[0][0].abs() > HIGH_JUMP_WALK_THRESHOLD
-                {
-                    HIGH_JUMP_TICK_WALK
-                } else {
-                    HIGH_JUMP_TICK
-                };
-                psc_event.send(JumpEvent { high_jump_tick })
-            }
-            _ => {}
+        if let PlayerStateEnum::Ground { .. } = player.state.state {
+            rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
+            let high_jump_tick = if rb_vel.linvel.data.0[0][0].abs() > HIGH_JUMP_WALK_THRESHOLD {
+                HIGH_JUMP_TICK_WALK
+            } else {
+                HIGH_JUMP_TICK
+            };
+            psc_event.send(JumpEvent {
+                high_jump_tick,
+                fall: false,
+            })
         }
     }
 }
@@ -41,11 +41,12 @@ pub fn high_jump(
 ) {
     if let Ok((mut player, mut rb_vel)) = query.single_mut() {
         match player.state.state {
-            PlayerStateEnum::Jump {
+            PlayerStateEnum::Air {
                 tick,
                 high_jump_tick,
                 released: false,
                 impulse,
+                fall,
                 ..
             } if tick < high_jump_tick => {
                 let released = keyboard_input.just_released(KeyCode::Space)
@@ -57,33 +58,37 @@ pub fn high_jump(
 
                 rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
                 if released {
-                    player.state.state = PlayerStateEnum::Jump {
+                    player.state.state = PlayerStateEnum::Air {
                         tick: tick + 1,
                         high_jump_tick,
                         released,
                         impulse,
+                        fall,
                     };
                 } else if jump {
-                    player.state.state = PlayerStateEnum::Jump {
+                    player.state.state = PlayerStateEnum::Air {
                         tick: tick + 1,
                         high_jump_tick,
                         released: false,
                         impulse,
+                        fall,
                     };
                 }
             }
-            PlayerStateEnum::Jump {
+            PlayerStateEnum::Air {
                 tick,
                 high_jump_tick,
                 released: false,
                 impulse,
+                fall,
             } if tick < high_jump_tick => {
                 rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
-                player.state.state = PlayerStateEnum::Jump {
+                player.state.state = PlayerStateEnum::Air {
                     tick: tick + 1,
                     high_jump_tick,
                     released: true,
                     impulse,
+                    fall,
                 };
             }
             _ => {}
@@ -93,12 +98,15 @@ pub fn high_jump(
 
 pub fn jump_to_fall(
     query: Query<(&Player, &RigidBodyVelocity)>,
-    mut fall_events: EventWriter<JumpEvent>,
+    mut jump_events: EventWriter<JumpEvent>,
 ) {
     if let Ok((player, rb_vel)) = query.single() {
-        if let PlayerStateEnum::Jump { .. } = player.state.state {
-            if rb_vel.linvel.data.0[0][1] <= 0. {
-                fall_events.send(JumpEvent { high_jump_tick: 0 });
+        if let PlayerStateEnum::Air { .. } = player.state.state {
+            if rb_vel.linvel.data.0[0][1] < 0. {
+                jump_events.send(JumpEvent {
+                    high_jump_tick: 0,
+                    fall: true,
+                });
             }
         }
     }
