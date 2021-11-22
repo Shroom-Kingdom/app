@@ -4,6 +4,7 @@ mod jump;
 mod movement;
 mod setup;
 mod state_change;
+mod touch;
 mod walk;
 
 use app_core::AppState;
@@ -15,11 +16,13 @@ use jump::{high_jump, jump, jump_to_fall};
 use movement::{movement, run};
 use setup::setup;
 use state_change::state_change;
+use touch::touch;
 use walk::{walk_animation, walk_start};
 
 pub use ground::{GroundIntersectEvent, GroundIntersections};
 pub use jump::JumpEvent;
 pub use movement::{DashTurnEvent, MovementEvent};
+pub use touch::TouchEvent;
 pub use walk::WalkEvent;
 
 pub struct CharacterPlugin;
@@ -33,6 +36,7 @@ impl Plugin for CharacterPlugin {
             .add_event::<JumpEvent>()
             .add_event::<GroundIntersectEvent>()
             .add_event::<StoopEvent>()
+            .add_event::<TouchEvent>()
             .add_startup_system(setup_ui)
             .add_stage_after(
                 CoreStage::First,
@@ -54,6 +58,7 @@ impl Plugin for CharacterPlugin {
             .add_system_to_stage(CoreStage::PreUpdate, stoop)
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
             .add_system_to_stage(CoreStage::PostUpdate, ground_intersect)
+            .add_system_to_stage(CoreStage::PostUpdate, touch)
             .add_system_to_stage(CoreStage::PostUpdate, jump_to_fall)
             .add_system_to_stage(PlayerStages::StateChange, state_change)
             .add_system_to_stage(CoreStage::Last, set_sprite);

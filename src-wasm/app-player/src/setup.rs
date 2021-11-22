@@ -92,6 +92,7 @@ pub fn setup(
                 friction_combine_rule: CoefficientCombineRule::Multiply,
                 ..Default::default()
             },
+            flags: ActiveEvents::CONTACT_EVENTS.into(),
             ..Default::default()
         })
         .with_children(|parent| {

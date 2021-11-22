@@ -1,6 +1,7 @@
 use crate::{
     DashTurnEvent, FacingDirection, GroundIntersectEvent, GroundIntersections, JumpEvent,
-    MovementEvent, Player, PlayerStateChangeEvent, PlayerStateEnum, StoopEvent, WalkEvent,
+    MovementEvent, Player, PlayerStateChangeEvent, PlayerStateEnum, StoopEvent, TouchEvent,
+    WalkEvent,
 };
 use bevy::prelude::*;
 use bevy_rapier::prelude::*;
@@ -8,9 +9,10 @@ use bevy_rapier::prelude::*;
 #[allow(clippy::too_many_arguments)]
 pub fn state_change(
     mut query: Query<(&mut Player, &mut GroundIntersections, &RigidBodyVelocity)>,
-    mut jump_events: EventReader<JumpEvent>,
-    ground_intersect_events: EventReader<GroundIntersectEvent>,
     walk_events: EventReader<WalkEvent>,
+    mut touch_events: EventReader<TouchEvent>,
+    ground_intersect_events: EventReader<GroundIntersectEvent>,
+    mut jump_events: EventReader<JumpEvent>,
     mut stoop_events: EventReader<StoopEvent>,
     mut movement_events: EventReader<MovementEvent>,
     mut dash_turn_events: EventReader<DashTurnEvent>,
@@ -18,6 +20,22 @@ pub fn state_change(
 ) {
     if let Ok((mut player, mut ground_intersections, rb_vel)) = query.single_mut() {
         let mut state = handle_walk_events(&mut player, walk_events);
+
+        state = if touch_events.iter().next().is_some() {
+            if let PlayerStateEnum::Air { .. } = player.state.state {
+                Some(PlayerStateEnum::Air {
+                    tick: 0,
+                    high_jump_tick: 0,
+                    impulse: false,
+                    released: true,
+                    fall: true,
+                })
+            } else {
+                state
+            }
+        } else {
+            state
+        };
 
         state = handle_ground_intersect_events(
             &player,
