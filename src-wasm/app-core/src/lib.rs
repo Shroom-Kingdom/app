@@ -1,3 +1,7 @@
+mod course;
+
+pub use course::{Course, CourseTheme, Tile, TileVariant};
+
 use bevy::{asset::LoadState, prelude::*};
 
 pub struct CorePlugin;

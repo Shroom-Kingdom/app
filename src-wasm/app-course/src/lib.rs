@@ -1,30 +1,9 @@
 use app_config::{GRID_SIZE, GROUND_FRICTION, TILE_COLLIDER_SUB, TILE_SIZE};
+use app_core::{Course, CourseTheme};
 use app_ground::{Ground, Grounds};
-use app_tile::{SpawnTileEvent, Tile};
-use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
+use app_tile::SpawnTileEvent;
+use bevy::prelude::*;
 use bevy_rapier::{na::Point2, prelude::*};
-
-#[derive(Debug, TypeUuid)]
-#[uuid = "81a23571-1f35-4f20-b1ea-30e5c2612049"]
-pub struct Course {
-    texture_atlas_handle: Handle<TextureAtlas>,
-    tiles: HashMap<[i32; 2], Tile>,
-    #[allow(dead_code)]
-    theme: CourseTheme,
-}
-
-#[derive(Debug)]
-pub enum CourseTheme {
-    Plain,
-}
-
-impl CourseTheme {
-    pub fn get_asset_str(&self) -> &str {
-        match self {
-            CourseTheme::Plain => "MW_Field_plain_0.png",
-        }
-    }
-}
 
 pub struct CoursePlugin;
 
@@ -40,17 +19,11 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let theme = CourseTheme::Plain;
-    let texture_handle = asset_server.load(theme.get_asset_str());
-    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-    let course = Course {
-        texture_atlas_handle,
-        tiles: HashMap::default(),
-        theme,
-    };
-
-    commands.insert_resource(course);
+    commands.insert_resource(Course::new(
+        CourseTheme::Plain,
+        &asset_server,
+        &mut texture_atlases,
+    ));
 }
 
 fn spawn_tile(

@@ -152,6 +152,7 @@ name = "app-course"
 version = "0.1.0"
 dependencies = [
  "app-config",
+ "app-core",
  "app-ground",
  "app-tile",
  "bevy",
@@ -197,7 +198,7 @@ name = "app-tile"
 version = "0.1.0"
 dependencies = [
  "app-config",
- "app-ground",
+ "app-core",
  "bevy",
  "bevy_rapier2d",
  "wasm-bindgen",

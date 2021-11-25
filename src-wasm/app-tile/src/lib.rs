@@ -1,17 +1,8 @@
 use app_config::{GRID_SIZE, RAPIER_SCALE};
+use app_core::{Tile, TileVariant};
 use bevy::{prelude::*, render::camera::Camera, winit::WinitWindows};
 use web_sys::{HtmlCanvasElement, HtmlElement};
 use winit::platform::web::WindowExtWebSys;
-
-#[derive(Clone, Debug)]
-pub struct Tile {
-    pub variant: TileVariant,
-}
-
-#[derive(Clone, Debug)]
-pub enum TileVariant {
-    Block,
-}
 
 pub struct SpawnTileEvent {
     pub tile: Tile,
