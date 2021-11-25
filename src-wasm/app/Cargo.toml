@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 console_error_panic_hook = "0.1"
 app-assets = { path = "../app-assets" }
 app-core = { path = "../app-core" }
+app-course = { path = "../app-course" }
 app-debug = { path = "../app-debug" }
 app-ground = { path = "../app-ground" }
 app-player = { path = "../app-player" }

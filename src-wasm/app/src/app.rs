@@ -1,6 +1,7 @@
 use crate::graphics::{enable_physics_profiling, setup_graphics};
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
 use app_core::{AppState, CorePlugin};
+use app_course::CoursePlugin;
 use app_ground::GroundPlugin;
 use app_player::CharacterPlugin;
 use app_tile::TilePlugin;
@@ -41,6 +42,7 @@ pub fn main(assets: Vec<u8>) {
         .add_plugin(CharacterPlugin)
         .add_plugin(GroundPlugin)
         .add_plugin(TilePlugin)
+        .add_plugin(CoursePlugin)
         // .add_plugin(DebugPlugin)
         .add_startup_system(setup_graphics.system())
         .add_startup_system(enable_physics_profiling.system())

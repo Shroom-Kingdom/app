@@ -1,66 +1,56 @@
-use app_config::{GROUND_FRICTION, RAPIER_SCALE};
-use app_ground::{Ground, Grounds};
-use bevy::{
-    prelude::*, reflect::TypeUuid, render::camera::Camera, utils::HashSet, winit::WinitWindows,
-};
-use bevy_rapier::{na::Point2, prelude::*};
+use app_config::RAPIER_SCALE;
+use bevy::{prelude::*, render::camera::Camera, winit::WinitWindows};
 use web_sys::{HtmlCanvasElement, HtmlElement};
 use winit::platform::web::WindowExtWebSys;
 
-#[derive(Debug, TypeUuid)]
-#[uuid = "89872da7-a8c0-4753-a2b7-cf3f84356d9d"]
-pub struct Tile;
+#[derive(Clone, Debug)]
+pub struct Tile {
+    pub variant: TileVariant,
+}
 
-#[derive(Debug, TypeUuid)]
-#[uuid = "7cafe334-3fc2-453a-846b-e8b14212592e"]
-pub struct Tiles(HashSet<Entity>);
+#[derive(Clone, Debug)]
+pub enum TileVariant {
+    Block,
+}
+
+pub struct SpawnTileEvent {
+    pub tile: Tile,
+    pub world_pos: Vec2,
+}
 
 pub struct TilePlugin;
 
 impl Plugin for TilePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PostUpdate, spawn_tile);
+        app.add_event::<SpawnTileEvent>()
+            .add_system_to_stage(CoreStage::PostUpdate, spawn_tile);
     }
 }
 
 #[allow(clippy::too_many_arguments)]
 fn spawn_tile(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mouse_button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
     winit_windows: Res<WinitWindows>,
-    mut grounds: ResMut<Grounds>,
     camera_query: Query<(&Transform, &Camera)>,
+    spawn_tile_events: EventWriter<SpawnTileEvent>,
 ) {
     let window = windows.get_primary().unwrap();
     let winit_window = winit_windows.get_window(window.id()).unwrap();
     let canvas = winit_window.canvas();
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        place_tile(
-            &mut commands,
-            &asset_server,
-            &mut texture_atlases,
-            window,
-            &canvas,
-            &mut grounds,
-            &camera_query,
-        );
+        send_spawn_tile(window, &canvas, &camera_query, spawn_tile_events);
     }
     if mouse_button_input.just_pressed(MouseButton::Right) {
         web_sys::console::log_1(&"PRESSED RIGHT".into());
     }
 }
 
-fn place_tile(
-    commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+fn send_spawn_tile(
     window: &Window,
     canvas: &HtmlCanvasElement,
-    grounds: &mut ResMut<Grounds>,
     camera_query: &Query<(&Transform, &Camera)>,
+    mut spawn_tile_events: EventWriter<SpawnTileEvent>,
 ) {
     let body = web_sys::window()
         .unwrap()
@@ -74,59 +64,14 @@ fn place_tile(
         return;
     };
 
-    let position = cursor_to_world(cursor_position, camera_query, &body, canvas);
+    let world_pos = cursor_to_world(cursor_position, camera_query, &body, canvas);
 
-    let texture_handle = asset_server.load("MW_Field_plain_0.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
-    let tile_size = 2.;
-
-    commands
-        .spawn_bundle(RigidBodyBundle {
-            position: position.into(),
-            body_type: RigidBodyType::Static,
-            ..Default::default()
-        })
-        .with_children(|parent| {
-            let ground = parent
-                .spawn_bundle(ColliderBundle {
-                    collider_type: ColliderType::Sensor,
-                    shape: ColliderShape::polyline(
-                        vec![
-                            Point2::new(-tile_size + 0.51, tile_size - 0.5),
-                            Point2::new(tile_size - 0.51, tile_size - 0.5),
-                        ],
-                        None,
-                    ),
-                    flags: ActiveEvents::INTERSECTION_EVENTS.into(),
-                    ..Default::default()
-                })
-                .insert(Ground)
-                .insert(ColliderPositionSync::Discrete)
-                .id();
-            // TODO on entity despawn?
-            grounds.insert(ground);
-            parent.spawn_bundle(SpriteSheetBundle {
-                transform: Transform {
-                    scale: Vec3::new(tile_size, tile_size, 0.),
-                    ..Default::default()
-                },
-                texture_atlas: texture_atlas_handle,
-                sprite: TextureAtlasSprite::new(6),
-                ..Default::default()
-            });
-        })
-        .insert_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(tile_size - 0.5, tile_size - 0.5),
-            material: ColliderMaterial {
-                friction: GROUND_FRICTION,
-                friction_combine_rule: CoefficientCombineRule::Multiply,
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(ColliderPositionSync::Discrete);
+    spawn_tile_events.send(SpawnTileEvent {
+        tile: Tile {
+            variant: TileVariant::Block,
+        },
+        world_pos,
+    });
 }
 
 fn cursor_to_world(

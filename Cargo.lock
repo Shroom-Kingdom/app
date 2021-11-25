@@ -108,6 +108,7 @@ version = "0.1.0"
 dependencies = [
  "app-assets",
  "app-core",
+ "app-course",
  "app-debug",
  "app-ground",
  "app-player",
@@ -144,6 +145,20 @@ name = "app-core"
 version = "0.1.0"
 dependencies = [
  "bevy",
+]
+
+[[package]]
+name = "app-course"
+version = "0.1.0"
+dependencies = [
+ "app-config",
+ "app-ground",
+ "app-tile",
+ "bevy",
+ "bevy_rapier2d",
+ "wasm-bindgen",
+ "web-sys",
+ "winit",
 ]
 
 [[package]]
