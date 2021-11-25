@@ -53,19 +53,18 @@ fn setup(
     commands.insert_resource(course);
 }
 
-#[allow(clippy::too_many_arguments)]
 fn spawn_tile(
     mut commands: Commands,
     mut course: ResMut<Course>,
     mut grounds: ResMut<Grounds>,
     mut spawn_tile_events: EventReader<SpawnTileEvent>,
 ) {
-    for SpawnTileEvent { world_pos, tile } in spawn_tile_events.iter() {
-        let (grid_pos, world_pos) = world_to_grid(world_pos);
-        if course.tiles.contains_key(&grid_pos) {
+    for SpawnTileEvent { grid_pos, tile } in spawn_tile_events.iter() {
+        let world_pos = grid_to_world(grid_pos);
+        if course.tiles.contains_key(grid_pos) {
             return;
         }
-        course.tiles.insert(grid_pos, tile.clone());
+        course.tiles.insert(*grid_pos, tile.clone());
 
         commands
             .spawn_bundle(RigidBodyBundle {
@@ -124,15 +123,10 @@ fn spawn_tile(
     }
 }
 
-fn world_to_grid(pos: &Vec2) -> ([i32; 2], Vec2) {
-    let grid_pos = [
-        (pos.x / GRID_SIZE).round() as i32,
-        (pos.y / GRID_SIZE).round() as i32,
-    ];
-    let world_pos = [
+fn grid_to_world(grid_pos: &[i32; 2]) -> Vec2 {
+    [
         grid_pos[0] as f32 * GRID_SIZE,
         grid_pos[1] as f32 * GRID_SIZE,
     ]
-    .into();
-    (grid_pos, world_pos)
+    .into()
 }
