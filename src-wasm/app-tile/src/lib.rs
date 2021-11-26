@@ -35,10 +35,10 @@ fn spawn_tile(
     let window = windows.get_primary().unwrap();
     let winit_window = winit_windows.get_window(window.id()).unwrap();
     let canvas = winit_window.canvas();
-    if mouse_button_input.just_pressed(MouseButton::Left) {
+    if mouse_button_input.pressed(MouseButton::Left) {
         send_spawn_tile(window, &canvas, &camera_query, spawn_tile_events, &course);
     }
-    if mouse_button_input.just_pressed(MouseButton::Right) {
+    if mouse_button_input.pressed(MouseButton::Right) {
         send_despawn_tile(window, &canvas, &camera_query, despawn_tile_events, &course);
     }
 }
@@ -50,17 +50,17 @@ fn send_spawn_tile(
     mut spawn_tile_events: EventWriter<SpawnTileEvent>,
     course: &Course,
 ) {
+    let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
+        cursor_pointer
+    } else {
+        return;
+    };
     let body = web_sys::window()
         .unwrap()
         .document()
         .unwrap()
         .body()
         .unwrap();
-    let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
-        cursor_pointer
-    } else {
-        return;
-    };
 
     let grid_pos = cursor_to_grid(cursor_position, camera_query, &body, canvas);
     if !course.tiles.contains_key(&grid_pos) {
@@ -78,17 +78,17 @@ fn send_despawn_tile(
     mut despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: &Course,
 ) {
+    let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
+        cursor_pointer
+    } else {
+        return;
+    };
     let body = web_sys::window()
         .unwrap()
         .document()
         .unwrap()
         .body()
         .unwrap();
-    let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
-        cursor_pointer
-    } else {
-        return;
-    };
 
     let grid_pos = cursor_to_grid(cursor_position, camera_query, &body, canvas);
     if course.tiles.contains_key(&grid_pos) {
