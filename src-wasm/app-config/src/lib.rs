@@ -26,4 +26,5 @@ pub const GROUND_FRICTION: f32 = GROUND_FRICTION_MULTIPLIER / RAPIER_GRAVITY;
 
 pub const TILE_SIZE: f32 = 2.;
 pub const TILE_COLLIDER_SUB: f32 = 0.5;
-pub const GRID_SIZE: f32 = TILE_SIZE * 2. - 1.;
+pub const GRID_MARGIN: f32 = 0.2;
+pub const GRID_SIZE: f32 = TILE_SIZE * 2. - (2. * TILE_COLLIDER_SUB) + GRID_MARGIN;
