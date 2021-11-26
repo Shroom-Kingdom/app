@@ -1,5 +1,5 @@
 use crate::{Player, PlayerStateEnum};
-use app_ground::Grounds;
+use app_ground::Ground;
 use bevy::{prelude::*, utils::HashSet};
 use bevy_rapier::prelude::*;
 
@@ -14,7 +14,7 @@ pub struct GroundIntersections(pub HashSet<Entity>);
 
 pub fn ground_intersect(
     mut query: Query<(&Player, Entity, &mut Timer, &mut RigidBodyVelocity)>,
-    grounds: Res<Grounds>,
+    ground_query: Query<&Ground>,
     mut ground_intersect_events: EventWriter<GroundIntersectEvent>,
     mut intersection_events: EventReader<IntersectionEvent>,
 ) {
@@ -27,8 +27,12 @@ pub fn ground_intersect(
                     intersecting: true,
                     ..
                 } => {
-                    if !grounds.contains(&collider1.entity())
-                        && !grounds.contains(&collider2.entity())
+                    if ground_query
+                        .get_component::<Ground>(collider1.entity())
+                        .is_err()
+                        && ground_query
+                            .get_component::<Ground>(collider2.entity())
+                            .is_err()
                     {
                         return;
                     }
@@ -53,8 +57,12 @@ pub fn ground_intersect(
                     if let PlayerStateEnum::Air { .. } = player.state.state {
                         return;
                     }
-                    if !grounds.contains(&collider1.entity())
-                        && !grounds.contains(&collider2.entity())
+                    if ground_query
+                        .get_component::<Ground>(collider1.entity())
+                        .is_err()
+                        && ground_query
+                            .get_component::<Ground>(collider2.entity())
+                            .is_err()
                     {
                         return;
                     }

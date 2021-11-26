@@ -40,6 +40,7 @@ impl CourseTheme {
 
 #[derive(Clone, Debug)]
 pub struct Tile {
+    pub entity: Entity,
     pub variant: TileVariant,
 }
 

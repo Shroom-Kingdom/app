@@ -1,11 +1,11 @@
 use app_config::{GRID_SIZE, RAPIER_SCALE};
-use app_core::{Tile, TileVariant};
+use app_core::{Course, TileVariant};
 use bevy::{prelude::*, render::camera::Camera, winit::WinitWindows};
 use web_sys::{HtmlCanvasElement, HtmlElement};
 use winit::platform::web::WindowExtWebSys;
 
 pub struct SpawnTileEvent {
-    pub tile: Tile,
+    pub tile_variant: TileVariant,
     pub grid_pos: [i32; 2],
 }
 
@@ -30,15 +30,16 @@ fn spawn_tile(
     camera_query: Query<(&Transform, &Camera)>,
     spawn_tile_events: EventWriter<SpawnTileEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
+    course: Res<Course>,
 ) {
     let window = windows.get_primary().unwrap();
     let winit_window = winit_windows.get_window(window.id()).unwrap();
     let canvas = winit_window.canvas();
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        send_spawn_tile(window, &canvas, &camera_query, spawn_tile_events);
+        send_spawn_tile(window, &canvas, &camera_query, spawn_tile_events, &course);
     }
     if mouse_button_input.just_pressed(MouseButton::Right) {
-        send_despawn_tile(window, &canvas, &camera_query, despawn_tile_events);
+        send_despawn_tile(window, &canvas, &camera_query, despawn_tile_events, &course);
     }
 }
 
@@ -47,6 +48,7 @@ fn send_spawn_tile(
     canvas: &HtmlCanvasElement,
     camera_query: &Query<(&Transform, &Camera)>,
     mut spawn_tile_events: EventWriter<SpawnTileEvent>,
+    course: &Course,
 ) {
     let body = web_sys::window()
         .unwrap()
@@ -61,13 +63,12 @@ fn send_spawn_tile(
     };
 
     let grid_pos = cursor_to_grid(cursor_position, camera_query, &body, canvas);
-
-    spawn_tile_events.send(SpawnTileEvent {
-        tile: Tile {
-            variant: TileVariant::Block,
-        },
-        grid_pos,
-    });
+    if !course.tiles.contains_key(&grid_pos) {
+        spawn_tile_events.send(SpawnTileEvent {
+            tile_variant: TileVariant::Block,
+            grid_pos,
+        });
+    }
 }
 
 fn send_despawn_tile(
@@ -75,6 +76,7 @@ fn send_despawn_tile(
     canvas: &HtmlCanvasElement,
     camera_query: &Query<(&Transform, &Camera)>,
     mut despawn_tile_events: EventWriter<DespawnTileEvent>,
+    course: &Course,
 ) {
     let body = web_sys::window()
         .unwrap()
@@ -89,8 +91,9 @@ fn send_despawn_tile(
     };
 
     let grid_pos = cursor_to_grid(cursor_position, camera_query, &body, canvas);
-
-    despawn_tile_events.send(DespawnTileEvent { grid_pos });
+    if course.tiles.contains_key(&grid_pos) {
+        despawn_tile_events.send(DespawnTileEvent { grid_pos });
+    }
 }
 
 fn cursor_to_grid(

@@ -1,7 +1,7 @@
 use app_config::{GRID_SIZE, GROUND_FRICTION, TILE_COLLIDER_SUB, TILE_SIZE};
-use app_core::{Course, CourseTheme};
-use app_ground::{Ground, Grounds};
-use app_tile::SpawnTileEvent;
+use app_core::{Course, CourseTheme, Tile};
+use app_ground::Ground;
+use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
 use bevy_rapier::{na::Point2, prelude::*};
 
@@ -10,7 +10,8 @@ pub struct CoursePlugin;
 impl Plugin for CoursePlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup)
-            .add_system_to_stage(CoreStage::Last, spawn_tile);
+            .add_system_to_stage(CoreStage::Last, spawn_tile)
+            .add_system_to_stage(CoreStage::Last, despawn_tile);
     }
 }
 
@@ -29,24 +30,26 @@ fn setup(
 fn spawn_tile(
     mut commands: Commands,
     mut course: ResMut<Course>,
-    mut grounds: ResMut<Grounds>,
     mut spawn_tile_events: EventReader<SpawnTileEvent>,
 ) {
-    for SpawnTileEvent { grid_pos, tile } in spawn_tile_events.iter() {
+    for SpawnTileEvent {
+        grid_pos,
+        tile_variant,
+    } in spawn_tile_events.iter()
+    {
         let world_pos = grid_to_world(grid_pos);
         if course.tiles.contains_key(grid_pos) {
             return;
         }
-        course.tiles.insert(*grid_pos, tile.clone());
 
-        commands
+        let entity = commands
             .spawn_bundle(RigidBodyBundle {
                 position: world_pos.into(),
                 body_type: RigidBodyType::Static,
                 ..Default::default()
             })
             .with_children(|parent| {
-                let ground = parent
+                parent
                     .spawn_bundle(ColliderBundle {
                         collider_type: ColliderType::Sensor,
                         shape: ColliderShape::polyline(
@@ -66,10 +69,7 @@ fn spawn_tile(
                         ..Default::default()
                     })
                     .insert(Ground)
-                    .insert(ColliderPositionSync::Discrete)
-                    .id();
-                // TODO on entity despawn?
-                grounds.insert(ground);
+                    .insert(ColliderPositionSync::Discrete);
                 parent.spawn_bundle(SpriteSheetBundle {
                     transform: Transform {
                         scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
@@ -92,7 +92,26 @@ fn spawn_tile(
                 },
                 ..Default::default()
             })
-            .insert(ColliderPositionSync::Discrete);
+            .insert(ColliderPositionSync::Discrete)
+            .id();
+
+        let tile = Tile {
+            entity,
+            variant: tile_variant.clone(),
+        };
+        course.tiles.insert(*grid_pos, tile);
+    }
+}
+
+fn despawn_tile(
+    mut commands: Commands,
+    mut course: ResMut<Course>,
+    mut despawn_tile_events: EventReader<DespawnTileEvent>,
+) {
+    for DespawnTileEvent { grid_pos } in despawn_tile_events.iter() {
+        if let Some(tile) = course.tiles.remove(grid_pos) {
+            commands.entity(tile.entity).despawn_recursive();
+        }
     }
 }
 
