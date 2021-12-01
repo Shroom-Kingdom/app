@@ -47,46 +47,16 @@ pub fn high_jump(
                 released: false,
                 impulse,
                 fall,
-                ..
             } if tick < high_jump_tick => {
-                let released = keyboard_input.just_released(KeyCode::Space)
-                    || keyboard_input.just_released(KeyCode::Up)
-                    || keyboard_input.just_released(KeyCode::W);
                 let jump = keyboard_input.pressed(KeyCode::Space)
                     || keyboard_input.pressed(KeyCode::Up)
                     || keyboard_input.pressed(KeyCode::W);
 
                 rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
-                if released {
-                    player.state.state = PlayerStateEnum::Air {
-                        tick: tick + 1,
-                        high_jump_tick,
-                        released,
-                        impulse,
-                        fall,
-                    };
-                } else if jump {
-                    player.state.state = PlayerStateEnum::Air {
-                        tick: tick + 1,
-                        high_jump_tick,
-                        released: false,
-                        impulse,
-                        fall,
-                    };
-                }
-            }
-            PlayerStateEnum::Air {
-                tick,
-                high_jump_tick,
-                released: false,
-                impulse,
-                fall,
-            } if tick < high_jump_tick => {
-                rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
                 player.state.state = PlayerStateEnum::Air {
                     tick: tick + 1,
                     high_jump_tick,
-                    released: true,
+                    released: !jump,
                     impulse,
                     fall,
                 };

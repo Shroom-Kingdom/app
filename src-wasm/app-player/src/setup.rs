@@ -1,5 +1,5 @@
 use crate::{FacingDirection, GroundIntersections, Player, PlayerState, PlayerStateEnum};
-use app_config::{RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
+use app_config::{PLAYER_COLLIDER_BORDER_RADIUS, RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
     physics::{RapierConfiguration, RigidBodyBundle},
@@ -84,7 +84,11 @@ pub fn setup(
             ..Default::default()
         })
         .insert_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(collider_size_x, collider_size_y),
+            shape: ColliderShape::round_cuboid(
+                collider_size_x - PLAYER_COLLIDER_BORDER_RADIUS,
+                collider_size_y - PLAYER_COLLIDER_BORDER_RADIUS,
+                PLAYER_COLLIDER_BORDER_RADIUS,
+            ),
             mass_properties: ColliderMassProps::MassProperties(Box::new(
                 MassProperties::from_ball(10., 10.),
             )),

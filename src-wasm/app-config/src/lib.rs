@@ -10,6 +10,8 @@ pub const LINVEL_CAP_WALK: f32 = 20.;
 pub const LINVEL_CAP_RUN: f32 = 35.;
 pub const LINVEL_CAP_STOOP: f32 = 10.;
 
+pub const PLAYER_COLLIDER_BORDER_RADIUS: f32 = 0.4;
+
 pub const RUN_THRESHOLD: f32 = LINVEL_CAP_RUN - 4.;
 pub const HIGH_JUMP_WALK_THRESHOLD: f32 = 7.;
 
@@ -26,5 +28,7 @@ pub const GROUND_FRICTION: f32 = GROUND_FRICTION_MULTIPLIER / RAPIER_GRAVITY;
 
 pub const TILE_SIZE: f32 = 2.;
 pub const TILE_COLLIDER_SUB: f32 = 0.5;
-pub const GRID_MARGIN: f32 = 0.2;
-pub const GRID_SIZE: f32 = TILE_SIZE * 2. - (2. * TILE_COLLIDER_SUB) + GRID_MARGIN;
+pub const GRID_MARGIN: f32 = 0.1;
+pub const GRID_SIZE: f32 = TILE_SIZE * 2. - (2. * TILE_COLLIDER_SUB) + (2. * GRID_MARGIN);
+pub const GROUND_MARGIN_MULTIPLIER: f32 = 2.;
+pub const GROUND_PROXIMITY_MARGIN_MULTIPLIER: f32 = 12.;

@@ -190,6 +190,7 @@ dependencies = [
  "app-ground",
  "bevy",
  "bevy_rapier2d",
+ "parry2d",
  "web-sys",
 ]
 

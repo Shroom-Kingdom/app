@@ -8,7 +8,13 @@ use bevy_rapier::prelude::*;
 
 #[allow(clippy::too_many_arguments)]
 pub fn state_change(
-    mut query: Query<(&mut Player, &mut GroundIntersections, &RigidBodyVelocity)>,
+    mut query: Query<(
+        &mut Player,
+        Entity,
+        &mut GroundIntersections,
+        &RigidBodyVelocity,
+    )>,
+    collider_query: Query<(&ColliderPosition, &ColliderShape)>,
     walk_events: EventReader<WalkEvent>,
     mut touch_events: EventReader<TouchEvent>,
     ground_intersect_events: EventReader<GroundIntersectEvent>,
@@ -18,17 +24,17 @@ pub fn state_change(
     mut dash_turn_events: EventReader<DashTurnEvent>,
     mut psc_events: EventWriter<PlayerStateChangeEvent>,
 ) {
-    if let Ok((mut player, mut ground_intersections, rb_vel)) = query.single_mut() {
+    if let Ok((mut player, player_entity, mut ground_intersections, rb_vel)) = query.single_mut() {
         let mut state = handle_walk_events(&mut player, walk_events);
 
         state = if touch_events.iter().next().is_some() {
-            if let PlayerStateEnum::Air { .. } = player.state.state {
+            if let PlayerStateEnum::Air { fall, .. } = player.state.state {
                 Some(PlayerStateEnum::Air {
                     tick: 0,
                     high_jump_tick: 0,
                     impulse: false,
                     released: true,
-                    fall: true,
+                    fall,
                 })
             } else {
                 state
@@ -39,10 +45,12 @@ pub fn state_change(
 
         state = handle_ground_intersect_events(
             &player,
+            player_entity,
             state,
             rb_vel,
             ground_intersect_events,
             &mut ground_intersections,
+            collider_query,
         );
 
         state = if let Some(jump_event) = jump_events.iter().next() {
@@ -147,10 +155,12 @@ fn handle_walk_events(
 
 fn handle_ground_intersect_events(
     player: &Player,
+    player_entity: Entity,
     prev_state: Option<PlayerStateEnum>,
     rb_vel: &RigidBodyVelocity,
     mut ground_intersect_events: EventReader<GroundIntersectEvent>,
     ground_intersections: &mut GroundIntersections,
+    query: Query<(&ColliderPosition, &ColliderShape)>,
 ) -> Option<PlayerStateEnum> {
     for ground_intersect_event in ground_intersect_events.iter() {
         match ground_intersect_event {
@@ -163,6 +173,12 @@ fn handle_ground_intersect_events(
         }
     }
     if rb_vel.linvel.data.0[0][1] <= 0. {
+        let (player_pos, player_shape) = query.get(player_entity).unwrap();
+        ground_intersections.0.retain(|entity| {
+            let (pos, shape) = query.get(*entity).unwrap();
+            parry2d::query::intersection_test(pos, &*shape.0, player_pos, &*player_shape.0)
+                .unwrap_or_default()
+        });
         if !ground_intersections.0.is_empty() {
             match player.state.state {
                 PlayerStateEnum::Ground { .. } => prev_state,

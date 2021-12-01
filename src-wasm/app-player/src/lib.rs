@@ -11,7 +11,7 @@ use app_core::AppState;
 use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 use debug::setup_ui;
-use ground::ground_intersect;
+use ground::{ground_intersect, ground_proximity_intersect};
 use jump::{high_jump, jump, jump_to_fall};
 use movement::{movement, run};
 use setup::setup;
@@ -43,6 +43,11 @@ impl Plugin for CharacterPlugin {
                 PlayerStages::PostInput,
                 SystemStage::parallel(),
             )
+            .add_stage_before(
+                CoreStage::PostUpdate,
+                PlayerStages::PreGroundIntersect,
+                SystemStage::parallel(),
+            )
             .add_stage_after(
                 CoreStage::PostUpdate,
                 PlayerStages::StateChange,
@@ -57,6 +62,7 @@ impl Plugin for CharacterPlugin {
             .add_system_to_stage(CoreStage::PreUpdate, movement)
             .add_system_to_stage(CoreStage::PreUpdate, stoop)
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
+            .add_system_to_stage(PlayerStages::PreGroundIntersect, ground_proximity_intersect)
             .add_system_to_stage(CoreStage::PostUpdate, ground_intersect)
             .add_system_to_stage(CoreStage::PostUpdate, touch)
             .add_system_to_stage(CoreStage::PostUpdate, jump_to_fall)
@@ -68,6 +74,7 @@ impl Plugin for CharacterPlugin {
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
 pub enum PlayerStages {
     PostInput,
+    PreGroundIntersect,
     StateChange,
 }
 

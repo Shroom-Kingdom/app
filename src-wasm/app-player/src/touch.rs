@@ -6,11 +6,11 @@ use bevy_rapier::prelude::*;
 pub struct TouchEvent(Entity);
 
 pub fn touch(
-    mut query: Query<(&Player, Entity)>,
+    mut query: Query<Entity, With<Player>>,
     mut touch_events: EventWriter<TouchEvent>,
     mut contact_events: EventReader<ContactEvent>,
 ) {
-    if let Ok((_, entity)) = query.single_mut() {
+    if let Ok(entity) = query.single_mut() {
         for contact_event in contact_events.iter() {
             if let ContactEvent::Started(collider1, collider2) = contact_event {
                 if collider1.entity() == entity || collider2.entity() == entity {

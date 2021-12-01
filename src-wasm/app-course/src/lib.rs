@@ -1,6 +1,9 @@
-use app_config::{GRID_SIZE, GROUND_FRICTION, TILE_COLLIDER_SUB, TILE_SIZE};
+use app_config::{
+    GRID_MARGIN, GRID_SIZE, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER,
+    GROUND_PROXIMITY_MARGIN_MULTIPLIER, TILE_COLLIDER_SUB, TILE_SIZE,
+};
 use app_core::{Course, CourseTheme, Tile};
-use app_ground::Ground;
+use app_ground::{Ground, GroundProximity};
 use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
 use bevy_rapier::{na::Point2, prelude::*};
@@ -55,12 +58,14 @@ fn spawn_tile(
                         shape: ColliderShape::polyline(
                             vec![
                                 Point2::new(
-                                    -TILE_SIZE + TILE_COLLIDER_SUB + 0.01,
-                                    TILE_SIZE - TILE_COLLIDER_SUB,
+                                    -TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN,
+                                    TILE_SIZE - TILE_COLLIDER_SUB
+                                        + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN,
                                 ),
                                 Point2::new(
-                                    TILE_SIZE - TILE_COLLIDER_SUB - 0.01,
-                                    TILE_SIZE - TILE_COLLIDER_SUB,
+                                    TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
+                                    TILE_SIZE - TILE_COLLIDER_SUB
+                                        + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN,
                                 ),
                             ],
                             None,
@@ -70,29 +75,53 @@ fn spawn_tile(
                     })
                     .insert(Ground)
                     .insert(ColliderPositionSync::Discrete);
-                parent.spawn_bundle(SpriteSheetBundle {
-                    transform: Transform {
-                        scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+                parent
+                    .spawn_bundle(ColliderBundle {
+                        collider_type: ColliderType::Sensor,
+                        shape: ColliderShape::polyline(
+                            vec![
+                                Point2::new(
+                                    -TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN,
+                                    TILE_SIZE - TILE_COLLIDER_SUB
+                                        + GROUND_PROXIMITY_MARGIN_MULTIPLIER * GRID_MARGIN,
+                                ),
+                                Point2::new(
+                                    TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
+                                    TILE_SIZE - TILE_COLLIDER_SUB
+                                        + GROUND_PROXIMITY_MARGIN_MULTIPLIER * GRID_MARGIN,
+                                ),
+                            ],
+                            None,
+                        ),
+                        flags: ActiveEvents::INTERSECTION_EVENTS.into(),
                         ..Default::default()
-                    },
-                    texture_atlas: course.texture_atlas_handle.clone(),
-                    sprite: TextureAtlasSprite::new(6),
-                    ..Default::default()
-                });
+                    })
+                    .insert(GroundProximity)
+                    .insert(ColliderPositionSync::Discrete);
+                parent
+                    .spawn_bundle(SpriteSheetBundle {
+                        transform: Transform {
+                            scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+                            ..Default::default()
+                        },
+                        texture_atlas: course.texture_atlas_handle.clone(),
+                        sprite: TextureAtlasSprite::new(6),
+                        ..Default::default()
+                    })
+                    .insert_bundle(ColliderBundle {
+                        shape: ColliderShape::cuboid(
+                            TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
+                            TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
+                        ),
+                        material: ColliderMaterial {
+                            friction: GROUND_FRICTION,
+                            friction_combine_rule: CoefficientCombineRule::Multiply,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    })
+                    .insert(ColliderPositionSync::Discrete);
             })
-            .insert_bundle(ColliderBundle {
-                shape: ColliderShape::cuboid(
-                    TILE_SIZE - TILE_COLLIDER_SUB,
-                    TILE_SIZE - TILE_COLLIDER_SUB,
-                ),
-                material: ColliderMaterial {
-                    friction: GROUND_FRICTION,
-                    friction_combine_rule: CoefficientCombineRule::Multiply,
-                    ..Default::default()
-                },
-                ..Default::default()
-            })
-            .insert(ColliderPositionSync::Discrete)
             .id();
 
         let tile = Tile {
