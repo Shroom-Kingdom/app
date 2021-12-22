@@ -1,20 +1,13 @@
 use crate::{
     DashTurnEvent, FacingDirection, GroundIntersectEvent, GroundIntersections, JumpEvent,
-    MovementEvent, Player, PlayerStateChangeEvent, PlayerStateEnum, StoopEvent, TouchEvent,
-    WalkEvent,
+    MovementEvent, Player, PlayerStateChangeEvent, PlayerStateEnum, PlayerVelocity, StoopEvent,
+    TouchEvent, WalkEvent,
 };
 use bevy::prelude::*;
-use bevy_rapier::prelude::*;
 
 #[allow(clippy::too_many_arguments)]
 pub fn state_change(
-    mut query: Query<(
-        &mut Player,
-        Entity,
-        &mut GroundIntersections,
-        &RigidBodyVelocity,
-    )>,
-    collider_query: Query<(&ColliderPosition, &ColliderShape)>,
+    mut query: Query<(&mut Player, &mut GroundIntersections, &PlayerVelocity)>,
     walk_events: EventReader<WalkEvent>,
     mut touch_events: EventReader<TouchEvent>,
     ground_intersect_events: EventReader<GroundIntersectEvent>,
@@ -24,7 +17,7 @@ pub fn state_change(
     mut dash_turn_events: EventReader<DashTurnEvent>,
     mut psc_events: EventWriter<PlayerStateChangeEvent>,
 ) {
-    if let Ok((mut player, player_entity, mut ground_intersections, rb_vel)) = query.single_mut() {
+    if let Ok((mut player, mut ground_intersections, vel)) = query.single_mut() {
         let mut state = handle_walk_events(&mut player, walk_events);
 
         state = if touch_events.iter().next().is_some() {
@@ -45,12 +38,10 @@ pub fn state_change(
 
         state = handle_ground_intersect_events(
             &player,
-            player_entity,
             state,
-            rb_vel,
+            vel,
             ground_intersect_events,
             &mut ground_intersections,
-            collider_query,
         );
 
         state = if let Some(jump_event) = jump_events.iter().next() {
@@ -76,7 +67,7 @@ pub fn state_change(
                 player.state.is_stooping = *is_stooping;
             }
             (Some(StoopEvent { is_stooping: false }), PlayerStateEnum::Air { .. })
-                if rb_vel.linvel.data.0[0][1] <= 0. =>
+                if vel.0[1] <= 0. =>
             {
                 send_state_update = true;
                 player.state.is_stooping = false;
@@ -155,12 +146,10 @@ fn handle_walk_events(
 
 fn handle_ground_intersect_events(
     player: &Player,
-    player_entity: Entity,
     prev_state: Option<PlayerStateEnum>,
-    rb_vel: &RigidBodyVelocity,
+    vel: &PlayerVelocity,
     mut ground_intersect_events: EventReader<GroundIntersectEvent>,
     ground_intersections: &mut GroundIntersections,
-    query: Query<(&ColliderPosition, &ColliderShape)>,
 ) -> Option<PlayerStateEnum> {
     for ground_intersect_event in ground_intersect_events.iter() {
         match ground_intersect_event {
@@ -172,19 +161,13 @@ fn handle_ground_intersect_events(
             }
         }
     }
-    if rb_vel.linvel.data.0[0][1] <= 0. {
-        let (player_pos, player_shape) = query.get(player_entity).unwrap();
-        ground_intersections.0.retain(|entity| {
-            let (pos, shape) = query.get(*entity).unwrap();
-            parry2d::query::intersection_test(pos, &*shape.0, player_pos, &*player_shape.0)
-                .unwrap_or_default()
-        });
+    if vel.0[1] <= 0. {
         if !ground_intersections.0.is_empty() {
             match player.state.state {
                 PlayerStateEnum::Ground { .. } => prev_state,
                 _ => Some(PlayerStateEnum::Ground {
                     frame: 1,
-                    is_walking: rb_vel.linvel.data.0[0][0].abs() >= f32::EPSILON,
+                    is_walking: vel.0[0].abs() >= f32::EPSILON,
                     is_turning: false,
                 }),
             }

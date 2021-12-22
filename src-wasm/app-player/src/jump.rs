@@ -1,7 +1,6 @@
-use crate::{Player, PlayerStateEnum};
+use crate::{Player, PlayerStateEnum, PlayerVelocity};
 use app_config::{HIGH_JUMP_TICK, HIGH_JUMP_TICK_WALK, HIGH_JUMP_WALK_THRESHOLD, JUMP_FORCE};
 use bevy::prelude::*;
-use bevy_rapier::prelude::*;
 
 pub struct JumpEvent {
     pub high_jump_tick: u8,
@@ -9,11 +8,11 @@ pub struct JumpEvent {
 }
 
 pub fn jump(
-    mut query: Query<(&Player, &mut RigidBodyVelocity)>,
+    mut query: Query<(&Player, &mut PlayerVelocity)>,
     keyboard_input: Res<Input<KeyCode>>,
     mut psc_event: EventWriter<JumpEvent>,
 ) {
-    if let Ok((player, mut rb_vel)) = query.single_mut() {
+    if let Ok((player, mut vel)) = query.single_mut() {
         let jump = keyboard_input.just_pressed(KeyCode::Space)
             || keyboard_input.just_pressed(KeyCode::Up)
             || keyboard_input.just_pressed(KeyCode::W);
@@ -21,8 +20,8 @@ pub fn jump(
             return;
         }
         if let PlayerStateEnum::Ground { .. } = player.state.state {
-            rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
-            let high_jump_tick = if rb_vel.linvel.data.0[0][0].abs() > HIGH_JUMP_WALK_THRESHOLD {
+            vel.0[1] = JUMP_FORCE;
+            let high_jump_tick = if vel.0[0].abs() > HIGH_JUMP_WALK_THRESHOLD {
                 HIGH_JUMP_TICK_WALK
             } else {
                 HIGH_JUMP_TICK
@@ -36,10 +35,10 @@ pub fn jump(
 }
 
 pub fn high_jump(
-    mut query: Query<(&mut Player, &mut RigidBodyVelocity)>,
+    mut query: Query<(&mut Player, &mut PlayerVelocity)>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    if let Ok((mut player, mut rb_vel)) = query.single_mut() {
+    if let Ok((mut player, mut vel)) = query.single_mut() {
         match player.state.state {
             PlayerStateEnum::Air {
                 tick,
@@ -52,7 +51,7 @@ pub fn high_jump(
                     || keyboard_input.pressed(KeyCode::Up)
                     || keyboard_input.pressed(KeyCode::W);
 
-                rb_vel.linvel.data.0[0][1] = JUMP_FORCE;
+                vel.0[1] = JUMP_FORCE;
                 player.state.state = PlayerStateEnum::Air {
                     tick: tick + 1,
                     high_jump_tick,
@@ -67,12 +66,12 @@ pub fn high_jump(
 }
 
 pub fn jump_to_fall(
-    query: Query<(&Player, &RigidBodyVelocity)>,
+    query: Query<(&Player, &PlayerVelocity)>,
     mut jump_events: EventWriter<JumpEvent>,
 ) {
-    if let Ok((player, rb_vel)) = query.single() {
+    if let Ok((player, vel)) = query.single() {
         if let PlayerStateEnum::Air { .. } = player.state.state {
-            if rb_vel.linvel.data.0[0][1] < 0. {
+            if vel.0[1] < 0. {
                 jump_events.send(JumpEvent {
                     high_jump_tick: 0,
                     fall: true,

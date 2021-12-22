@@ -1,7 +1,7 @@
 mod debug;
-mod ground;
 mod jump;
 mod movement;
+mod physics;
 mod setup;
 mod state_change;
 mod touch;
@@ -9,19 +9,18 @@ mod walk;
 
 use app_core::AppState;
 use bevy::prelude::*;
-use bevy_rapier::prelude::*;
 use debug::setup_ui;
-use ground::{ground_intersect, ground_proximity_intersect};
 use jump::{high_jump, jump, jump_to_fall};
 use movement::{movement, run};
+use physics::{apply_vel, physics};
 use setup::setup;
 use state_change::state_change;
 use touch::touch;
 use walk::{walk_animation, walk_start};
 
-pub use ground::{GroundIntersectEvent, GroundIntersections};
 pub use jump::JumpEvent;
 pub use movement::{DashTurnEvent, MovementEvent};
+pub use physics::{GroundIntersectEvent, GroundIntersections, PlayerVelocity};
 pub use touch::TouchEvent;
 pub use walk::WalkEvent;
 
@@ -40,12 +39,12 @@ impl Plugin for CharacterPlugin {
             .add_startup_system(setup_ui)
             .add_stage_after(
                 CoreStage::First,
-                PlayerStages::PostInput,
+                PlayerStages::PlayerInput,
                 SystemStage::parallel(),
             )
-            .add_stage_before(
-                CoreStage::PostUpdate,
-                PlayerStages::PreGroundIntersect,
+            .add_stage_after(
+                CoreStage::PreUpdate,
+                PlayerStages::PrePhysics,
                 SystemStage::parallel(),
             )
             .add_stage_after(
@@ -59,11 +58,11 @@ impl Plugin for CharacterPlugin {
             .add_system_to_stage(CoreStage::First, high_jump)
             .add_system_to_stage(CoreStage::First, walk_animation)
             .add_system_to_stage(CoreStage::First, walk_start)
-            .add_system_to_stage(CoreStage::PreUpdate, movement)
+            .add_system_to_stage(PlayerStages::PlayerInput, movement)
+            .add_system_to_stage(CoreStage::PreUpdate, physics)
             .add_system_to_stage(CoreStage::PreUpdate, stoop)
+            .add_system_to_stage(PlayerStages::PrePhysics, apply_vel)
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
-            .add_system_to_stage(PlayerStages::PreGroundIntersect, ground_proximity_intersect)
-            .add_system_to_stage(CoreStage::PostUpdate, ground_intersect)
             .add_system_to_stage(CoreStage::PostUpdate, touch)
             .add_system_to_stage(CoreStage::PostUpdate, jump_to_fall)
             .add_system_to_stage(PlayerStages::StateChange, state_change)
@@ -73,8 +72,8 @@ impl Plugin for CharacterPlugin {
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
 pub enum PlayerStages {
-    PostInput,
-    PreGroundIntersect,
+    PlayerInput,
+    PrePhysics,
     StateChange,
 }
 
@@ -144,13 +143,13 @@ fn stoop(
 }
 
 fn set_sprite(
-    mut query: Query<(&Player, &Children, &RigidBodyVelocity)>,
+    mut query: Query<(&Children, &PlayerVelocity), With<Player>>,
     mut child_query: Query<(&mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
     mut psc_events: EventReader<PlayerStateChangeEvent>,
     assets: Res<AssetServer>,
     texture_atlases: Res<Assets<TextureAtlas>>,
 ) {
-    if let Ok((_, children, rb_vel)) = query.single_mut() {
+    if let Ok((children, vel)) = query.single_mut() {
         let child = children.first().unwrap();
         let (mut sprite, atlas_handle) = child_query.get_mut(*child).unwrap();
         if let Some(event) = psc_events.iter().last() {
@@ -167,9 +166,7 @@ fn set_sprite(
                     state,
                     ..
                 } => match state {
-                    PlayerStateEnum::Ground { .. }
-                        if rb_vel.linvel.data.0[0][0].abs() < f32::EPSILON =>
-                    {
+                    PlayerStateEnum::Ground { .. } if vel.0[0].abs() < f32::EPSILON => {
                         "MW_Player_MarioMdl_wait.0_0.png"
                     }
                     PlayerStateEnum::Ground { frame, .. } => {
@@ -192,7 +189,7 @@ fn set_sprite(
                         }
                     }
                     PlayerStateEnum::Air { tick, .. } => {
-                        if rb_vel.linvel.data.0[0][1] > 0. {
+                        if vel.0[1] > 0. {
                             if *tick == 0 {
                                 sprite.flip_x = match *facing_direction {
                                     FacingDirection::Left => true,

@@ -1,4 +1,6 @@
-use crate::{FacingDirection, GroundIntersections, Player, PlayerState, PlayerStateEnum};
+use crate::{
+    FacingDirection, GroundIntersections, Player, PlayerState, PlayerStateEnum, PlayerVelocity,
+};
 use app_config::{PLAYER_COLLIDER_BORDER_RADIUS, RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
@@ -9,7 +11,6 @@ use bevy_rapier::{
 pub fn setup(
     mut commands: Commands,
     assets: Res<AssetServer>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut rapier_config: ResMut<RapierConfiguration>,
     mut textures: ResMut<Assets<Texture>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
@@ -71,7 +72,6 @@ pub fn setup(
 
     let texture_atlas = texture_atlas_builder.finish(&mut textures).unwrap();
     let wait_index = texture_atlas.get_texture_index(&handle).unwrap();
-    let texture_atlas_texture = texture_atlas.texture.clone();
     let atlas_handle = texture_atlases.add(texture_atlas);
 
     commands
@@ -81,8 +81,10 @@ pub fn setup(
                 flags: RigidBodyMassPropsFlags::ROTATION_LOCKED,
                 ..Default::default()
             },
+            body_type: RigidBodyType::KinematicVelocityBased,
             ..Default::default()
         })
+        .insert(PlayerVelocity::default())
         .insert_bundle(ColliderBundle {
             shape: ColliderShape::round_cuboid(
                 collider_size_x - PLAYER_COLLIDER_BORDER_RADIUS,
@@ -130,10 +132,4 @@ pub fn setup(
         .insert(ColliderPositionSync::Discrete)
         .insert(GroundIntersections::default())
         .insert(Timer::from_seconds(1.3, true));
-
-    commands.spawn_bundle(SpriteBundle {
-        material: materials.add(texture_atlas_texture.into()),
-        transform: Transform::from_xyz(-300.0, 0.0, 0.0),
-        ..Default::default()
-    });
 }

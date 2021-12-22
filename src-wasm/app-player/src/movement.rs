@@ -1,9 +1,10 @@
-use crate::{Player, PlayerState, PlayerStateEnum};
+use crate::{Player, PlayerState, PlayerStateEnum, PlayerVelocity};
 use app_config::{
-    LINVEL_CAP_RUN, LINVEL_CAP_STOOP, LINVEL_CAP_WALK, MOVE_IMPULSE_MULTIPLIER_AIR,
-    MOVE_IMPULSE_MULTIPLIER_AIR_RUN, MOVE_IMPULSE_MULTIPLIER_GROUND,
+    COLLIDER_TOI_THRESHOLD, LINVEL_CAP_RUN, LINVEL_CAP_STOOP, LINVEL_CAP_WALK,
+    MOVE_IMPULSE_MULTIPLIER_AIR, MOVE_IMPULSE_MULTIPLIER_AIR_RUN, MOVE_IMPULSE_MULTIPLIER_GROUND,
     MOVE_IMPULSE_MULTIPLIER_GROUND_RUN, RUN_THRESHOLD,
 };
+use app_ground::Ground;
 use bevy::prelude::*;
 use bevy_rapier::{na::Vector2, prelude::*};
 
@@ -26,16 +27,24 @@ pub fn run(mut query: Query<&mut Player>, keyboard_input: Res<Input<KeyCode>>) {
 
 pub fn movement(
     mut query: Query<(
+        Entity,
         &mut Player,
-        &mut RigidBodyVelocity,
+        &mut PlayerVelocity,
         &RigidBodyMassProps,
         &mut ColliderMaterial,
+        &RigidBodyPosition,
+        &ColliderShape,
     )>,
+    ground_query: Query<&Ground>,
+    colliders: QueryPipelineColliderComponentsQuery,
     keyboard_input: Res<Input<KeyCode>>,
     mut movement_events: EventWriter<MovementEvent>,
     mut dash_turn_events: EventWriter<DashTurnEvent>,
+    query_pipeline: Res<QueryPipeline>,
 ) {
-    if let Ok((mut player, mut rb_vel, rb_mprops, mut c_mat)) = query.single_mut() {
+    if let Ok((entity, mut player, mut vel, rb_mprops, mut c_mat, rb_pos, shape)) =
+        query.single_mut()
+    {
         match player.state {
             PlayerState {
                 is_stooping: false,
@@ -54,7 +63,7 @@ pub fn movement(
                     ..
                 } = player.state
                 {
-                    player.state.is_dashing = rb_vel.linvel.data.0[0][0].abs() > RUN_THRESHOLD;
+                    player.state.is_dashing = vel.0[0].abs() > RUN_THRESHOLD;
                 }
 
                 let left =
@@ -68,7 +77,7 @@ pub fn movement(
                     (false, true) => LINVEL_CAP_RUN,
                     (false, false) => LINVEL_CAP_WALK,
                 };
-                match (&player.state, rb_vel.linvel.data.0[0][0]) {
+                match (&player.state, vel.0[0]) {
                     (
                         PlayerState {
                             is_dashing: true,
@@ -101,13 +110,13 @@ pub fn movement(
                 match x_axis {
                     _ if x_axis > 0 => {
                         movement_events.send(MovementEvent::Right);
-                        if rb_vel.linvel.data.0[0][0] > cap {
+                        if vel.0[0] > cap {
                             return;
                         }
                     }
                     _ if x_axis < 0 => {
                         movement_events.send(MovementEvent::Left);
-                        if rb_vel.linvel.data.0[0][0] < -cap {
+                        if vel.0[0] < -cap {
                             return;
                         }
                     }
@@ -123,16 +132,33 @@ pub fn movement(
                             MOVE_IMPULSE_MULTIPLIER_GROUND_RUN
                         }
                     };
-                    rb_vel.apply_impulse(rb_mprops, move_delta * multiplier);
+                    let colliders = QueryPipelineColliderComponentsSet(&colliders);
+
+                    #[allow(clippy::blocks_in_if_conditions)]
+                    if query_pipeline
+                        .cast_shape(
+                            &colliders,
+                            &rb_pos.position,
+                            &move_delta,
+                            &*shape.0,
+                            COLLIDER_TOI_THRESHOLD * 10.,
+                            InteractionGroups::default(),
+                            Some(&|collider| {
+                                collider.entity() != entity
+                                    && ground_query.get(collider.entity()).is_err()
+                            }),
+                        )
+                        .is_none()
+                    {
+                        vel.0 += move_delta * multiplier * rb_mprops.effective_inv_mass;
+                    }
                 }
                 match player.state.state {
                     PlayerStateEnum::Ground {
                         is_turning: false,
                         is_walking,
                         frame,
-                    } if (x_axis == 1 && rb_vel.linvel.data.0[0][0] < 0.)
-                        || (x_axis == -1 && rb_vel.linvel.data.0[0][0] > 0.) =>
-                    {
+                    } if (x_axis == 1 && vel.0[0] < 0.) || (x_axis == -1 && vel.0[0] > 0.) => {
                         player.state.state = PlayerStateEnum::Ground {
                             frame,
                             is_walking,
@@ -144,9 +170,7 @@ pub fn movement(
                         is_turning: true,
                         is_walking,
                         frame,
-                    } if (x_axis == 1 && rb_vel.linvel.data.0[0][0] > 0.)
-                        || (x_axis == -1 && rb_vel.linvel.data.0[0][0] < 0.) =>
-                    {
+                    } if (x_axis == 1 && vel.0[0] > 0.) || (x_axis == -1 && vel.0[0] < 0.) => {
                         player.state.state = PlayerStateEnum::Ground {
                             frame,
                             is_walking,

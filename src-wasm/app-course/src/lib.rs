@@ -1,9 +1,8 @@
 use app_config::{
-    GRID_MARGIN, GRID_SIZE, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER,
-    GROUND_PROXIMITY_MARGIN_MULTIPLIER, TILE_COLLIDER_SUB, TILE_SIZE,
+    GRID_MARGIN, GRID_SIZE, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, TILE_COLLIDER_SUB, TILE_SIZE,
 };
 use app_core::{Course, CourseTheme, Tile};
-use app_ground::{Ground, GroundProximity};
+use app_ground::Ground;
 use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
 use bevy_rapier::{na::Point2, prelude::*};
@@ -58,45 +57,28 @@ fn spawn_tile(
                         shape: ColliderShape::polyline(
                             vec![
                                 Point2::new(
-                                    -TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN,
+                                    -TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN + 0.01,
                                     TILE_SIZE - TILE_COLLIDER_SUB
-                                        + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN,
+                                        + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
+                                        + 0.02,
                                 ),
                                 Point2::new(
-                                    TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
+                                    TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN - 0.01,
                                     TILE_SIZE - TILE_COLLIDER_SUB
-                                        + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN,
+                                        + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
+                                        + 0.02,
                                 ),
                             ],
                             None,
                         ),
+                        material: ColliderMaterial {
+                            friction: GROUND_FRICTION,
+                            ..Default::default()
+                        },
                         flags: ActiveEvents::INTERSECTION_EVENTS.into(),
                         ..Default::default()
                     })
                     .insert(Ground)
-                    .insert(ColliderPositionSync::Discrete);
-                parent
-                    .spawn_bundle(ColliderBundle {
-                        collider_type: ColliderType::Sensor,
-                        shape: ColliderShape::polyline(
-                            vec![
-                                Point2::new(
-                                    -TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN,
-                                    TILE_SIZE - TILE_COLLIDER_SUB
-                                        + GROUND_PROXIMITY_MARGIN_MULTIPLIER * GRID_MARGIN,
-                                ),
-                                Point2::new(
-                                    TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
-                                    TILE_SIZE - TILE_COLLIDER_SUB
-                                        + GROUND_PROXIMITY_MARGIN_MULTIPLIER * GRID_MARGIN,
-                                ),
-                            ],
-                            None,
-                        ),
-                        flags: ActiveEvents::INTERSECTION_EVENTS.into(),
-                        ..Default::default()
-                    })
-                    .insert(GroundProximity)
                     .insert(ColliderPositionSync::Discrete);
                 parent
                     .spawn_bundle(SpriteSheetBundle {
@@ -114,8 +96,7 @@ fn spawn_tile(
                             TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
                         ),
                         material: ColliderMaterial {
-                            friction: GROUND_FRICTION,
-                            friction_combine_rule: CoefficientCombineRule::Multiply,
+                            friction: 0.,
                             ..Default::default()
                         },
                         ..Default::default()

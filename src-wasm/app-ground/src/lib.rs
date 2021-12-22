@@ -5,9 +5,6 @@ use bevy_rapier::{na::Point2, prelude::*};
 #[derive(Debug)]
 pub struct Ground;
 
-#[derive(Debug)]
-pub struct GroundProximity;
-
 pub struct GroundPlugin;
 
 impl Plugin for GroundPlugin {
