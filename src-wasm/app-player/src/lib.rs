@@ -92,7 +92,7 @@ pub struct PlayerState {
     is_dash_turning: bool,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FacingDirection {
     Left,
     Right,
@@ -182,7 +182,10 @@ fn set_sprite(
                             } else {
                                 "MW_Player_MarioMdl_b_dash.0_0.png"
                             }
-                        } else if *frame == 1 {
+                        } else if *frame == 1
+                            || (vel.0[0] > 0. && *facing_direction == FacingDirection::Left)
+                            || (vel.0[0] < 0. && *facing_direction == FacingDirection::Right)
+                        {
                             "MW_Player_MarioMdl_walk.1_0.png"
                         } else {
                             "MW_Player_MarioMdl_walk.0_0.png"

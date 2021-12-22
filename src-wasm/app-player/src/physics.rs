@@ -1,5 +1,8 @@
 use crate::Player;
-use app_config::{COLLIDER_MIN_TOI, GROUND_FRICTION_MIN_VEL, RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
+use app_config::{
+    COLLIDER_MIN_TOI, GROUND_FRICTION_KINETIC_MULTIPLIER, GROUND_FRICTION_MIN_VEL,
+    GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY_VECTOR, RAPIER_SCALE,
+};
 use app_ground::Ground;
 use bevy::{prelude::*, utils::HashSet};
 use bevy_rapier::prelude::*;
@@ -26,6 +29,7 @@ pub fn physics(
             &mut PlayerVelocity,
             &RigidBodyMassProps,
             &ColliderShape,
+            &ColliderMaterial,
             &mut GroundIntersections,
         ),
         With<Player>,
@@ -42,6 +46,7 @@ pub fn physics(
         mut vel,
         rb_mprops,
         shape,
+        c_mat,
         mut ground_intersections,
     )) = query.single_mut()
     {
@@ -57,10 +62,11 @@ pub fn physics(
             &*shape.0,
         );
 
-        let (ground, ground_colliders) = ground_collision(
+        let (ground_friction, ground_colliders) = ground_collision(
             &query_pipeline,
             &colliders,
             &mut rb_pos,
+            c_mat.friction,
             &ground_query,
             &mut ground_intersections,
             entity,
@@ -82,7 +88,7 @@ pub fn physics(
             &mut ground_intersections,
         );
 
-        ground_friction_or_gravity(ground, &mut vel, rb_mprops);
+        ground_friction_or_gravity(ground_friction, &mut vel, rb_mprops);
     }
 }
 
@@ -150,13 +156,14 @@ fn ground_collision(
     query_pipeline: &QueryPipeline,
     colliders: &QueryPipelineColliderComponentsSet,
     rb_pos: &mut RigidBodyPosition,
+    friction: f32,
     ground_query: &Query<(&Ground, &ColliderMaterial)>,
     ground_intersections: &mut GroundIntersections,
     entity: Entity,
     shape: &dyn Shape,
     timer: &mut Timer,
 ) -> (Option<f32>, HashSet<Entity>) {
-    let mut ground = None;
+    let mut ground_friction = None;
     let mut ground_colliders = HashSet::default();
     query_pipeline.intersections_with_shape(
         colliders,
@@ -169,7 +176,7 @@ fn ground_collision(
         |collider| {
             let entity = collider.entity();
             let (_, material) = ground_query.get(collider.entity()).unwrap();
-            ground = Some(material.friction);
+            ground_friction = Some(material.friction * friction);
             ground_colliders.insert(entity);
             if !ground_intersections.0.contains(&entity) {
                 timer.reset();
@@ -178,7 +185,7 @@ fn ground_collision(
             true
         },
     );
-    (ground, ground_colliders)
+    (ground_friction, ground_colliders)
 }
 
 fn update_ground_intersections(
@@ -228,17 +235,24 @@ fn set_pos_to_closest_ground_collider(
 }
 
 fn ground_friction_or_gravity(
-    ground: Option<f32>,
+    ground_friction: Option<f32>,
     vel: &mut PlayerVelocity,
     rb_mprops: &RigidBodyMassProps,
 ) {
-    if let Some(friction) = ground {
+    if let Some(friction) = ground_friction {
         if vel.0[1] < 0. {
             vel.0[1] = 0.;
         }
-        vel.0[0] *= 1.0 / (1.0 + 1.0 / 60.0 * friction);
-        if vel.0[0].abs() < GROUND_FRICTION_MIN_VEL {
-            vel.0[0] = 0.
+        if vel.0[0].abs() > f32::EPSILON {
+            vel.0[0] += if vel.0[0] > 0. {
+                -GROUND_FRICTION_STATIC_MULTIPLIER * friction
+            } else {
+                GROUND_FRICTION_STATIC_MULTIPLIER * friction
+            };
+            vel.0[0] *= 1.0 / (1.0 + GROUND_FRICTION_KINETIC_MULTIPLIER * friction);
+            if vel.0[0].abs() < GROUND_FRICTION_MIN_VEL {
+                vel.0[0] = 0.
+            }
         }
     } else {
         vel.0 += RAPIER_GRAVITY_VECTOR * RAPIER_SCALE * rb_mprops.effective_inv_mass;

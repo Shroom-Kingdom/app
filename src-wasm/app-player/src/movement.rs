@@ -170,7 +170,10 @@ pub fn movement(
                         is_turning: true,
                         is_walking,
                         frame,
-                    } if (x_axis == 1 && vel.0[0] > 0.) || (x_axis == -1 && vel.0[0] < 0.) => {
+                    } if x_axis == 0
+                        || (x_axis == 1 && vel.0[0] > 0.)
+                        || (x_axis == -1 && vel.0[0] < 0.) =>
+                    {
                         player.state.state = PlayerStateEnum::Ground {
                             frame,
                             is_walking,
@@ -178,6 +181,7 @@ pub fn movement(
                         };
                         c_mat.friction = 1.
                     }
+                    PlayerStateEnum::Ground { .. } => {}
                     _ => c_mat.friction = 1.,
                 }
             }
