@@ -52,16 +52,6 @@ pub fn physics(
     {
         let colliders = QueryPipelineColliderComponentsSet(&colliders);
 
-        collision_detection(
-            &query_pipeline,
-            &colliders,
-            &mut rb_pos,
-            &mut vel,
-            &ground_query,
-            entity,
-            &*shape.0,
-        );
-
         let (ground_friction, ground_colliders) = ground_collision(
             &query_pipeline,
             &colliders,
@@ -86,6 +76,16 @@ pub fn physics(
             &colliders,
             &mut rb_pos,
             &mut ground_intersections,
+        );
+
+        collision_detection(
+            &query_pipeline,
+            &colliders,
+            &mut rb_pos,
+            &mut vel,
+            &ground_query,
+            entity,
+            &*shape.0,
         );
 
         ground_friction_or_gravity(ground_friction, &mut vel, rb_mprops);
