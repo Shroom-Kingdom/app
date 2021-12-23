@@ -33,7 +33,7 @@ pub fn main(assets: Vec<u8>) {
         // })
         .insert_resource(AssetIoTarConfig(assets))
         .add_state(AppState::Setup)
-        .add_plugins_with(bevy_webgl2::DefaultPlugins, |group| {
+        .add_plugins_with(DefaultPlugins, |group| {
             group.add_before::<bevy::asset::AssetPlugin, _>(AssetIoTarPlugin)
         })
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())

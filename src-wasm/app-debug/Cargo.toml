@@ -11,6 +11,6 @@ wasm-bindgen = "0.2"
 [dependencies.bevy]
 version = "0.5"
 git = "https://github.com/bevyengine/bevy.git"
-rev = "a89a954a1706bcffa497309388b993ff82016829"
+rev = "081350916c39fc1c7c9d659ccb6d86413832b465"
 # branch = "main"
 default-features = false

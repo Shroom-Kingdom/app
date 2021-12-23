@@ -13,12 +13,12 @@ web-sys = "0.3"
 [dependencies.bevy]
 version = "0.5"
 git = "https://github.com/bevyengine/bevy.git"
-rev = "a89a954a1706bcffa497309388b993ff82016829"
+rev = "081350916c39fc1c7c9d659ccb6d86413832b465"
 # branch = "main"
 default-features = false
 
 [dependencies.bevy_rapier]
 package = "bevy_rapier2d"
-version = "0.10"
-# path = "../../../bevy_rapier/bevy_rapier2d"
-git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"
+version = "0.11"
+path = "../../../bevy_rapier/bevy_rapier2d"
+# git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"
