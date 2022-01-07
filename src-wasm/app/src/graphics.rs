@@ -1,3 +1,4 @@
+use app_config::CAMERA_MIN_X;
 use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 use rapier::pipeline::PhysicsPipeline;
@@ -10,7 +11,7 @@ pub fn setup_graphics(mut commands: Commands, mut configuration: ResMut<RapierCo
     configuration.scale = 10.0;
 
     let mut camera = OrthographicCameraBundle::new_2d();
-    camera.transform = Transform::from_translation(Vec3::new(0.0, 200.0, 0.0));
+    camera.transform = Transform::from_translation(Vec3::new(CAMERA_MIN_X, 200.0, 0.0));
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_translation(Vec3::new(1000.0, 10.0, 2000.0)),
         point_light: PointLight {
