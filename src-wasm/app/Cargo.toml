@@ -15,7 +15,6 @@ app-config = { path = "../app-config" }
 app-core = { path = "../app-core" }
 app-course = { path = "../app-course" }
 app-debug = { path = "../app-debug" }
-app-ground = { path = "../app-ground" }
 app-player = { path = "../app-player" }
 app-tile = { path = "../app-tile" }
 js-sys = "0.3"

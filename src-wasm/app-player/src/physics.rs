@@ -3,7 +3,7 @@ use app_config::{
     COLLIDER_MIN_TOI, GROUND_FRICTION_KINETIC_MULTIPLIER, GROUND_FRICTION_MIN_VEL,
     GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY_VECTOR, RAPIER_SCALE,
 };
-use app_ground::Ground;
+use app_core::Ground;
 use bevy::{prelude::*, utils::HashSet};
 use bevy_rapier::prelude::*;
 
@@ -101,6 +101,11 @@ fn collision_detection(
     entity: Entity,
     shape: &dyn Shape,
 ) {
+    if rb_pos.next_position.translation.vector.data.0[0][0] <= 0. && vel.0[0] < 0. {
+        vel.0[0] = 0.;
+        rb_pos.position.translation.vector.data.0[0][0] = 0.;
+    }
+
     if let Some((collider, _)) = query_pipeline.cast_shape(
         colliders,
         &rb_pos.position,

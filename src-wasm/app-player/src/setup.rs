@@ -2,6 +2,7 @@ use crate::{
     FacingDirection, GroundIntersections, Player, PlayerState, PlayerStateEnum, PlayerVelocity,
 };
 use app_config::{PLAYER_COLLIDER_BORDER_RADIUS, RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
+use app_core::grid_to_world;
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
     physics::{RapierConfiguration, RigidBodyBundle},
@@ -74,9 +75,11 @@ pub fn setup(
     let wait_index = texture_atlas.get_texture_index(&handle).unwrap();
     let atlas_handle = texture_atlases.add(texture_atlas);
 
+    let world_pos = grid_to_world(&[5, 2]);
+
     commands
         .spawn_bundle(RigidBodyBundle {
-            position: [0., 10.].into(),
+            position: world_pos.into(),
             mass_properties: RigidBodyMassProps {
                 flags: RigidBodyMassPropsFlags::ROTATION_LOCKED,
                 ..Default::default()

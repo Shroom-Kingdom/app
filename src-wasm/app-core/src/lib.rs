@@ -1,8 +1,12 @@
 mod course;
 
+use app_config::GRID_SIZE;
 pub use course::{Course, CourseTheme, Tile, TileVariant};
 
 use bevy::{asset::LoadState, prelude::*};
+
+#[derive(Debug)]
+pub struct Ground;
 
 pub struct CorePlugin;
 
@@ -54,4 +58,12 @@ fn check_textures(
     {
         state.set(AppState::Finished).unwrap();
     }
+}
+
+pub fn grid_to_world(grid_pos: &[i32; 2]) -> Vec2 {
+    [
+        grid_pos[0] as f32 * GRID_SIZE,
+        grid_pos[1] as f32 * GRID_SIZE,
+    ]
+    .into()
 }

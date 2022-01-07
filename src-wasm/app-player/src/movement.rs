@@ -4,11 +4,11 @@ use app_config::{
     MOVE_IMPULSE_MULTIPLIER_AIR, MOVE_IMPULSE_MULTIPLIER_AIR_RUN, MOVE_IMPULSE_MULTIPLIER_GROUND,
     MOVE_IMPULSE_MULTIPLIER_GROUND_RUN, RUN_THRESHOLD,
 };
-use app_ground::Ground;
+use app_core::Ground;
 use bevy::prelude::*;
 use bevy_rapier::{na::Vector2, prelude::*};
 
-pub enum MovementEvent {
+pub enum FacingDirectionEvent {
     Left,
     Right,
 }
@@ -38,7 +38,7 @@ pub fn movement(
     ground_query: Query<&Ground>,
     colliders: QueryPipelineColliderComponentsQuery,
     keyboard_input: Res<Input<KeyCode>>,
-    mut movement_events: EventWriter<MovementEvent>,
+    mut facing_direction_events: EventWriter<FacingDirectionEvent>,
     mut dash_turn_events: EventWriter<DashTurnEvent>,
     query_pipeline: Res<QueryPipeline>,
 ) {
@@ -109,13 +109,13 @@ pub fn movement(
                 }
                 match x_axis {
                     _ if x_axis > 0 => {
-                        movement_events.send(MovementEvent::Right);
+                        facing_direction_events.send(FacingDirectionEvent::Right);
                         if vel.0[0] > cap {
                             return;
                         }
                     }
                     _ if x_axis < 0 => {
-                        movement_events.send(MovementEvent::Left);
+                        facing_direction_events.send(FacingDirectionEvent::Left);
                         if vel.0[0] < -cap {
                             return;
                         }

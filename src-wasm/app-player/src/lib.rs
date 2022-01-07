@@ -21,7 +21,7 @@ use touch::touch;
 use walk::{walk_animation, walk_start};
 
 pub use jump::JumpEvent;
-pub use movement::{DashTurnEvent, MovementEvent};
+pub use movement::{DashTurnEvent, FacingDirectionEvent};
 pub use physics::{GroundIntersectEvent, GroundIntersections, PlayerVelocity};
 pub use touch::TouchEvent;
 pub use walk::WalkEvent;
@@ -32,7 +32,7 @@ impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerStateChangeEvent>()
             .add_event::<WalkEvent>()
-            .add_event::<MovementEvent>()
+            .add_event::<FacingDirectionEvent>()
             .add_event::<DashTurnEvent>()
             .add_event::<JumpEvent>()
             .add_event::<GroundIntersectEvent>()
@@ -59,11 +59,11 @@ impl Plugin for CharacterPlugin {
             .add_system_to_stage(CoreStage::First, jump)
             .add_system_to_stage(CoreStage::First, high_jump)
             .add_system_to_stage(CoreStage::First, walk_animation)
-            .add_system_to_stage(CoreStage::First, walk_start)
             .add_system_to_stage(PlayerStages::PlayerInput, movement)
             .add_system_to_stage(CoreStage::PreUpdate, physics)
             .add_system_to_stage(CoreStage::PreUpdate, stoop)
             .add_system_to_stage(PlayerStages::PrePhysics, apply_vel)
+            .add_system_to_stage(PlayerStages::PrePhysics, walk_start)
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
             .add_system_to_stage(CoreStage::PostUpdate, touch)
             .add_system_to_stage(CoreStage::PostUpdate, jump_to_fall)

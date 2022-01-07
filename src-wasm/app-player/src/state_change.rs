@@ -1,7 +1,7 @@
 use crate::{
-    DashTurnEvent, FacingDirection, GroundIntersectEvent, GroundIntersections, JumpEvent,
-    MovementEvent, Player, PlayerStateChangeEvent, PlayerStateEnum, PlayerVelocity, StoopEvent,
-    TouchEvent, WalkEvent,
+    DashTurnEvent, FacingDirection, FacingDirectionEvent, GroundIntersectEvent,
+    GroundIntersections, JumpEvent, Player, PlayerStateChangeEvent, PlayerStateEnum,
+    PlayerVelocity, StoopEvent, TouchEvent, WalkEvent,
 };
 use bevy::prelude::*;
 
@@ -13,7 +13,7 @@ pub fn state_change(
     ground_intersect_events: EventReader<GroundIntersectEvent>,
     mut jump_events: EventReader<JumpEvent>,
     mut stoop_events: EventReader<StoopEvent>,
-    mut movement_events: EventReader<MovementEvent>,
+    mut facing_direction_events: EventReader<FacingDirectionEvent>,
     mut dash_turn_events: EventReader<DashTurnEvent>,
     mut psc_events: EventWriter<PlayerStateChangeEvent>,
 ) {
@@ -78,12 +78,12 @@ pub fn state_change(
             send_state_update = true;
             player.state.is_dash_turning = *is_dash_turning;
         }
-        match movement_events.iter().next() {
-            Some(MovementEvent::Left) => {
+        match facing_direction_events.iter().next() {
+            Some(FacingDirectionEvent::Left) => {
                 send_state_update = true;
                 player.state.facing_direction = FacingDirection::Left;
             }
-            Some(MovementEvent::Right) => {
+            Some(FacingDirectionEvent::Right) => {
                 send_state_update = true;
                 player.state.facing_direction = FacingDirection::Right;
             }

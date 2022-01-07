@@ -37,4 +37,5 @@ pub const GRID_MARGIN: f32 = 0.1;
 pub const GRID_SIZE: f32 = TILE_SIZE * 2. - (2. * TILE_COLLIDER_SUB) + (2. * GRID_MARGIN);
 pub const GROUND_MARGIN_MULTIPLIER: f32 = 2.;
 
-pub const CAMERA_MIN_X: f32 = 1000.;
+pub const CAMERA_MIN_X: f32 = 620.;
+pub const CAMERA_MIN_Y: f32 = 340.;

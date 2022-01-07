@@ -111,7 +111,6 @@ dependencies = [
  "app-core",
  "app-course",
  "app-debug",
- "app-ground",
  "app-player",
  "app-tile",
  "bevy",
@@ -145,7 +144,9 @@ dependencies = [
 name = "app-core"
 version = "0.1.0"
 dependencies = [
+ "app-config",
  "bevy",
+ "bevy_rapier2d",
 ]
 
 [[package]]
@@ -154,7 +155,6 @@ version = "0.1.0"
 dependencies = [
  "app-config",
  "app-core",
- "app-ground",
  "app-tile",
  "bevy",
  "bevy_rapier2d",
@@ -174,21 +174,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "app-ground"
-version = "0.1.0"
-dependencies = [
- "app-config",
- "bevy",
- "bevy_rapier2d",
-]
-
-[[package]]
 name = "app-player"
 version = "0.1.0"
 dependencies = [
  "app-config",
  "app-core",
- "app-ground",
+ "app-course",
  "bevy",
  "bevy_rapier2d",
  "parry2d",

@@ -6,7 +6,7 @@ edition = "2018"
 [dependencies]
 app-config = { path = "../app-config" }
 app-core = { path = "../app-core" }
-app-ground = { path = "../app-ground" }
+app-course = { path = "../app-course" }
 parry2d = "*"
 web-sys = "0.3"
 
