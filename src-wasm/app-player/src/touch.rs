@@ -10,7 +10,7 @@ pub fn touch(
     mut touch_events: EventWriter<TouchEvent>,
     mut contact_events: EventReader<ContactEvent>,
 ) {
-    if let Ok(entity) = query.single_mut() {
+    if let Ok(entity) = query.get_single_mut() {
         for contact_event in contact_events.iter() {
             if let ContactEvent::Started(collider1, collider2) = contact_event {
                 if collider1.entity() == entity || collider2.entity() == entity {

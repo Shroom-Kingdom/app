@@ -1,20 +1,16 @@
 [package]
-name = "app-assets"
+name = "app-menu"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+app-core = { path = "../app-core" }
+wasm-bindgen = "0.2"
 web-sys = "0.3"
 
 [dependencies.bevy]
 version = "0.6"
-features = ["png"]
 # git = "https://github.com/bevyengine/bevy.git"
 # rev = "a89a954a1706bcffa497309388b993ff82016829"
 # branch = "main"
 default-features = false
-
-[dependencies.tar]
-version = "0.4"
-# path = "../../../tar-rs"
-git = "https://github.com/Shroom-Kingdom/tar-rs.git"

@@ -4,6 +4,7 @@ cargo-features = ["strip"]
 members = [
     "src-wasm/*",
 ]
+resolver = "2"
 
 [profile]
 [profile.release]

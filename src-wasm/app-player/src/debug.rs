@@ -1,35 +1,35 @@
-use bevy::prelude::*;
+// use bevy::prelude::*;
 // use bevy_rapier::prelude::*;
 
 // use crate::Player;
 
-pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
-    commands.spawn_bundle(TextBundle {
-        style: Style {
-            align_self: AlignSelf::FlexEnd,
-            position_type: PositionType::Absolute,
-            position: Rect {
-                top: Val::Px(5.0),
-                left: Val::Px(15.0),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-        text: Text {
-            sections: vec![TextSection {
-                value: "asdasdasd".to_string(),
-                style: TextStyle {
-                    font_size: 15.0,
-                    color: Color::BLACK,
-                    font,
-                },
-            }],
-            ..Default::default()
-        },
-        ..Default::default()
-    });
-}
+// pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
+//     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+//     commands.spawn_bundle(TextBundle {
+//         style: Style {
+//             align_self: AlignSelf::FlexEnd,
+//             position_type: PositionType::Absolute,
+//             position: Rect {
+//                 top: Val::Px(5.0),
+//                 left: Val::Px(15.0),
+//                 ..Default::default()
+//             },
+//             ..Default::default()
+//         },
+//         text: Text {
+//             sections: vec![TextSection {
+//                 value: "asdasdasd".to_string(),
+//                 style: TextStyle {
+//                     font_size: 15.0,
+//                     color: Color::BLACK,
+//                     font,
+//                 },
+//             }],
+//             ..Default::default()
+//         },
+//         ..Default::default()
+//     });
+// }
 
 // pub fn text_update_system(
 //     mut query: Query<&mut Text>,

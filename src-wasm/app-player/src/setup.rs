@@ -2,7 +2,7 @@ use crate::{
     FacingDirection, GroundIntersections, Player, PlayerState, PlayerStateEnum, PlayerVelocity,
 };
 use app_config::{PLAYER_COLLIDER_BORDER_RADIUS, RAPIER_GRAVITY_VECTOR, RAPIER_SCALE};
-use app_core::grid_to_world;
+use app_core::{grid_to_world, PlayerFrame, PlayerSpriteHandles};
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::{
     physics::{RapierConfiguration, RigidBodyBundle},
@@ -11,9 +11,9 @@ use bevy_rapier::{
 
 pub fn setup(
     mut commands: Commands,
-    assets: Res<AssetServer>,
     mut rapier_config: ResMut<RapierConfiguration>,
-    mut textures: ResMut<Assets<Texture>>,
+    mut textures: ResMut<Assets<Image>>,
+    player_sprite_handles: Res<PlayerSpriteHandles>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     rapier_config.scale = RAPIER_SCALE;
@@ -27,52 +27,20 @@ pub fn setup(
 
     let mut texture_atlas_builder = TextureAtlasBuilder::default();
 
-    let handle = assets.load("MW_Player_MarioMdl_wait.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle.clone(), texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_walk.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_walk.1_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_stoop.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_b_dash.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_b_dash.1_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_b_dash_jump.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_b_dash_jump_fall.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_turn.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_jump.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle, texture);
-
-    let handle = assets.load("MW_Player_MarioMdl_jump_fall.0_0.png");
-    let texture = textures.get(&handle).unwrap();
-    texture_atlas_builder.add_texture(handle.clone(), texture);
+    for (_, handle) in player_sprite_handles.handles.iter() {
+        let texture = textures.get(handle).unwrap();
+        texture_atlas_builder.add_texture(handle.clone_weak(), texture);
+    }
 
     let texture_atlas = texture_atlas_builder.finish(&mut textures).unwrap();
-    let wait_index = texture_atlas.get_texture_index(&handle).unwrap();
+    let wait_index = texture_atlas
+        .get_texture_index(
+            player_sprite_handles
+                .handles
+                .get(&PlayerFrame::Wait)
+                .unwrap(),
+        )
+        .unwrap();
     let atlas_handle = texture_atlases.add(texture_atlas);
 
     let world_pos = grid_to_world(&[5, 2]);
@@ -83,8 +51,9 @@ pub fn setup(
             mass_properties: RigidBodyMassProps {
                 flags: RigidBodyMassPropsFlags::ROTATION_LOCKED,
                 ..Default::default()
-            },
-            body_type: RigidBodyType::KinematicVelocityBased,
+            }
+            .into(),
+            body_type: RigidBodyTypeComponent::from(RigidBodyType::KinematicVelocityBased),
             ..Default::default()
         })
         .insert(PlayerVelocity::default())
@@ -93,14 +62,17 @@ pub fn setup(
                 collider_size_x - PLAYER_COLLIDER_BORDER_RADIUS,
                 collider_size_y - PLAYER_COLLIDER_BORDER_RADIUS,
                 PLAYER_COLLIDER_BORDER_RADIUS,
-            ),
+            )
+            .into(),
             mass_properties: ColliderMassProps::MassProperties(Box::new(
                 MassProperties::from_ball(10., 10.),
-            )),
+            ))
+            .into(),
             material: ColliderMaterial {
                 friction_combine_rule: CoefficientCombineRule::Multiply,
                 ..Default::default()
-            },
+            }
+            .into(),
             flags: ActiveEvents::CONTACT_EVENTS.into(),
             ..Default::default()
         })
@@ -108,10 +80,10 @@ pub fn setup(
             parent.spawn_bundle(SpriteSheetBundle {
                 transform: Transform {
                     scale: Vec3::new(scale_size, scale_size, 1.),
-                    translation: Vec3::new(0., 6. * scale_size, 1.),
+                    translation: Vec3::new(0., 6. * scale_size, 0.),
                     ..Default::default()
                 },
-                sprite: TextureAtlasSprite::new(wait_index as u32),
+                sprite: TextureAtlasSprite::new(wait_index),
                 texture_atlas: atlas_handle,
                 ..Default::default()
             });

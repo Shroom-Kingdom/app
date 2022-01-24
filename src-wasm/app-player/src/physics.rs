@@ -7,7 +7,7 @@ use app_core::Ground;
 use bevy::{prelude::*, utils::HashSet};
 use bevy_rapier::prelude::*;
 
-#[derive(Default, Debug)]
+#[derive(Component, Default, Debug)]
 pub struct PlayerVelocity(pub Vector<Real>);
 
 #[derive(Debug)]
@@ -16,7 +16,7 @@ pub enum GroundIntersectEvent {
     Stop(Entity),
 }
 
-#[derive(Default)]
+#[derive(Component, Default)]
 pub struct GroundIntersections(pub HashSet<Entity>);
 
 #[allow(clippy::type_complexity)]
@@ -25,16 +25,16 @@ pub fn physics(
         (
             Entity,
             &mut Timer,
-            &mut RigidBodyPosition,
+            &mut RigidBodyPositionComponent,
             &mut PlayerVelocity,
-            &RigidBodyMassProps,
-            &ColliderShape,
-            &ColliderMaterial,
+            &RigidBodyMassPropsComponent,
+            &ColliderShapeComponent,
+            &ColliderMaterialComponent,
             &mut GroundIntersections,
         ),
         With<Player>,
     >,
-    ground_query: Query<(&Ground, &ColliderMaterial)>,
+    ground_query: Query<(&Ground, &ColliderMaterialComponent)>,
     query_pipeline: Res<QueryPipeline>,
     colliders: QueryPipelineColliderComponentsQuery,
     ground_intersect_events: EventWriter<GroundIntersectEvent>,
@@ -48,7 +48,7 @@ pub fn physics(
         shape,
         c_mat,
         mut ground_intersections,
-    )) = query.single_mut()
+    )) = query.get_single_mut()
     {
         let colliders = QueryPipelineColliderComponentsSet(&colliders);
 
@@ -97,7 +97,7 @@ fn collision_detection(
     colliders: &QueryPipelineColliderComponentsSet,
     rb_pos: &mut RigidBodyPosition,
     vel: &mut PlayerVelocity,
-    ground_query: &Query<(&Ground, &ColliderMaterial)>,
+    ground_query: &Query<(&Ground, &ColliderMaterialComponent)>,
     entity: Entity,
     shape: &dyn Shape,
 ) {
@@ -162,7 +162,7 @@ fn ground_collision(
     colliders: &QueryPipelineColliderComponentsSet,
     rb_pos: &mut RigidBodyPosition,
     friction: f32,
-    ground_query: &Query<(&Ground, &ColliderMaterial)>,
+    ground_query: &Query<(&Ground, &ColliderMaterialComponent)>,
     ground_intersections: &mut GroundIntersections,
     entity: Entity,
     shape: &dyn Shape,
@@ -260,12 +260,14 @@ fn ground_friction_or_gravity(
             }
         }
     } else {
-        vel.0 += RAPIER_GRAVITY_VECTOR * RAPIER_SCALE * rb_mprops.effective_inv_mass;
+        vel.0 += RAPIER_GRAVITY_VECTOR.component_mul(&rb_mprops.effective_inv_mass) * RAPIER_SCALE;
     }
 }
 
-pub fn apply_vel(mut query: Query<(&mut RigidBodyVelocity, &PlayerVelocity), With<Player>>) {
-    if let Ok((mut rb_vel, vel)) = query.single_mut() {
+pub fn apply_vel(
+    mut query: Query<(&mut RigidBodyVelocityComponent, &PlayerVelocity), With<Player>>,
+) {
+    if let Ok((mut rb_vel, vel)) = query.get_single_mut() {
         rb_vel.linvel = vel.0;
     }
 }

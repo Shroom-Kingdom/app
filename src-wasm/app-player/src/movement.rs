@@ -18,7 +18,7 @@ pub struct DashTurnEvent {
 }
 
 pub fn run(mut query: Query<&mut Player>, keyboard_input: Res<Input<KeyCode>>) {
-    if let Ok(mut player) = query.single_mut() {
+    if let Ok(mut player) = query.get_single_mut() {
         let run =
             keyboard_input.pressed(KeyCode::LShift) || keyboard_input.pressed(KeyCode::RShift);
         player.state.is_running = run;
@@ -30,10 +30,10 @@ pub fn movement(
         Entity,
         &mut Player,
         &mut PlayerVelocity,
-        &RigidBodyMassProps,
-        &mut ColliderMaterial,
-        &RigidBodyPosition,
-        &ColliderShape,
+        &RigidBodyMassPropsComponent,
+        &mut ColliderMaterialComponent,
+        &RigidBodyPositionComponent,
+        &ColliderShapeComponent,
     )>,
     ground_query: Query<&Ground>,
     colliders: QueryPipelineColliderComponentsQuery,
@@ -43,7 +43,7 @@ pub fn movement(
     query_pipeline: Res<QueryPipeline>,
 ) {
     if let Ok((entity, mut player, mut vel, rb_mprops, mut c_mat, rb_pos, shape)) =
-        query.single_mut()
+        query.get_single_mut()
     {
         match player.state {
             PlayerState {
@@ -150,7 +150,8 @@ pub fn movement(
                         )
                         .is_none()
                     {
-                        vel.0 += move_delta * multiplier * rb_mprops.effective_inv_mass;
+                        vel.0 +=
+                            move_delta.component_mul(&rb_mprops.effective_inv_mass) * multiplier;
                     }
                 }
                 match player.state.state {

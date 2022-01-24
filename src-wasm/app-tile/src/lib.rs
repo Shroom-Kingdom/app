@@ -1,6 +1,10 @@
 use app_config::{GRID_SIZE, RAPIER_SCALE};
-use app_core::{Course, TileVariant};
-use bevy::{prelude::*, render::camera::Camera, winit::WinitWindows};
+use app_core::{AppState, Course, TileVariant};
+use bevy::{
+    prelude::*,
+    render::{camera::Camera, primitives::Frustum},
+    winit::WinitWindows,
+};
 use web_sys::{HtmlCanvasElement, HtmlElement};
 use winit::platform::web::WindowExtWebSys;
 
@@ -19,7 +23,10 @@ impl Plugin for TilePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnTileEvent>()
             .add_event::<DespawnTileEvent>()
-            .add_system_to_stage(CoreStage::PostUpdate, spawn_tile);
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::on_update(AppState::Game).with_system(spawn_tile),
+            );
     }
 }
 
@@ -27,7 +34,7 @@ fn spawn_tile(
     mouse_button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
     winit_windows: Res<WinitWindows>,
-    camera_query: Query<(&Transform, &Camera)>,
+    camera_query: Query<(&Transform, &Camera), With<Frustum>>,
     spawn_tile_events: EventWriter<SpawnTileEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: Res<Course>,
@@ -46,7 +53,7 @@ fn spawn_tile(
 fn send_spawn_tile(
     window: &Window,
     canvas: &HtmlCanvasElement,
-    camera_query: &Query<(&Transform, &Camera)>,
+    camera_query: &Query<(&Transform, &Camera), With<Frustum>>,
     mut spawn_tile_events: EventWriter<SpawnTileEvent>,
     course: &Course,
 ) {
@@ -74,7 +81,7 @@ fn send_spawn_tile(
 fn send_despawn_tile(
     window: &Window,
     canvas: &HtmlCanvasElement,
-    camera_query: &Query<(&Transform, &Camera)>,
+    camera_query: &Query<(&Transform, &Camera), With<Frustum>>,
     mut despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: &Course,
 ) {
@@ -98,7 +105,7 @@ fn send_despawn_tile(
 
 fn cursor_to_grid(
     cursor: Vec2,
-    camera_query: &Query<(&Transform, &Camera)>,
+    camera_query: &Query<(&Transform, &Camera), With<Frustum>>,
     body: &HtmlElement,
     canvas: &HtmlCanvasElement,
 ) -> [i32; 2] {
@@ -109,7 +116,7 @@ fn cursor_to_grid(
     let cursor =
         (cursor - diff) / Vec2::new(canvas.offset_width() as f32, canvas.offset_height() as f32);
 
-    let (transform, camera) = camera_query.single().expect("main camera not found");
+    let (transform, camera) = camera_query.single();
 
     let camera_position = transform.compute_matrix();
     let projection_matrix = camera.projection_matrix;

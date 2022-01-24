@@ -14,7 +14,7 @@ pub struct DebugPluginState {
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::Update, text_update_system.system())
+        app.add_system_to_stage(CoreStage::Update, text_update_system)
             .insert_resource(DebugPluginCount(0));
     }
 }

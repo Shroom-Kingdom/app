@@ -17,7 +17,7 @@ pub fn state_change(
     mut dash_turn_events: EventReader<DashTurnEvent>,
     mut psc_events: EventWriter<PlayerStateChangeEvent>,
 ) {
-    if let Ok((mut player, mut ground_intersections, vel)) = query.single_mut() {
+    if let Ok((mut player, mut ground_intersections, vel)) = query.get_single_mut() {
         let mut state = handle_walk_events(&mut player, walk_events);
 
         state = if touch_events.iter().next().is_some() {

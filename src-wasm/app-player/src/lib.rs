@@ -11,7 +11,7 @@ mod walk;
 use app_core::AppState;
 use bevy::prelude::*;
 use camera::position_camera;
-use debug::setup_ui;
+// use debug::setup_ui;
 use jump::{high_jump, jump, jump_to_fall};
 use movement::{movement, run};
 use physics::{apply_vel, physics};
@@ -26,9 +26,9 @@ pub use physics::{GroundIntersectEvent, GroundIntersections, PlayerVelocity};
 pub use touch::TouchEvent;
 pub use walk::WalkEvent;
 
-pub struct CharacterPlugin;
+pub struct PlayerPlugin;
 
-impl Plugin for CharacterPlugin {
+impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerStateChangeEvent>()
             .add_event::<WalkEvent>()
@@ -38,7 +38,7 @@ impl Plugin for CharacterPlugin {
             .add_event::<GroundIntersectEvent>()
             .add_event::<StoopEvent>()
             .add_event::<TouchEvent>()
-            .add_startup_system(setup_ui)
+            // .add_startup_system(setup_ui)
             .add_stage_after(
                 CoreStage::First,
                 PlayerStages::PlayerInput,
@@ -54,22 +54,67 @@ impl Plugin for CharacterPlugin {
                 PlayerStages::StateChange,
                 SystemStage::parallel(),
             )
-            .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup))
-            .add_system_to_stage(CoreStage::First, run)
-            .add_system_to_stage(CoreStage::First, jump)
-            .add_system_to_stage(CoreStage::First, high_jump)
-            .add_system_to_stage(CoreStage::First, walk_animation)
-            .add_system_to_stage(PlayerStages::PlayerInput, movement)
-            .add_system_to_stage(CoreStage::PreUpdate, physics)
-            .add_system_to_stage(CoreStage::PreUpdate, stoop)
-            .add_system_to_stage(PlayerStages::PrePhysics, apply_vel)
-            .add_system_to_stage(PlayerStages::PrePhysics, walk_start)
+            .add_system_set_to_stage(PlayerStages::PlayerInput, State::<AppState>::get_driver())
+            .add_system_set_to_stage(PlayerStages::PrePhysics, State::<AppState>::get_driver())
+            .add_system_set_to_stage(PlayerStages::StateChange, State::<AppState>::get_driver())
+            .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup))
+            .add_system_set_to_stage(
+                CoreStage::First,
+                SystemSet::on_update(AppState::Game).with_system(run),
+            )
+            .add_system_set_to_stage(
+                CoreStage::First,
+                SystemSet::on_update(AppState::Game).with_system(jump),
+            )
+            .add_system_set_to_stage(
+                CoreStage::First,
+                SystemSet::on_update(AppState::Game).with_system(high_jump),
+            )
+            .add_system_set_to_stage(
+                CoreStage::First,
+                SystemSet::on_update(AppState::Game).with_system(walk_animation),
+            )
+            .add_system_set_to_stage(
+                PlayerStages::PlayerInput,
+                SystemSet::on_update(AppState::Game).with_system(movement),
+            )
+            .add_system_set_to_stage(
+                CoreStage::PreUpdate,
+                SystemSet::on_update(AppState::Game).with_system(physics),
+            )
+            .add_system_set_to_stage(
+                CoreStage::PreUpdate,
+                SystemSet::on_update(AppState::Game).with_system(stoop),
+            )
+            .add_system_set_to_stage(
+                PlayerStages::PrePhysics,
+                SystemSet::on_update(AppState::Game).with_system(apply_vel),
+            )
+            .add_system_set_to_stage(
+                PlayerStages::PrePhysics,
+                SystemSet::on_update(AppState::Game).with_system(walk_start),
+            )
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
-            .add_system_to_stage(CoreStage::PostUpdate, touch)
-            .add_system_to_stage(CoreStage::PostUpdate, jump_to_fall)
-            .add_system_to_stage(CoreStage::PostUpdate, position_camera)
-            .add_system_to_stage(PlayerStages::StateChange, state_change)
-            .add_system_to_stage(CoreStage::Last, set_sprite);
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::on_update(AppState::Game).with_system(touch),
+            )
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::on_update(AppState::Game).with_system(jump_to_fall),
+            )
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::on_update(AppState::Game).with_system(position_camera),
+            )
+            .add_system_set_to_stage(
+                PlayerStages::StateChange,
+                SystemSet::on_update(AppState::Game).with_system(state_change),
+            )
+            .add_system_set_to_stage(
+                CoreStage::Last,
+                SystemSet::on_update(AppState::Game).with_system(set_sprite),
+            );
     }
 }
 
@@ -80,7 +125,7 @@ pub enum PlayerStages {
     StateChange,
 }
 
-#[derive(Debug)]
+#[derive(Component, Debug)]
 pub struct Player {
     pub state: PlayerState,
 }
@@ -117,6 +162,7 @@ pub enum PlayerStateEnum {
     },
 }
 
+#[derive(Debug)]
 pub struct PlayerStateChangeEvent {
     pub state: PlayerState,
 }
@@ -130,7 +176,7 @@ fn stoop(
     keyboard_input: Res<Input<KeyCode>>,
     mut stoop_events: EventWriter<StoopEvent>,
 ) {
-    if let Ok(player) = query.single() {
+    if let Ok(player) = query.get_single() {
         let stooped = !player.state.is_stooping
             && (keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down));
         let unstooped = player.state.is_stooping
@@ -152,7 +198,7 @@ fn set_sprite(
     assets: Res<AssetServer>,
     texture_atlases: Res<Assets<TextureAtlas>>,
 ) {
-    if let Ok((children, vel)) = query.single_mut() {
+    if let Ok((children, vel)) = query.get_single_mut() {
         let child = children.first().unwrap();
         let (mut sprite, atlas_handle) = child_query.get_mut(*child).unwrap();
         if let Some(event) = psc_events.iter().last() {
@@ -217,7 +263,7 @@ fn set_sprite(
             };
             let handle = assets.load(asset_path);
             let index = texture_atlas.get_texture_index(&handle).unwrap();
-            sprite.index = index as u32;
+            sprite.index = index;
         }
     }
 }

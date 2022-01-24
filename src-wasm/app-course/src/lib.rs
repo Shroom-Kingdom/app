@@ -1,4 +1,4 @@
-use app_core::{Course, CourseTheme};
+use app_core::{AppState, Course, CourseTheme};
 use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
 
@@ -6,9 +6,15 @@ pub struct CoursePlugin;
 
 impl Plugin for CoursePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system_to_stage(CoreStage::Last, spawn_tile)
-            .add_system_to_stage(CoreStage::Last, despawn_tile);
+        app.add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup))
+            .add_system_set_to_stage(
+                CoreStage::Last,
+                SystemSet::on_update(AppState::Game).with_system(spawn_tile),
+            )
+            .add_system_set_to_stage(
+                CoreStage::Last,
+                SystemSet::on_update(AppState::Game).with_system(despawn_tile),
+            );
     }
 }
 
@@ -48,7 +54,8 @@ fn despawn_tile(
 ) {
     for DespawnTileEvent { grid_pos } in despawn_tile_events.iter() {
         if let Some(tile) = course.tiles.remove(grid_pos) {
-            commands.entity(tile.entity).despawn_recursive();
+            // TODO does not despawn rigid body. bevy_rapier crashes
+            commands.entity(tile.entity).despawn_descendants();
         }
     }
 }

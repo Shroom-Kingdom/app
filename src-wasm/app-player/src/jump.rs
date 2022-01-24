@@ -12,7 +12,7 @@ pub fn jump(
     keyboard_input: Res<Input<KeyCode>>,
     mut psc_event: EventWriter<JumpEvent>,
 ) {
-    if let Ok((player, mut vel)) = query.single_mut() {
+    if let Ok((player, mut vel)) = query.get_single_mut() {
         let jump = keyboard_input.just_pressed(KeyCode::Space)
             || keyboard_input.just_pressed(KeyCode::Up)
             || keyboard_input.just_pressed(KeyCode::W);
@@ -38,7 +38,7 @@ pub fn high_jump(
     mut query: Query<(&mut Player, &mut PlayerVelocity)>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    if let Ok((mut player, mut vel)) = query.single_mut() {
+    if let Ok((mut player, mut vel)) = query.get_single_mut() {
         match player.state.state {
             PlayerStateEnum::Air {
                 tick,
@@ -69,7 +69,7 @@ pub fn jump_to_fall(
     query: Query<(&Player, &PlayerVelocity)>,
     mut jump_events: EventWriter<JumpEvent>,
 ) {
-    if let Ok((player, vel)) = query.single() {
+    if let Ok((player, vel)) = query.get_single() {
         if let PlayerStateEnum::Air { .. } = player.state.state {
             if vel.0[1] < 0. {
                 jump_events.send(JumpEvent {

@@ -58,14 +58,14 @@ impl Course {
         let entity = commands
             .spawn_bundle(RigidBodyBundle {
                 position: world_pos.into(),
-                body_type: RigidBodyType::Static,
+                body_type: RigidBodyTypeComponent::from(RigidBodyType::Static),
                 ..Default::default()
             })
             .with_children(|parent| {
                 parent
                     .spawn_bundle(ColliderBundle {
-                        collider_type: ColliderType::Sensor,
-                        shape: ColliderShape::polyline(
+                        collider_type: ColliderTypeComponent::from(ColliderType::Sensor),
+                        shape: ColliderShapeComponent::from(ColliderShape::polyline(
                             vec![
                                 Point2::new(
                                     -TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN + 0.01,
@@ -81,11 +81,11 @@ impl Course {
                                 ),
                             ],
                             None,
-                        ),
-                        material: ColliderMaterial {
+                        )),
+                        material: ColliderMaterialComponent::from(ColliderMaterial {
                             friction: GROUND_FRICTION,
                             ..Default::default()
-                        },
+                        }),
                         flags: ActiveEvents::INTERSECTION_EVENTS.into(),
                         ..Default::default()
                     })
@@ -102,14 +102,14 @@ impl Course {
                         ..Default::default()
                     })
                     .insert_bundle(ColliderBundle {
-                        shape: ColliderShape::cuboid(
+                        shape: ColliderShapeComponent::from(ColliderShape::cuboid(
                             TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
                             TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
-                        ),
-                        material: ColliderMaterial {
+                        )),
+                        material: ColliderMaterialComponent::from(ColliderMaterial {
                             friction: 0.,
                             ..Default::default()
-                        },
+                        }),
                         ..Default::default()
                     })
                     .insert(ColliderPositionSync::Discrete);

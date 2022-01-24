@@ -2,7 +2,8 @@ use crate::graphics::{enable_physics_profiling, setup_graphics};
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
 use app_core::{AppState, CorePlugin};
 use app_course::CoursePlugin;
-use app_player::CharacterPlugin;
+use app_menu::MenuPlugin;
+use app_player::PlayerPlugin;
 use app_tile::TilePlugin;
 // use app_debug::{DebugPlugin, DebugPluginState};
 use bevy::{input::keyboard::keyboard_input_system, prelude::*};
@@ -31,19 +32,25 @@ pub fn main(assets: Vec<u8>) {
         //     set_debug_state,
         // })
         .insert_resource(AssetIoTarConfig(assets))
-        .add_state(AppState::Setup)
-        .add_plugins_with(bevy_webgl2::DefaultPlugins, |group| {
+        .insert_resource(State::new(AppState::Setup))
+        .add_plugins_with(bevy::DefaultPlugins, |group| {
             group.add_before::<bevy::asset::AssetPlugin, _>(AssetIoTarPlugin)
         })
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierRenderPlugin)
         .add_plugin(CorePlugin)
-        .add_plugin(CharacterPlugin)
+        .add_plugin(PlayerPlugin)
         .add_plugin(TilePlugin)
         .add_plugin(CoursePlugin)
+        .add_plugin(MenuPlugin)
         // .add_plugin(DebugPlugin)
-        .add_startup_system(setup_graphics.system())
-        .add_startup_system(enable_physics_profiling.system())
-        .add_startup_system(keyboard_input_system.system())
+        .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup_graphics))
+        .add_startup_system(enable_physics_profiling)
+        .add_startup_system(keyboard_input_system)
+        .add_system_set_to_stage(CoreStage::First, State::<AppState>::get_driver())
+        .add_system_set_to_stage(CoreStage::PreUpdate, State::<AppState>::get_driver())
+        .add_system_set_to_stage(CoreStage::Update, State::<AppState>::get_driver())
+        .add_system_set_to_stage(CoreStage::PostUpdate, State::<AppState>::get_driver())
+        .add_system_set_to_stage(CoreStage::Last, State::<AppState>::get_driver())
         .run();
 }

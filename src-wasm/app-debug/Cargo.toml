@@ -1,16 +1,16 @@
 [package]
 name = "app-debug"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 js-sys = "0.3"
-rapier = { package = "rapier2d", version = "0.11" }
+rapier = { package = "rapier2d", version = "0.12.0-alpha.0" }
 wasm-bindgen = "0.2"
 
 [dependencies.bevy]
-version = "0.5"
-git = "https://github.com/bevyengine/bevy.git"
-rev = "a89a954a1706bcffa497309388b993ff82016829"
+version = "0.6"
+# git = "https://github.com/bevyengine/bevy.git"
+# rev = "a89a954a1706bcffa497309388b993ff82016829"
 # branch = "main"
 default-features = false
