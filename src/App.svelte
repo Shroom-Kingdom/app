@@ -55,7 +55,7 @@
 <canvas
 	id="canvas"
 	bind:this={canvas}
-	on:contextmenu={(e) => { e.preventDefault(); }}
+	on:contextmenu={(e) => { e.preventDefault(); return false; }}
 />
 
 <style>

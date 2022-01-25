@@ -1,4 +1,4 @@
-use crate::graphics::{enable_physics_profiling, setup_graphics};
+use crate::graphics::{enable_physics_profiling, setup_graphics, setup_resolution_scaling};
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
 use app_core::{AppState, CorePlugin};
 use app_course::CoursePlugin;
@@ -17,9 +17,9 @@ use wasm_bindgen::prelude::*;
 pub fn main(assets: Vec<u8>) {
     App::new()
         .insert_resource(ClearColor(Color::rgb(
-            0xF9 as f32 / 255.0,
-            0xF9 as f32 / 255.0,
-            0xFF as f32 / 255.0,
+            0xF0 as f32 / 255.0,
+            0xF0 as f32 / 255.0,
+            0xF0 as f32 / 255.0,
         )))
         .insert_resource(Msaa::default())
         .insert_resource(WindowDescriptor {
@@ -45,6 +45,7 @@ pub fn main(assets: Vec<u8>) {
         .add_plugin(MenuPlugin)
         // .add_plugin(DebugPlugin)
         .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup_graphics))
+        .add_startup_system(setup_resolution_scaling)
         .add_startup_system(enable_physics_profiling)
         .add_startup_system(keyboard_input_system)
         .add_system_set_to_stage(CoreStage::First, State::<AppState>::get_driver())

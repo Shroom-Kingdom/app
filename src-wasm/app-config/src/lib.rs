@@ -32,7 +32,7 @@ pub const GROUND_FRICTION_STATIC_MULTIPLIER: f32 = 2.5 / 60.;
 pub const GROUND_FRICTION_KINETIC_MULTIPLIER: f32 = 0.3 / 60.;
 
 pub const TILE_SIZE: f32 = 2.;
-pub const TILE_COLLIDER_SUB: f32 = 0.5;
+pub const TILE_COLLIDER_SUB: f32 = 0.55;
 pub const GRID_MARGIN: f32 = 0.1;
 pub const GRID_SIZE: f32 = TILE_SIZE * 2. - (2. * TILE_COLLIDER_SUB) + (2. * GRID_MARGIN);
 pub const GROUND_MARGIN_MULTIPLIER: f32 = 2.;

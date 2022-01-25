@@ -97,6 +97,7 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
  "wee_alloc",
+ "winit",
 ]
 
 [[package]]
