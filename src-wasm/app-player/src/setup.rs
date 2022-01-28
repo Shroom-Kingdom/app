@@ -27,19 +27,14 @@ pub fn setup(
 
     let mut texture_atlas_builder = TextureAtlasBuilder::default();
 
-    for (_, handle) in player_sprite_handles.handles.iter() {
+    for (_, handle) in player_sprite_handles.0.iter() {
         let texture = textures.get(handle).unwrap();
         texture_atlas_builder.add_texture(handle.clone_weak(), texture);
     }
 
     let texture_atlas = texture_atlas_builder.finish(&mut textures).unwrap();
     let wait_index = texture_atlas
-        .get_texture_index(
-            player_sprite_handles
-                .handles
-                .get(&PlayerFrame::Wait)
-                .unwrap(),
-        )
+        .get_texture_index(player_sprite_handles.0.get(&PlayerFrame::Wait).unwrap())
         .unwrap();
     let atlas_handle = texture_atlases.add(texture_atlas);
 

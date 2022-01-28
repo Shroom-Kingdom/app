@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+app-config = { path = "../app-config" }
 app-core = { path = "../app-core" }
 wasm-bindgen = "0.2"
 web-sys = "0.3"

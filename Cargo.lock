@@ -154,6 +154,7 @@ dependencies = [
 name = "app-menu"
 version = "0.1.0"
 dependencies = [
+ "app-config",
  "app-core",
  "bevy",
  "wasm-bindgen",
