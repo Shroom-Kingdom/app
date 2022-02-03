@@ -19,6 +19,7 @@ pub enum GroundIntersectEvent {
 #[derive(Component, Default)]
 pub struct GroundIntersections(pub HashSet<Entity>);
 
+#[allow(clippy::type_complexity)]
 pub fn physics(
     mut query: Query<
         (

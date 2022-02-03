@@ -68,6 +68,7 @@ pub fn setup_game_ui(
     done.0 = false;
 }
 
+#[allow(clippy::type_complexity)]
 pub fn select_tile(
     mut query: Query<(&Interaction, &TileVariant), (Changed<Interaction>, With<TileVariant>)>,
     mut selected_tile: ResMut<SelectedTile>,

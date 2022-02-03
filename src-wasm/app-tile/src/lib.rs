@@ -27,15 +27,22 @@ impl Plugin for TilePlugin {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn spawn_tile(
     mouse_button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
     camera_query: Query<(&Transform, &Camera), With<Frustum>>,
+    button_query: Query<&Interaction, With<Button>>,
     spawn_tile_events: EventWriter<SpawnTileEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: Res<Course>,
     selected_tile: Res<SelectedTile>,
 ) {
+    for interaction in button_query.iter() {
+        if interaction == &Interaction::Hovered || interaction == &Interaction::Clicked {
+            return;
+        }
+    }
     let window = windows.get_primary().unwrap();
     if mouse_button_input.pressed(MouseButton::Left) {
         send_spawn_tile(

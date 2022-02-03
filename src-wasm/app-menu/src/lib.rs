@@ -31,6 +31,7 @@ impl Plugin for MenuPlugin {
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 
+#[allow(clippy::type_complexity)]
 fn on_hover(mut query: Query<(&Interaction, &mut UiColor), (Changed<Interaction>, With<Button>)>) {
     for (interaction, mut color) in query.iter_mut() {
         match *interaction {
