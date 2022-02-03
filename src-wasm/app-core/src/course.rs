@@ -1,10 +1,12 @@
+pub(crate) mod sprites;
+pub(crate) mod tile;
+
+use crate::{grid_to_world, Ground, Tile, TileVariant};
 use app_config::{
     GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, TILE_COLLIDER_SUB, TILE_SIZE,
 };
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{na::Point2, prelude::*};
-
-use crate::{grid_to_world, Ground};
 
 #[derive(Debug, TypeUuid)]
 #[uuid = "81a23571-1f35-4f20-b1ea-30e5c2612049"]
@@ -12,6 +14,19 @@ pub struct Course {
     pub texture_atlas_handle: Handle<TextureAtlas>,
     pub tiles: HashMap<[i32; 2], Tile>,
     pub theme: CourseTheme,
+}
+
+#[derive(Debug)]
+pub enum CourseTheme {
+    Plain,
+}
+
+impl CourseTheme {
+    pub fn get_asset_str(&self) -> &str {
+        match self {
+            CourseTheme::Plain => "MW_Field_plain_0.png",
+        }
+    }
 }
 
 impl Course {
@@ -32,7 +47,7 @@ impl Course {
 
         for x in 0..8 {
             for y in 0..2 {
-                course.spawn_tile(commands, &[x, y], &TileVariant::Block);
+                course.spawn_tile(commands, &[x, y], &TileVariant::Ground);
             }
         }
 
@@ -98,7 +113,7 @@ impl Course {
                             ..Default::default()
                         },
                         texture_atlas: self.texture_atlas_handle.clone(),
-                        sprite: TextureAtlasSprite::new(6),
+                        sprite: TextureAtlasSprite::new(tile_variant.get_sprite_sheet_index()),
                         ..Default::default()
                     })
                     .insert_bundle(ColliderBundle {
@@ -122,28 +137,4 @@ impl Course {
         };
         self.tiles.insert(*grid_pos, tile);
     }
-}
-
-#[derive(Debug)]
-pub enum CourseTheme {
-    Plain,
-}
-
-impl CourseTheme {
-    pub fn get_asset_str(&self) -> &str {
-        match self {
-            CourseTheme::Plain => "MW_Field_plain_0.png",
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Tile {
-    pub entity: Entity,
-    pub variant: TileVariant,
-}
-
-#[derive(Clone, Debug)]
-pub enum TileVariant {
-    Block,
 }

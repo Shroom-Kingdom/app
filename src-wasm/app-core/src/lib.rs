@@ -1,14 +1,16 @@
 mod course;
-mod course_sprites;
 mod player_sprites;
 
-pub use course::{Course, CourseTheme, Tile, TileVariant};
-pub use course_sprites::{CourseSpriteHandles, CourseTile};
+pub use course::{
+    sprites::CourseSpriteHandles,
+    tile::{SelectedTile, Tile, TileVariant},
+    Course, CourseTheme,
+};
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
 
 use app_config::GRID_SIZE;
 use bevy::{asset::LoadState, ecs::schedule::ShouldRun, prelude::*};
-use course_sprites::load_course_sprites;
+use course::sprites::load_course_sprites;
 use player_sprites::load_player_sprites;
 
 #[derive(Component, Debug)]

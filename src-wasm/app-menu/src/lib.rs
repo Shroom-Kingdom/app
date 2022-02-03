@@ -2,6 +2,7 @@ mod game;
 
 use app_core::{is_done_insert_course, AppLabel, AppState};
 use bevy::prelude::*;
+use game::select_tile;
 
 #[derive(Component)]
 struct MainMenu;
@@ -22,6 +23,7 @@ impl Plugin for MenuPlugin {
                     .with_system(game::setup_game_ui),
             )
             .add_system_set(SystemSet::on_update(AppState::Menu).with_system(start_game))
+            .add_system_set(SystemSet::on_update(AppState::Game).with_system(select_tile))
             .add_system(on_hover);
     }
 }
@@ -29,7 +31,6 @@ impl Plugin for MenuPlugin {
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 
-#[allow(clippy::type_complexity)]
 fn on_hover(mut query: Query<(&Interaction, &mut UiColor), (Changed<Interaction>, With<Button>)>) {
     for (interaction, mut color) in query.iter_mut() {
         match *interaction {
@@ -44,7 +45,6 @@ fn on_hover(mut query: Query<(&Interaction, &mut UiColor), (Changed<Interaction>
     }
 }
 
-#[allow(clippy::type_complexity)]
 fn start_game(
     mut query: Query<&Interaction, (Changed<Interaction>, With<MainMenuBuildButton>)>,
     mut state: ResMut<State<AppState>>,

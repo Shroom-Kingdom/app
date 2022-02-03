@@ -1,4 +1,6 @@
-use app_core::{AppLabel, AppState, Course, CourseTheme, DoneInsertCourse};
+use app_core::{
+    AppLabel, AppState, Course, CourseTheme, DoneInsertCourse, SelectedTile, TileVariant,
+};
 use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
 
@@ -36,6 +38,7 @@ fn setup(
     );
 
     commands.insert_resource(course);
+    commands.insert_resource(SelectedTile(TileVariant::Ground));
     done.0 = true;
 }
 

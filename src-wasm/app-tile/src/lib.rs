@@ -1,5 +1,5 @@
 use app_config::{GRID_SIZE, RAPIER_SCALE};
-use app_core::{AppState, Course, TileVariant};
+use app_core::{AppState, Course, SelectedTile, TileVariant};
 use bevy::{
     prelude::*,
     render::{camera::Camera, primitives::Frustum},
@@ -34,10 +34,17 @@ fn spawn_tile(
     spawn_tile_events: EventWriter<SpawnTileEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: Res<Course>,
+    selected_tile: Res<SelectedTile>,
 ) {
     let window = windows.get_primary().unwrap();
     if mouse_button_input.pressed(MouseButton::Left) {
-        send_spawn_tile(window, &camera_query, spawn_tile_events, &course);
+        send_spawn_tile(
+            window,
+            &camera_query,
+            spawn_tile_events,
+            &course,
+            &selected_tile,
+        );
     }
     if mouse_button_input.pressed(MouseButton::Right) {
         send_despawn_tile(window, &camera_query, despawn_tile_events, &course);
@@ -49,6 +56,7 @@ fn send_spawn_tile(
     camera_query: &Query<(&Transform, &Camera), With<Frustum>>,
     mut spawn_tile_events: EventWriter<SpawnTileEvent>,
     course: &Course,
+    selected_tile: &SelectedTile,
 ) {
     let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
         cursor_pointer
@@ -59,7 +67,7 @@ fn send_spawn_tile(
     let grid_pos = cursor_to_grid(cursor_position, camera_query, window);
     if !course.tiles.contains_key(&grid_pos) {
         spawn_tile_events.send(SpawnTileEvent {
-            tile_variant: TileVariant::Block,
+            tile_variant: selected_tile.0.clone(),
             grid_pos,
         });
     }

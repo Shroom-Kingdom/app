@@ -1,6 +1,6 @@
 use crate::NORMAL_BUTTON;
 use app_config::TILE_SIZE;
-use app_core::{CourseSpriteHandles, CourseTile, DoneInsertCourse};
+use app_core::{CourseSpriteHandles, DoneInsertCourse, SelectedTile, TileVariant};
 use bevy::{prelude::*, ui::FocusPolicy};
 
 macro_rules! add_button {
@@ -31,7 +31,8 @@ macro_rules! add_button {
                         ..Default::default()
                     })
                     .insert(FocusPolicy::Pass);
-            });
+            })
+            .insert($tile);
     };
 }
 
@@ -57,12 +58,23 @@ pub fn setup_game_ui(
             ..Default::default()
         })
         .with_children(|parent| {
-            add_button!(parent, sprite_handles, CourseTile::Ground);
-            add_button!(parent, sprite_handles, CourseTile::HardBlock);
-            add_button!(parent, sprite_handles, CourseTile::RotatingBlock);
-            add_button!(parent, sprite_handles, CourseTile::DonutBlock);
-            add_button!(parent, sprite_handles, CourseTile::CloudBlock);
+            add_button!(parent, sprite_handles, TileVariant::Ground);
+            add_button!(parent, sprite_handles, TileVariant::HardBlock);
+            add_button!(parent, sprite_handles, TileVariant::RotatingBlock);
+            add_button!(parent, sprite_handles, TileVariant::DonutBlock);
+            add_button!(parent, sprite_handles, TileVariant::CloudBlock);
         });
 
     done.0 = false;
+}
+
+pub fn select_tile(
+    mut query: Query<(&Interaction, &TileVariant), (Changed<Interaction>, With<TileVariant>)>,
+    mut selected_tile: ResMut<SelectedTile>,
+) {
+    for (interaction, tile_variant) in query.iter_mut() {
+        if *interaction == Interaction::Clicked {
+            selected_tile.0 = tile_variant.clone();
+        }
+    }
 }
