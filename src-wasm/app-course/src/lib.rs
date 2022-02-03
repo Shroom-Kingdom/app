@@ -1,6 +1,4 @@
-use app_core::{
-    AppLabel, AppState, Course, CourseTheme, DoneInsertCourse, SelectedTile, TileVariant,
-};
+use app_core::{AppLabel, AppState, Course, CourseTheme, SelectedTile, TileVariant};
 use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
 
@@ -28,7 +26,7 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut done: ResMut<DoneInsertCourse>,
+    mut selected_tile: ResMut<SelectedTile>,
 ) {
     let course = Course::empty(
         &mut commands,
@@ -38,8 +36,7 @@ fn setup(
     );
 
     commands.insert_resource(course);
-    commands.insert_resource(SelectedTile(TileVariant::Ground));
-    done.0 = true;
+    selected_tile.0 = Some(TileVariant::Ground);
 }
 
 fn spawn_tile(

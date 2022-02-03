@@ -9,7 +9,7 @@ pub use course::{
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
 
 use app_config::GRID_SIZE;
-use bevy::{asset::LoadState, ecs::schedule::ShouldRun, prelude::*};
+use bevy::{asset::LoadState, prelude::*};
 use course::sprites::load_course_sprites;
 use player_sprites::load_player_sprites;
 
@@ -22,7 +22,7 @@ impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerSpriteHandles>()
             .init_resource::<CourseSpriteHandles>()
-            .init_resource::<DoneInsertCourse>()
+            .init_resource::<SelectedTile>()
             .add_startup_system_to_stage(StartupStage::Startup, load_player_sprites)
             .add_startup_system_to_stage(StartupStage::Startup, load_course_sprites)
             .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures));
@@ -39,17 +39,6 @@ pub enum AppState {
 #[derive(SystemLabel, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AppLabel {
     InsertCourse,
-}
-
-#[derive(Default)]
-pub struct DoneInsertCourse(pub bool);
-
-pub fn is_done_insert_course(done: Res<DoneInsertCourse>) -> ShouldRun {
-    if done.0 {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
 }
 
 pub fn grid_to_world(grid_pos: &[i32; 2]) -> Vec2 {

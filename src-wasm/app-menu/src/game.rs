@@ -1,10 +1,9 @@
-use crate::NORMAL_BUTTON;
-use app_config::TILE_SIZE;
-use app_core::{CourseSpriteHandles, DoneInsertCourse, SelectedTile, TileVariant};
+use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR, TILE_SIZE};
+use app_core::{CourseSpriteHandles, SelectedTile, TileVariant};
 use bevy::{prelude::*, ui::FocusPolicy};
 
 macro_rules! add_button {
-    ( $parent:expr, $sprite_handles:expr, $tile:expr ) => {
+    ( $parent:expr, $color:expr, $sprite_handles:expr, $tile:expr, $is_selected:expr ) => {
         $parent
             .spawn_bundle(ButtonBundle {
                 style: Style {
@@ -13,7 +12,7 @@ macro_rules! add_button {
                     align_items: AlignItems::Center,
                     ..Default::default()
                 },
-                color: NORMAL_BUTTON.into(),
+                color: $color.into(),
                 ..Default::default()
             })
             .with_children(|parent| {
@@ -32,15 +31,17 @@ macro_rules! add_button {
                     })
                     .insert(FocusPolicy::Pass);
             })
-            .insert($tile);
+            .insert($tile)
+            .insert(SelectedTileButton($is_selected));
     };
 }
 
-pub fn setup_game_ui(
-    mut commands: Commands,
-    mut done: ResMut<DoneInsertCourse>,
-    sprite_handles: Res<CourseSpriteHandles>,
-) {
+#[derive(Component)]
+pub struct SelectedTileButton(pub bool);
+
+pub struct SelectTileEvent(pub Entity);
+
+pub fn setup_game_ui(mut commands: Commands, sprite_handles: Res<CourseSpriteHandles>) {
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -58,24 +59,87 @@ pub fn setup_game_ui(
             ..Default::default()
         })
         .with_children(|parent| {
-            add_button!(parent, sprite_handles, TileVariant::Ground);
-            add_button!(parent, sprite_handles, TileVariant::HardBlock);
-            add_button!(parent, sprite_handles, TileVariant::RotatingBlock);
-            add_button!(parent, sprite_handles, TileVariant::DonutBlock);
-            add_button!(parent, sprite_handles, TileVariant::CloudBlock);
+            add_button!(
+                parent,
+                SELECTED_BUTTON_COLOR,
+                sprite_handles,
+                TileVariant::Ground,
+                true
+            );
+            add_button!(
+                parent,
+                NORMAL_BUTTON_COLOR,
+                sprite_handles,
+                TileVariant::HardBlock,
+                false
+            );
+            add_button!(
+                parent,
+                NORMAL_BUTTON_COLOR,
+                sprite_handles,
+                TileVariant::RotatingBlock,
+                false
+            );
+            add_button!(
+                parent,
+                NORMAL_BUTTON_COLOR,
+                sprite_handles,
+                TileVariant::DonutBlock,
+                false
+            );
+            add_button!(
+                parent,
+                NORMAL_BUTTON_COLOR,
+                sprite_handles,
+                TileVariant::CloudBlock,
+                false
+            );
         });
-
-    done.0 = false;
 }
 
 #[allow(clippy::type_complexity)]
 pub fn select_tile(
-    mut query: Query<(&Interaction, &TileVariant), (Changed<Interaction>, With<TileVariant>)>,
+    mut query: Query<
+        (
+            Entity,
+            &Interaction,
+            &TileVariant,
+            &mut UiColor,
+            &mut SelectedTileButton,
+        ),
+        Changed<Interaction>,
+    >,
     mut selected_tile: ResMut<SelectedTile>,
+    mut select_tile_event: EventWriter<SelectTileEvent>,
 ) {
-    for (interaction, tile_variant) in query.iter_mut() {
+    for (entity, interaction, tile_variant, mut color, mut is_selected) in query.iter_mut() {
         if *interaction == Interaction::Clicked {
-            selected_tile.0 = tile_variant.clone();
+            selected_tile.0 = Some(tile_variant.clone());
+            *color = SELECTED_BUTTON_COLOR.into();
+            is_selected.0 = true;
+            select_tile_event.send(SelectTileEvent(entity));
+        }
+    }
+}
+
+pub fn change_after_tile_select(
+    mut query: Query<(Entity, &Interaction, &mut SelectedTileButton, &mut UiColor)>,
+    mut select_tile_event: EventReader<SelectTileEvent>,
+) {
+    for SelectTileEvent(selected_entity) in select_tile_event.iter() {
+        for (entity, interaction, mut tile_button, mut color) in query.iter_mut() {
+            if tile_button.0 && selected_entity != &entity {
+                match interaction {
+                    Interaction::Hovered => {
+                        *color = HOVERED_BUTTON_COLOR.into();
+                    }
+                    Interaction::None => {
+                        *color = NORMAL_BUTTON_COLOR.into();
+                    }
+                    _ => {}
+                }
+                tile_button.0 = false;
+            }
         }
     }
 }

@@ -72,11 +72,13 @@ fn send_spawn_tile(
     };
 
     let grid_pos = cursor_to_grid(cursor_position, camera_query, window);
-    if !course.tiles.contains_key(&grid_pos) {
-        spawn_tile_events.send(SpawnTileEvent {
-            tile_variant: selected_tile.0.clone(),
-            grid_pos,
-        });
+    if let Some(selected_tile) = &selected_tile.0 {
+        if !course.tiles.contains_key(&grid_pos) {
+            spawn_tile_events.send(SpawnTileEvent {
+                tile_variant: selected_tile.clone(),
+                grid_pos,
+            });
+        }
     }
 }
 

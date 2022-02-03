@@ -1,3 +1,7 @@
+mod colors;
+
+pub use colors::*;
+
 use bevy_rapier::na::Vector2;
 
 pub const MOVE_IMPULSE_MULTIPLIER_GROUND: f32 = 0.2 * GROUND_FRICTION_MULTIPLIER * RAPIER_GRAVITY;

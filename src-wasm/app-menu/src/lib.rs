@@ -1,8 +1,9 @@
 mod game;
 
-use app_core::{is_done_insert_course, AppLabel, AppState};
+use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR};
+use app_core::{AppLabel, AppState, SelectedTile, TileVariant};
 use bevy::prelude::*;
-use game::select_tile;
+use game::{change_after_tile_select, select_tile, SelectTileEvent};
 
 #[derive(Component)]
 struct MainMenu;
@@ -10,36 +11,57 @@ struct MainMenu;
 #[derive(Component)]
 struct MainMenuBuildButton;
 
+#[derive(SystemLabel, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum MenuLabel {
+    SelectTile,
+}
+
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(AppState::Menu).with_system(setup_menu))
+        app.add_event::<SelectTileEvent>()
+            .add_system_set(SystemSet::on_enter(AppState::Menu).with_system(setup_menu))
             .add_system_set(SystemSet::on_exit(AppState::Menu).with_system(exit_menu))
             .add_system_set(
-                SystemSet::new()
-                    .with_run_criteria(is_done_insert_course)
+                SystemSet::on_enter(AppState::Game)
                     .after(AppLabel::InsertCourse)
                     .with_system(game::setup_game_ui),
             )
             .add_system_set(SystemSet::on_update(AppState::Menu).with_system(start_game))
-            .add_system_set(SystemSet::on_update(AppState::Game).with_system(select_tile))
+            .add_system_set_to_stage(
+                CoreStage::PreUpdate,
+                SystemSet::on_update(AppState::Game)
+                    .with_system(select_tile.label(MenuLabel::SelectTile))
+                    .with_system(change_after_tile_select.after(MenuLabel::SelectTile)),
+            )
             .add_system(on_hover);
     }
 }
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-
 #[allow(clippy::type_complexity)]
-fn on_hover(mut query: Query<(&Interaction, &mut UiColor), (Changed<Interaction>, With<Button>)>) {
-    for (interaction, mut color) in query.iter_mut() {
+fn on_hover(
+    mut query: Query<
+        (&Interaction, &mut UiColor, Option<&TileVariant>),
+        (Changed<Interaction>, With<Button>),
+    >,
+    selected_tile: Res<SelectedTile>,
+) {
+    for (interaction, mut color, tile_variant) in query.iter_mut() {
+        if let Some(selected_tile) = &selected_tile.0 {
+            if let Some(tile_variant) = tile_variant {
+                if tile_variant == selected_tile {
+                    *color = SELECTED_BUTTON_COLOR.into();
+                    continue;
+                }
+            }
+        }
         match *interaction {
             Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
+                *color = HOVERED_BUTTON_COLOR.into();
             }
             Interaction::None => {
-                *color = NORMAL_BUTTON.into();
+                *color = NORMAL_BUTTON_COLOR.into();
             }
             _ => {}
         }
@@ -68,7 +90,7 @@ fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            color: NORMAL_BUTTON.into(),
+            color: NORMAL_BUTTON_COLOR.into(),
             ..Default::default()
         })
         .insert(MainMenu)

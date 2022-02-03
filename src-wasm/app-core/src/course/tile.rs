@@ -15,7 +15,8 @@ pub enum TileVariant {
     CloudBlock,
 }
 
-pub struct SelectedTile(pub TileVariant);
+#[derive(Debug, Default)]
+pub struct SelectedTile(pub Option<TileVariant>);
 
 impl TileVariant {
     pub fn get_sprite_sheet_index(&self) -> usize {
