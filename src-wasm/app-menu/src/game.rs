@@ -1,5 +1,5 @@
 use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR, TILE_SIZE};
-use app_core::{CourseSpriteHandles, SelectedTile, TileVariant};
+use app_core::{CourseSpriteHandles, GroundVariant, SelectedTile, TileVariant};
 use bevy::{prelude::*, ui::FocusPolicy};
 
 macro_rules! add_button {
@@ -63,7 +63,7 @@ pub fn setup_game_ui(mut commands: Commands, sprite_handles: Res<CourseSpriteHan
                 parent,
                 SELECTED_BUTTON_COLOR,
                 sprite_handles,
-                TileVariant::Ground,
+                TileVariant::Ground(GroundVariant::default()),
                 true
             );
             add_button!(

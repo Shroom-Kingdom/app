@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 app-config = { path = "../app-config" }
+strum = "0.23"
+strum_macros = "0.23"
 web-sys = "0.3"
 
 [dependencies.bevy]

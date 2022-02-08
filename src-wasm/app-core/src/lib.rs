@@ -3,7 +3,7 @@ mod player_sprites;
 
 pub use course::{
     sprites::CourseSpriteHandles,
-    tile::{SelectedTile, Tile, TileVariant},
+    tile::{GroundSurroundingMatrix, GroundVariant, SelectedTile, Tile, TileVariant},
     Course, CourseTheme,
 };
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};

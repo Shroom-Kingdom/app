@@ -1,5 +1,6 @@
 use crate::TileVariant;
 use bevy::{prelude::*, utils::HashMap};
+use strum::IntoEnumIterator;
 
 #[derive(Default)]
 pub struct CourseSpriteHandles(pub HashMap<TileVariant, Handle<Image>>);
@@ -9,24 +10,11 @@ pub(crate) fn load_course_sprites(
     asset_server: Res<AssetServer>,
 ) {
     sprite_handles.0 = HashMap::default();
-    sprite_handles.0.insert(
-        TileVariant::Ground,
-        asset_server.load("MW_Field_plain_0_193.png"),
-    );
-    sprite_handles.0.insert(
-        TileVariant::HardBlock,
-        asset_server.load("MW_Field_plain_0_6.png"),
-    );
-    sprite_handles.0.insert(
-        TileVariant::RotatingBlock,
-        asset_server.load("MW_Field_plain_0_1.png"),
-    );
-    sprite_handles.0.insert(
-        TileVariant::DonutBlock,
-        asset_server.load("MW_Field_plain_0_64.png"),
-    );
-    sprite_handles.0.insert(
-        TileVariant::CloudBlock,
-        asset_server.load("MW_Field_plain_0_102.png"),
-    );
+    for tile_variant in TileVariant::iter() {
+        let index = tile_variant.get_sprite_sheet_index();
+        sprite_handles.0.insert(
+            tile_variant,
+            asset_server.load(&format!("MW_Field_plain_0_{}.png", index)),
+        );
+    }
 }
