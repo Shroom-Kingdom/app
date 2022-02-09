@@ -4,6 +4,10 @@
 	import { assets } from './modules/asset'
 	
 	let canvas: HTMLCanvasElement | null = null;
+	document.body.oncontextmenu = (e) => {
+		e.preventDefault();
+		return false;
+	};
 
 	let assetData: Uint8Array | null = null;
 	assets.subscribe(data => {
