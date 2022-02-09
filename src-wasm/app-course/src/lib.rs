@@ -95,7 +95,7 @@ fn despawn_tile(
                 }
             }
             // TODO does not despawn rigid body. bevy_rapier crashes
-            commands.entity(tile.entity).despawn_descendants();
+            commands.entity(tile.entity).despawn_recursive();
         }
     }
 }
