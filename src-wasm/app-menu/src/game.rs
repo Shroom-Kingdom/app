@@ -1,5 +1,5 @@
 use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR, TILE_SIZE};
-use app_core::{CourseSpriteHandles, GroundVariant, SelectedTile, TileVariant};
+use app_core::{TileSpriteHandles, GroundVariant, SelectedTile, TileVariant};
 use bevy::{prelude::*, ui::FocusPolicy};
 
 macro_rules! add_button {
@@ -41,7 +41,7 @@ pub struct SelectedTileButton(pub bool);
 
 pub struct SelectTileEvent(pub Entity);
 
-pub fn setup_game_ui(mut commands: Commands, sprite_handles: Res<CourseSpriteHandles>) {
+pub fn setup_game_ui(mut commands: Commands, sprite_handles: Res<TileSpriteHandles>) {
     commands
         .spawn_bundle(NodeBundle {
             style: Style {

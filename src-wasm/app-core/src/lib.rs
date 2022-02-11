@@ -2,9 +2,10 @@ mod course;
 mod player_sprites;
 
 pub use course::{
-    sprites::CourseSpriteHandles,
+    sprites::{ThemeSpriteHandles, TileSpriteHandles},
+    theme::ThemeVariant,
     tile::{GroundSurroundingMatrix, GroundVariant, SelectedTile, Tile, TileVariant},
-    Course, CourseTheme,
+    Course,
 };
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
 
@@ -21,7 +22,8 @@ pub struct CorePlugin;
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerSpriteHandles>()
-            .init_resource::<CourseSpriteHandles>()
+            .init_resource::<TileSpriteHandles>()
+            .init_resource::<ThemeSpriteHandles>()
             .init_resource::<SelectedTile>()
             .add_startup_system_to_stage(StartupStage::Startup, load_player_sprites)
             .add_startup_system_to_stage(StartupStage::Startup, load_course_sprites)
@@ -51,15 +53,18 @@ pub fn grid_to_world(grid_pos: &[i32; 2]) -> Vec2 {
 
 fn check_textures(
     mut state: ResMut<State<AppState>>,
-    player_sprite_handles: ResMut<PlayerSpriteHandles>,
-    course_sprite_handles: ResMut<CourseSpriteHandles>,
+    player_sprite_handles: Res<PlayerSpriteHandles>,
+    course_sprite_handles: Res<TileSpriteHandles>,
+    theme_sprite_handles: Res<ThemeSpriteHandles>,
     asset_server: Res<AssetServer>,
 ) {
-    if let (LoadState::Loaded, LoadState::Loaded) = (
+    if let (LoadState::Loaded, LoadState::Loaded, LoadState::Loaded) = (
         asset_server
             .get_group_load_state(player_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
         asset_server
             .get_group_load_state(course_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
+        asset_server
+            .get_group_load_state(theme_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
     ) {
         state.set(AppState::Menu).unwrap();
     }

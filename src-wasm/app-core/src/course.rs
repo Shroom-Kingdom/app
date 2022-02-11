@@ -1,7 +1,10 @@
 pub(crate) mod sprites;
+pub(crate) mod theme;
 pub(crate) mod tile;
 
-use crate::{grid_to_world, Ground, GroundSurroundingMatrix, GroundVariant, Tile, TileVariant};
+use crate::{
+    grid_to_world, Ground, GroundSurroundingMatrix, GroundVariant, ThemeVariant, Tile, TileVariant,
+};
 use app_config::{
     GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, TILE_COLLIDER_SUB, TILE_SIZE,
 };
@@ -13,30 +16,17 @@ use bevy_rapier::{na::Point2, prelude::*};
 pub struct Course {
     pub texture_atlas_handle: Handle<TextureAtlas>,
     pub tiles: HashMap<[i32; 2], Tile>,
-    pub theme: CourseTheme,
-}
-
-#[derive(Debug)]
-pub enum CourseTheme {
-    Plain,
-}
-
-impl CourseTheme {
-    pub fn get_asset_str(&self) -> &str {
-        match self {
-            CourseTheme::Plain => "MW_Field_plain_0.png",
-        }
-    }
+    pub theme: ThemeVariant,
 }
 
 impl Course {
     pub fn empty(
         commands: &mut Commands,
-        theme: CourseTheme,
+        theme: ThemeVariant,
         asset_server: &AssetServer,
         texture_atlases: &mut Assets<TextureAtlas>,
     ) -> Self {
-        let texture_handle = asset_server.load(theme.get_asset_str());
+        let texture_handle = asset_server.load(&format!("MW_Field_{}_0.png", theme.get_name()));
         let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
         let texture_atlas_handle = texture_atlases.add(texture_atlas);
         let mut course = Course {

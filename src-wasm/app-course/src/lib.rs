@@ -1,6 +1,6 @@
 use app_core::{
-    AppLabel, AppState, Course, CourseTheme, GroundSurroundingMatrix, GroundVariant, SelectedTile,
-    Tile, TileVariant,
+    AppLabel, AppState, Course, GroundSurroundingMatrix, GroundVariant, SelectedTile,
+    ThemeSpriteHandles, ThemeVariant, Tile, TileVariant,
 };
 use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
@@ -30,16 +30,42 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut selected_tile: ResMut<SelectedTile>,
+    theme_sprite_handles: Res<ThemeSpriteHandles>,
 ) {
     let course = Course::empty(
         &mut commands,
-        CourseTheme::Plain,
+        ThemeVariant::Plain,
         &asset_server,
         &mut texture_atlases,
     );
 
     commands.insert_resource(course);
     selected_tile.0 = Some(TileVariant::Ground(GroundVariant::default()));
+
+    let texture = theme_sprite_handles
+        .0
+        .get(&ThemeVariant::Plain)
+        .unwrap()
+        .clone();
+
+    let scale = 2.5;
+    let image_size = 512.;
+    let offset = -50.;
+    for i in (1..=15).step_by(2) {
+        commands.spawn_bundle(SpriteBundle {
+            texture: texture.clone(),
+            transform: Transform {
+                translation: Vec3::new(
+                    scale / 2. * image_size * (i as f32) + offset,
+                    image_size,
+                    -1.,
+                ),
+                scale: Vec3::new(scale, scale, 0.),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    }
 }
 
 fn spawn_tile(
