@@ -8,8 +8,11 @@ pub enum WalkEvent {
     Stop,
 }
 
+#[derive(Component, Deref, DerefMut)]
+pub struct WalkAnimationTimer(pub Timer);
+
 pub fn walk_animation(
-    mut query: Query<(&Player, &mut Timer, &PlayerVelocity)>,
+    mut query: Query<(&Player, &mut WalkAnimationTimer, &PlayerVelocity)>,
     time: Res<Time>,
     mut walk_event: EventWriter<WalkEvent>,
 ) {
@@ -30,7 +33,7 @@ pub fn walk_animation(
 }
 
 pub fn walk_start(
-    mut query: Query<(&Player, &mut Timer, &PlayerVelocity)>,
+    mut query: Query<(&Player, &mut WalkAnimationTimer, &PlayerVelocity)>,
     mut walk_event: EventWriter<WalkEvent>,
 ) {
     for (player, mut timer, vel) in query.iter_mut() {

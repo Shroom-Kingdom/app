@@ -1,14 +1,14 @@
-use crate::Player;
+use crate::{Player, WalkAnimationTimer};
 use app_config::{
     COLLIDER_MIN_TOI, GROUND_FRICTION_KINETIC_MULTIPLIER, GROUND_FRICTION_MIN_VEL,
-    GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY_VECTOR, RAPIER_SCALE,
+    GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE,
 };
 use app_core::Ground;
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{math::Vec3Swizzles, prelude::*, utils::HashSet};
 use bevy_rapier::prelude::*;
 
 #[derive(Component, Default, Debug)]
-pub struct PlayerVelocity(pub Vector<Real>);
+pub struct PlayerVelocity(pub Vect);
 
 #[derive(Debug)]
 pub enum GroundIntersectEvent {
@@ -24,43 +24,39 @@ pub fn physics(
     mut query: Query<
         (
             Entity,
-            &mut Timer,
-            &mut RigidBodyPositionComponent,
+            &mut WalkAnimationTimer,
+            &mut Transform,
             &mut PlayerVelocity,
-            &RigidBodyMassPropsComponent,
-            &ColliderShapeComponent,
-            &ColliderMaterialComponent,
+            &MassProperties,
+            &Collider,
+            &Friction,
             &mut GroundIntersections,
         ),
-        With<Player>,
+        (With<Player>, With<RigidBody>),
     >,
-    ground_query: Query<(&Ground, &ColliderMaterialComponent)>,
-    query_pipeline: Res<QueryPipeline>,
-    colliders: QueryPipelineColliderComponentsQuery,
+    ground_query: Query<(&Ground, &Friction)>,
+    ctx: Res<RapierContext>,
     ground_intersect_events: EventWriter<GroundIntersectEvent>,
 ) {
     if let Ok((
         entity,
         mut timer,
-        mut rb_pos,
+        mut rb_transform,
         mut vel,
         rb_mprops,
-        shape,
-        c_mat,
+        collider,
+        friction,
         mut ground_intersections,
     )) = query.get_single_mut()
     {
-        let colliders = QueryPipelineColliderComponentsSet(&colliders);
-
         let (ground_friction, ground_colliders) = ground_collision(
-            &query_pipeline,
-            &colliders,
-            &mut rb_pos,
-            c_mat.friction,
+            &ctx,
+            &mut rb_transform,
+            friction.coefficient,
             &ground_query,
             &mut ground_intersections,
             entity,
-            &*shape.0,
+            collider,
             &mut timer,
         );
 
@@ -71,21 +67,15 @@ pub fn physics(
             &mut timer,
         );
 
-        set_pos_to_closest_ground_collider(
-            &query_pipeline,
-            &colliders,
-            &mut rb_pos,
-            &mut ground_intersections,
-        );
+        set_pos_to_closest_ground_collider(&ctx, &mut rb_transform, &mut ground_intersections);
 
         collision_detection(
-            &query_pipeline,
-            &colliders,
-            &mut rb_pos,
+            &ctx,
+            &mut rb_transform,
             &mut vel,
             &ground_query,
             entity,
-            &*shape.0,
+            collider,
         );
 
         ground_friction_or_gravity(ground_friction, &mut vel, rb_mprops);
@@ -93,59 +83,57 @@ pub fn physics(
 }
 
 fn collision_detection(
-    query_pipeline: &QueryPipeline,
-    colliders: &QueryPipelineColliderComponentsSet,
-    rb_pos: &mut RigidBodyPosition,
+    ctx: &RapierContext,
+    rb_transform: &mut Transform,
     vel: &mut PlayerVelocity,
-    ground_query: &Query<(&Ground, &ColliderMaterialComponent)>,
+    ground_query: &Query<(&Ground, &Friction)>,
     entity: Entity,
-    shape: &dyn Shape,
+    collider: &Collider,
 ) {
-    if rb_pos.next_position.translation.vector.data.0[0][0] <= 0. && vel.0[0] < 0. {
+    if rb_transform.translation.x <= 0. && vel.0[0] < 0. {
         vel.0[0] = 0.;
-        rb_pos.position.translation.vector.data.0[0][0] = 0.;
+        rb_transform.translation.x = 0.;
     }
 
-    if let Some((collider, _)) = query_pipeline.cast_shape(
-        colliders,
-        &rb_pos.position,
-        &vel.0,
-        shape,
+    if let Some((collider_entity, _)) = ctx.cast_shape(
+        rb_transform.translation.xy(),
+        rb_transform.rotation.to_axis_angle().1,
+        vel.0,
+        collider,
         COLLIDER_MIN_TOI,
         InteractionGroups::default(),
-        Some(&|collider| {
-            collider.entity() != entity && ground_query.get(collider.entity()).is_err()
+        Some(&|collider_entity| {
+            collider_entity != entity && ground_query.get(collider_entity).is_err()
         }),
     ) {
         let mut vel_x = vel.0;
-        vel_x.data.0[0][1] = 0.;
+        vel_x.y = 0.;
         let mut vel_y = vel.0;
-        vel_y.data.0[0][0] = 0.;
-        if query_pipeline
+        vel_y.x = 0.;
+        if ctx
             .cast_shape(
-                colliders,
-                &rb_pos.position,
-                &vel_x,
-                shape,
+                rb_transform.translation.xy(),
+                rb_transform.rotation.to_axis_angle().1,
+                vel_x,
+                collider,
                 COLLIDER_MIN_TOI,
                 InteractionGroups::default(),
-                Some(&|c| c.entity() == collider.entity()),
+                Some(&|c| c == collider_entity),
             )
             .is_some()
         {
-            rb_pos.position.translation.vector.data.0[0][0] +=
-                if vel_x.data.0[0][0] > 0. { -0.02 } else { 0.02 };
+            rb_transform.translation.x += if vel_x.x > 0. { -0.02 } else { 0.02 };
             vel.0[0] = 0.;
         }
-        if query_pipeline
+        if ctx
             .cast_shape(
-                colliders,
-                &rb_pos.position,
-                &vel_y,
-                shape,
+                rb_transform.translation.xy(),
+                rb_transform.rotation.to_axis_angle().1,
+                vel_y,
+                collider,
                 COLLIDER_MIN_TOI,
                 InteractionGroups::default(),
-                Some(&|c| c.entity() == collider.entity()),
+                Some(&|c| c == collider_entity),
             )
             .is_some()
         {
@@ -158,30 +146,29 @@ fn collision_detection(
 
 #[allow(clippy::too_many_arguments)]
 fn ground_collision(
-    query_pipeline: &QueryPipeline,
-    colliders: &QueryPipelineColliderComponentsSet,
-    rb_pos: &mut RigidBodyPosition,
+    ctx: &RapierContext,
+    rb_pos: &mut Transform,
     friction: f32,
-    ground_query: &Query<(&Ground, &ColliderMaterialComponent)>,
+    ground_query: &Query<(&Ground, &Friction)>,
     ground_intersections: &mut GroundIntersections,
     entity: Entity,
-    shape: &dyn Shape,
+    shape: &bevy_rapier::prelude::Collider,
     timer: &mut Timer,
 ) -> (Option<f32>, HashSet<Entity>) {
     let mut ground_friction = None;
     let mut ground_colliders = HashSet::default();
-    query_pipeline.intersections_with_shape(
-        colliders,
-        &rb_pos.position,
+    ctx.intersections_with_shape(
+        rb_pos.translation.xy(),
+        rb_pos.rotation.to_axis_angle().1,
         shape,
         InteractionGroups::default(),
-        Some(&|collider: ColliderHandle| {
-            collider.entity() != entity && ground_query.get(collider.entity()).is_ok()
+        Some(&|collider_entity| {
+            collider_entity != entity && ground_query.get(collider_entity).is_ok()
         }),
-        |collider| {
-            let entity = collider.entity();
-            let (_, material) = ground_query.get(collider.entity()).unwrap();
-            ground_friction = Some(material.friction * friction);
+        |collider_entity| {
+            let entity = collider_entity;
+            let (_, collider_friction) = ground_query.get(collider_entity).unwrap();
+            ground_friction = Some(collider_friction.coefficient * friction);
             ground_colliders.insert(entity);
             if !ground_intersections.0.contains(&entity) {
                 timer.reset();
@@ -222,27 +209,24 @@ fn update_ground_intersections(
 }
 
 fn set_pos_to_closest_ground_collider(
-    query_pipeline: &QueryPipeline,
-    colliders: &QueryPipelineColliderComponentsSet,
-    rb_pos: &mut RigidBodyPosition,
+    ctx: &RapierContext,
+    rb_transform: &mut Transform,
     ground_intersections: &mut GroundIntersections,
 ) {
-    if let Some((_, projection)) = query_pipeline.project_point(
-        colliders,
-        &Point::from(rb_pos.position.translation.vector),
+    if let Some((_, projection)) = ctx.project_point(
+        rb_transform.translation.xy(),
         true,
         InteractionGroups::default(),
-        Some(&|collider| ground_intersections.0.contains(&collider.entity())),
+        Some(&|collider_entity| ground_intersections.0.contains(&collider_entity)),
     ) {
-        rb_pos.position.translation.vector.data.0[0][1] =
-            projection.point.coords.data.0[0][1] + 1.9;
+        rb_transform.translation.y = projection.point.y + 1.9;
     }
 }
 
 fn ground_friction_or_gravity(
     ground_friction: Option<f32>,
     vel: &mut PlayerVelocity,
-    rb_mprops: &RigidBodyMassProps,
+    rb_mprops: &bevy_rapier::prelude::MassProperties,
 ) {
     if let Some(friction) = ground_friction {
         if vel.0[1] < 0. {
@@ -260,13 +244,11 @@ fn ground_friction_or_gravity(
             }
         }
     } else {
-        vel.0 += RAPIER_GRAVITY_VECTOR.component_mul(&rb_mprops.effective_inv_mass) * RAPIER_SCALE;
+        vel.0.y -= RAPIER_GRAVITY * rb_mprops.into_rapier(RAPIER_SCALE).inv_mass;
     }
 }
 
-pub fn apply_vel(
-    mut query: Query<(&mut RigidBodyVelocityComponent, &PlayerVelocity), With<Player>>,
-) {
+pub fn apply_vel(mut query: Query<(&mut Velocity, &PlayerVelocity), With<Player>>) {
     if let Ok((mut rb_vel, vel)) = query.get_single_mut() {
         rb_vel.linvel = vel.0;
     }

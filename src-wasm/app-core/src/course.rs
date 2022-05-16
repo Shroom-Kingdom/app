@@ -9,7 +9,7 @@ use app_config::{
     GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, TILE_COLLIDER_SUB, TILE_SIZE,
 };
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
-use bevy_rapier::{na::Point2, prelude::*};
+use bevy_rapier::{geometry::Friction, prelude::*};
 
 #[derive(Debug, TypeUuid)]
 #[uuid = "81a23571-1f35-4f20-b1ea-30e5c2612049"]
@@ -93,7 +93,9 @@ impl Course {
         )>,
         surrounding_matrix: Option<[[bool; 3]; 3]>,
     ) {
+        web_sys::console::log_1(&format!("grid_pos {:?}", grid_pos).into());
         let world_pos = grid_to_world(grid_pos);
+        web_sys::console::log_1(&format!("world_pos {:?}", world_pos).into());
         if self.tiles.contains_key(grid_pos) {
             return;
         }
@@ -147,41 +149,32 @@ impl Course {
             None
         };
 
-        let mut entity_commands = commands.spawn_bundle(RigidBodyBundle {
-            position: world_pos.into(),
-            body_type: RigidBodyTypeComponent::from(RigidBodyType::Static),
-            ..Default::default()
-        });
+        let mut entity_commands = commands.spawn();
+        entity_commands
+            .insert(RigidBody::Fixed)
+            .insert(Transform::from_xyz(world_pos.x, world_pos.y, 0.));
         entity_commands.with_children(|parent| {
             parent
-                .spawn_bundle(ColliderBundle {
-                    collider_type: ColliderTypeComponent::from(ColliderType::Sensor),
-                    shape: ColliderShapeComponent::from(ColliderShape::polyline(
-                        vec![
-                            Point2::new(
-                                -TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN + 0.01,
-                                TILE_SIZE - TILE_COLLIDER_SUB
-                                    + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
-                                    + 0.02,
-                            ),
-                            Point2::new(
-                                TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN - 0.01,
-                                TILE_SIZE - TILE_COLLIDER_SUB
-                                    + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
-                                    + 0.02,
-                            ),
-                        ],
-                        None,
-                    )),
-                    material: ColliderMaterialComponent::from(ColliderMaterial {
-                        friction: GROUND_FRICTION,
-                        ..Default::default()
-                    }),
-                    flags: ActiveEvents::INTERSECTION_EVENTS.into(),
-                    ..Default::default()
-                })
-                .insert(Ground)
-                .insert(ColliderPositionSync::Discrete);
+                .spawn()
+                .insert(Collider::polyline(
+                    vec![
+                        Vec2::new(
+                            -TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN + 0.01,
+                            TILE_SIZE - TILE_COLLIDER_SUB
+                                + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
+                                + 0.02,
+                        ),
+                        Vec2::new(
+                            TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN - 0.01,
+                            TILE_SIZE - TILE_COLLIDER_SUB
+                                + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
+                                + 0.02,
+                        ),
+                    ],
+                    None,
+                ))
+                .insert(Friction::new(GROUND_FRICTION))
+                .insert(Ground);
             let sprite = if let Some(surrounding_matrix) = &surrounding_matrix {
                 TextureAtlasSprite::new(
                     GroundVariant::from_surrounding_matrix(&surrounding_matrix.0)
@@ -191,7 +184,8 @@ impl Course {
                 TextureAtlasSprite::new(tile_variant.get_sprite_sheet_index())
             };
             parent
-                .spawn_bundle(SpriteSheetBundle {
+                .spawn()
+                .insert_bundle(SpriteSheetBundle {
                     transform: Transform {
                         scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
                         ..Default::default()
@@ -200,18 +194,11 @@ impl Course {
                     sprite,
                     ..Default::default()
                 })
-                .insert_bundle(ColliderBundle {
-                    shape: ColliderShapeComponent::from(ColliderShape::cuboid(
-                        TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
-                        TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
-                    )),
-                    material: ColliderMaterialComponent::from(ColliderMaterial {
-                        friction: 0.,
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                })
-                .insert(ColliderPositionSync::Discrete);
+                .insert(Collider::cuboid(
+                    TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
+                    TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
+                ))
+                .insert(Friction::new(0.));
         });
         if let Some(surrounding_matrix) = surrounding_matrix {
             entity_commands.insert(surrounding_matrix);

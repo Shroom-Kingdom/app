@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies.bevy]
-version = "0.6"
+version = "0.7"
 # path = "../../bevy"
 # git = "https://github.com/bevyengine/bevy.git"
 # rev = "a89a954a1706bcffa497309388b993ff82016829"
@@ -14,6 +14,6 @@ features = ["bevy_winit", "png", "render"]
 
 [dependencies.bevy_rapier]
 package = "bevy_rapier2d"
-version = "0.12.0-alpha.0"
+version = "0.13"
 # path = "../../../bevy_rapier/bevy_rapier2d"
 # git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"

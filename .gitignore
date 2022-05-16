@@ -1,5 +1,6 @@
 /target
 /node_modules
 /dist
+/pkg
 stats.json
 bundle-report.html

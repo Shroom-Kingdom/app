@@ -1,16 +1,8 @@
 use app_config::{CAMERA_MIN_X, CAMERA_MIN_Y};
 use bevy::{prelude::*, winit::WinitWindows};
-use bevy_rapier::prelude::*;
-use rapier::pipeline::PhysicsPipeline;
 use winit::platform::web::WindowExtWebSys;
 
-pub fn enable_physics_profiling(mut pipeline: ResMut<PhysicsPipeline>) {
-    pipeline.counters.enable()
-}
-
-pub fn setup_graphics(mut commands: Commands, mut configuration: ResMut<RapierConfiguration>) {
-    configuration.scale = 10.0;
-
+pub fn setup_graphics(mut commands: Commands) {
     let mut camera = OrthographicCameraBundle::new_2d();
     camera.transform = Transform::from_translation(Vec3::new(CAMERA_MIN_X, CAMERA_MIN_Y, 0.0));
     commands.spawn_bundle(PointLightBundle {

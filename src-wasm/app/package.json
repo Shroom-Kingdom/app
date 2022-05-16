@@ -1,10 +1,10 @@
 {
   "license": "MIT",
   "scripts": {
-    "build": "wasm-pack build --release --target web --out-dir ../../pkg",
-    "build:dev": "wasm-pack build --dev --target web --out-dir ../../pkg",
-    "watch": "cargo watch -w src -s 'wasm-pack build --dev --target=web --out-dir ../../pkg'",
-    "watch:prod": "cargo watch -w src -s 'wasm-pack build --release --target=web --out-dir ../../pkg'",
+    "build": "wasm-bindgen ../../target/wasm32-unknown-unknown/release/app.wasm --out-dir ../../pkg --target web",
+    "build:dev": "wasm-bindgen ../../target/wasm32-unknown-unknown/debug/app.wasm --out-dir ../../pkg --target web",
+    "watch": "cargo watch -w .. -x build -s 'yarn build:dev'",
+    "watch:prod": "cargo watch -w .. -x 'build --release' -s 'yarn build'",
     "clean": "rm -rf ./pkg"
   }
 }

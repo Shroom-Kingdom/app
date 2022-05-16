@@ -1,4 +1,4 @@
-use crate::graphics::{enable_physics_profiling, setup_graphics, setup_resolution_scaling};
+use crate::graphics::{setup_graphics, setup_resolution_scaling};
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
 use app_core::{AppState, CorePlugin};
 use app_course::CoursePlugin;
@@ -7,10 +7,7 @@ use app_player::PlayerPlugin;
 use app_tile::TilePlugin;
 // use app_debug::{DebugPlugin, DebugPluginState};
 use bevy::{input::keyboard::keyboard_input_system, prelude::*};
-use bevy_rapier::{
-    physics::{NoUserData, RapierPhysicsPlugin},
-    render::RapierRenderPlugin,
-};
+use bevy_rapier::{plugin::RapierPhysicsPlugin, prelude::*};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -23,7 +20,6 @@ pub fn main(assets: Vec<u8>) {
         )))
         .insert_resource(Msaa::default())
         .insert_resource(WindowDescriptor {
-            vsync: false,
             canvas: Some("canvas".to_string()),
             ..Default::default()
         })
@@ -36,8 +32,8 @@ pub fn main(assets: Vec<u8>) {
         .add_plugins_with(bevy::DefaultPlugins, |group| {
             group.add_before::<bevy::asset::AssetPlugin, _>(AssetIoTarPlugin)
         })
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierRenderPlugin)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::with_physics_scale(10.))
+        // .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.))
         .add_plugin(CorePlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(TilePlugin)
@@ -46,7 +42,6 @@ pub fn main(assets: Vec<u8>) {
         // .add_plugin(DebugPlugin)
         .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup_graphics))
         .add_startup_system(setup_resolution_scaling)
-        .add_startup_system(enable_physics_profiling)
         .add_startup_system(keyboard_input_system)
         .add_system_set_to_stage(CoreStage::First, State::<AppState>::get_driver())
         .add_system_set_to_stage(CoreStage::PreUpdate, State::<AppState>::get_driver())

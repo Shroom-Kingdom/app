@@ -2,11 +2,11 @@ use crate::{Player, PlayerState, PlayerStateEnum, PlayerVelocity};
 use app_config::{
     COLLIDER_TOI_THRESHOLD, LINVEL_CAP_RUN, LINVEL_CAP_STOOP, LINVEL_CAP_WALK,
     MOVE_IMPULSE_MULTIPLIER_AIR, MOVE_IMPULSE_MULTIPLIER_AIR_RUN, MOVE_IMPULSE_MULTIPLIER_GROUND,
-    MOVE_IMPULSE_MULTIPLIER_GROUND_RUN, RUN_THRESHOLD,
+    MOVE_IMPULSE_MULTIPLIER_GROUND_RUN, RAPIER_SCALE, RUN_THRESHOLD,
 };
 use app_core::Ground;
-use bevy::prelude::*;
-use bevy_rapier::{na::Vector2, prelude::*};
+use bevy::{math::Vec3Swizzles, prelude::*};
+use bevy_rapier::prelude::*;
 
 pub enum FacingDirectionEvent {
     Left,
@@ -25,24 +25,27 @@ pub fn run(mut query: Query<&mut Player>, keyboard_input: Res<Input<KeyCode>>) {
     }
 }
 
+#[allow(clippy::type_complexity)]
 pub fn movement(
-    mut query: Query<(
-        Entity,
-        &mut Player,
-        &mut PlayerVelocity,
-        &RigidBodyMassPropsComponent,
-        &mut ColliderMaterialComponent,
-        &RigidBodyPositionComponent,
-        &ColliderShapeComponent,
-    )>,
+    mut query: Query<
+        (
+            Entity,
+            &mut Player,
+            &mut PlayerVelocity,
+            &MassProperties,
+            &mut Friction,
+            &Transform,
+            &Collider,
+        ),
+        With<RigidBody>,
+    >,
     ground_query: Query<&Ground>,
-    colliders: QueryPipelineColliderComponentsQuery,
     keyboard_input: Res<Input<KeyCode>>,
     mut facing_direction_events: EventWriter<FacingDirectionEvent>,
     mut dash_turn_events: EventWriter<DashTurnEvent>,
-    query_pipeline: Res<QueryPipeline>,
+    ctx: Res<RapierContext>,
 ) {
-    if let Ok((entity, mut player, mut vel, rb_mprops, mut c_mat, rb_pos, shape)) =
+    if let Ok((entity, mut player, mut vel, rb_mprops, mut friction, rb_transform, collider)) =
         query.get_single_mut()
     {
         match player.state {
@@ -123,7 +126,7 @@ pub fn movement(
                     _ => {}
                 }
                 if x_axis != 0 {
-                    let move_delta = Vector2::new(x_axis as f32, 0.);
+                    let move_delta = Vec2::new(x_axis as f32, 0.);
                     let multiplier = match (&player.state.state, is_running) {
                         (PlayerStateEnum::Air { .. }, false) => MOVE_IMPULSE_MULTIPLIER_AIR,
                         (PlayerStateEnum::Air { .. }, true) => MOVE_IMPULSE_MULTIPLIER_AIR_RUN,
@@ -132,26 +135,26 @@ pub fn movement(
                             MOVE_IMPULSE_MULTIPLIER_GROUND_RUN
                         }
                     };
-                    let colliders = QueryPipelineColliderComponentsSet(&colliders);
 
                     #[allow(clippy::blocks_in_if_conditions)]
-                    if query_pipeline
+                    if ctx
                         .cast_shape(
-                            &colliders,
-                            &rb_pos.position,
-                            &move_delta,
-                            &*shape.0,
+                            rb_transform.translation.xy(),
+                            rb_transform.rotation.to_axis_angle().1,
+                            move_delta,
+                            collider,
                             COLLIDER_TOI_THRESHOLD * 10.,
                             InteractionGroups::default(),
-                            Some(&|collider| {
-                                collider.entity() != entity
-                                    && ground_query.get(collider.entity()).is_err()
+                            Some(&|collider_entity| {
+                                collider_entity != entity
+                                    && ground_query.get(collider_entity).is_err()
                             }),
                         )
                         .is_none()
                     {
-                        vel.0 +=
-                            move_delta.component_mul(&rb_mprops.effective_inv_mass) * multiplier;
+                        vel.0.x += x_axis as f32
+                            * rb_mprops.into_rapier(RAPIER_SCALE).inv_mass
+                            * multiplier;
                     }
                 }
                 match player.state.state {
@@ -165,7 +168,7 @@ pub fn movement(
                             is_walking,
                             is_turning: true,
                         };
-                        c_mat.friction = 0.
+                        friction.coefficient = 0.
                     }
                     PlayerStateEnum::Ground {
                         is_turning: true,
@@ -180,10 +183,10 @@ pub fn movement(
                             is_walking,
                             is_turning: false,
                         };
-                        c_mat.friction = 1.
+                        friction.coefficient = 1.
                     }
                     PlayerStateEnum::Ground { .. } => {}
-                    _ => c_mat.friction = 1.,
+                    _ => friction.coefficient = 1.,
                 }
             }
             PlayerState {

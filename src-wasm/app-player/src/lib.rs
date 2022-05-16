@@ -24,7 +24,7 @@ pub use jump::JumpEvent;
 pub use movement::{DashTurnEvent, FacingDirectionEvent};
 pub use physics::{GroundIntersectEvent, GroundIntersections, PlayerVelocity};
 pub use touch::TouchEvent;
-pub use walk::WalkEvent;
+pub use walk::{WalkAnimationTimer, WalkEvent};
 
 pub struct PlayerPlugin;
 
