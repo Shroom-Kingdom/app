@@ -1,11 +1,9 @@
 name: Publish
 
-on:
-  push:
-    branches: [master]
+on: [push]
 
 jobs:
-  publish:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -41,11 +39,20 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build site
-        run: yarn build
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+      - uses: actions-rs/cargo@v1
+        name: Fmt
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          command: fmt
+          args: --all -- --check
+
+      - uses: actions-rs/cargo@v1
+        name: Clippy
+        with:
+          command: clippy
+          args: -- -D warnings
+
+      # TODO
+      # - uses: actions-rs/cargo@v1
+      #   name: Test
+      #   with:
+      #     command: test
