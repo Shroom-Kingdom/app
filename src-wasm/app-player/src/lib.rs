@@ -215,7 +215,7 @@ fn set_sprite(
                     state,
                     ..
                 } => match state {
-                    PlayerStateEnum::Ground { .. } if vel.0[0].abs() < f32::EPSILON => {
+                    PlayerStateEnum::Ground { .. } if vel.0.x.abs() < f32::EPSILON => {
                         "MW_Player_MarioMdl_wait.0_0.png"
                     }
                     PlayerStateEnum::Ground { frame, .. } => {
@@ -232,8 +232,8 @@ fn set_sprite(
                                 "MW_Player_MarioMdl_b_dash.0_0.png"
                             }
                         } else if *frame == 1
-                            || (vel.0[0] > 0. && *facing_direction == FacingDirection::Left)
-                            || (vel.0[0] < 0. && *facing_direction == FacingDirection::Right)
+                            || (vel.0.x > 0. && *facing_direction == FacingDirection::Left)
+                            || (vel.0.x < 0. && *facing_direction == FacingDirection::Right)
                         {
                             "MW_Player_MarioMdl_walk.1_0.png"
                         } else {
@@ -241,7 +241,7 @@ fn set_sprite(
                         }
                     }
                     PlayerStateEnum::Air { tick, .. } => {
-                        if vel.0[1] > 0. {
+                        if vel.0.y > 0. {
                             if *tick == 0 {
                                 sprite.flip_x = match *facing_direction {
                                     FacingDirection::Left => true,

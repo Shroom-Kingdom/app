@@ -66,7 +66,7 @@ pub fn movement(
                     ..
                 } = player.state
                 {
-                    player.state.is_dashing = vel.0[0].abs() > RUN_THRESHOLD;
+                    player.state.is_dashing = vel.0.x.abs() > RUN_THRESHOLD;
                 }
 
                 let left =
@@ -80,7 +80,7 @@ pub fn movement(
                     (false, true) => LINVEL_CAP_RUN,
                     (false, false) => LINVEL_CAP_WALK,
                 };
-                match (&player.state, vel.0[0]) {
+                match (&player.state, vel.0.x) {
                     (
                         PlayerState {
                             is_dashing: true,
@@ -113,13 +113,13 @@ pub fn movement(
                 match x_axis {
                     _ if x_axis > 0 => {
                         facing_direction_events.send(FacingDirectionEvent::Right);
-                        if vel.0[0] > cap {
+                        if vel.0.x > cap {
                             return;
                         }
                     }
                     _ if x_axis < 0 => {
                         facing_direction_events.send(FacingDirectionEvent::Left);
-                        if vel.0[0] < -cap {
+                        if vel.0.x < -cap {
                             return;
                         }
                     }
@@ -162,7 +162,7 @@ pub fn movement(
                         is_turning: false,
                         is_walking,
                         frame,
-                    } if (x_axis == 1 && vel.0[0] < 0.) || (x_axis == -1 && vel.0[0] > 0.) => {
+                    } if (x_axis == 1 && vel.0.x < 0.) || (x_axis == -1 && vel.0.x > 0.) => {
                         player.state.state = PlayerStateEnum::Ground {
                             frame,
                             is_walking,
@@ -175,8 +175,8 @@ pub fn movement(
                         is_walking,
                         frame,
                     } if x_axis == 0
-                        || (x_axis == 1 && vel.0[0] > 0.)
-                        || (x_axis == -1 && vel.0[0] < 0.) =>
+                        || (x_axis == 1 && vel.0.x > 0.)
+                        || (x_axis == -1 && vel.0.x < 0.) =>
                     {
                         player.state.state = PlayerStateEnum::Ground {
                             frame,

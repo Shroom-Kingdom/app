@@ -1,7 +1,7 @@
 use crate::{Player, WalkAnimationTimer};
 use app_config::{
-    COLLIDER_MIN_TOI, GROUND_FRICTION_KINETIC_MULTIPLIER, GROUND_FRICTION_MIN_VEL,
-    GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE,
+    COLLIDER_MAX_TOI, GROUND_FRICTION_KINETIC_MULTIPLIER, GROUND_FRICTION_MIN_VEL,
+    GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE, TILE_GRID_SIZE, GRID_COLLISION_PROJECTION_MULTIPLIER,
 };
 use app_core::Ground;
 use bevy::{math::Vec3Swizzles, prelude::*, utils::HashSet};
@@ -90,8 +90,8 @@ fn collision_detection(
     entity: Entity,
     collider: &Collider,
 ) {
-    if rb_transform.translation.x <= 0. && vel.0[0] < 0. {
-        vel.0[0] = 0.;
+    if rb_transform.translation.x <= 0. && vel.0.x < 0. {
+        vel.0.x = 0.;
         rb_transform.translation.x = 0.;
     }
 
@@ -100,7 +100,7 @@ fn collision_detection(
         rb_transform.rotation.to_axis_angle().1,
         vel.0,
         collider,
-        COLLIDER_MIN_TOI,
+        COLLIDER_MAX_TOI,
         InteractionGroups::default(),
         Some(&|collider_entity| {
             collider_entity != entity && ground_query.get(collider_entity).is_err()
@@ -110,20 +110,34 @@ fn collision_detection(
         vel_x.y = 0.;
         let mut vel_y = vel.0;
         vel_y.x = 0.;
-        if ctx
+        while ctx
             .cast_shape(
                 rb_transform.translation.xy(),
                 rb_transform.rotation.to_axis_angle().1,
                 vel_x,
                 collider,
-                COLLIDER_MIN_TOI,
+                COLLIDER_MAX_TOI,
                 InteractionGroups::default(),
                 Some(&|c| c == collider_entity),
             )
             .is_some()
         {
-            rb_transform.translation.x += if vel_x.x > 0. { -0.02 } else { 0.02 };
-            vel.0[0] = 0.;
+            if let Some((_, projection)) = ctx.project_point(
+                rb_transform.translation.xy(),
+                true,
+                InteractionGroups::default(),
+                Some(&|c| c == collider_entity),
+            ) {
+                rb_transform.translation.x += if rb_transform.translation.x < projection.point.x {
+                    -0.02
+                } else {
+                    0.02
+                };
+                vel_x.x /= 2.;
+                vel.0.x = vel_x.x;
+            } else {
+                break
+            }
         }
         if ctx
             .cast_shape(
@@ -131,15 +145,15 @@ fn collision_detection(
                 rb_transform.rotation.to_axis_angle().1,
                 vel_y,
                 collider,
-                COLLIDER_MIN_TOI,
+                COLLIDER_MAX_TOI,
                 InteractionGroups::default(),
                 Some(&|c| c == collider_entity),
             )
             .is_some()
         {
-            vel.0[1] = 0.;
+            vel.0.y = 0.;
         } else {
-            vel.0[0] = 0.;
+            vel.0.x = 0.;
         }
     }
 }
@@ -147,19 +161,19 @@ fn collision_detection(
 #[allow(clippy::too_many_arguments)]
 fn ground_collision(
     ctx: &RapierContext,
-    rb_pos: &mut Transform,
+    rb_transform: &mut Transform,
     friction: f32,
     ground_query: &Query<(&Ground, &Friction)>,
     ground_intersections: &mut GroundIntersections,
     entity: Entity,
-    shape: &bevy_rapier::prelude::Collider,
+    shape: &Collider,
     timer: &mut Timer,
 ) -> (Option<f32>, HashSet<Entity>) {
     let mut ground_friction = None;
     let mut ground_colliders = HashSet::default();
     ctx.intersections_with_shape(
-        rb_pos.translation.xy(),
-        rb_pos.rotation.to_axis_angle().1,
+        rb_transform.translation.xy(),
+        rb_transform.rotation.to_axis_angle().1,
         shape,
         InteractionGroups::default(),
         Some(&|collider_entity| {
@@ -219,28 +233,28 @@ fn set_pos_to_closest_ground_collider(
         InteractionGroups::default(),
         Some(&|collider_entity| ground_intersections.0.contains(&collider_entity)),
     ) {
-        rb_transform.translation.y = projection.point.y + 1.9;
+        rb_transform.translation.y = projection.point.y + 1.9 * RAPIER_SCALE;
     }
 }
 
 fn ground_friction_or_gravity(
     ground_friction: Option<f32>,
     vel: &mut PlayerVelocity,
-    rb_mprops: &bevy_rapier::prelude::MassProperties,
+    rb_mprops: &MassProperties,
 ) {
     if let Some(friction) = ground_friction {
-        if vel.0[1] < 0. {
-            vel.0[1] = 0.;
+        if vel.0.y < 0. {
+            vel.0.y = 0.;
         }
-        if vel.0[0].abs() > f32::EPSILON {
-            vel.0[0] += if vel.0[0] > 0. {
+        if vel.0.x.abs() > f32::EPSILON {
+            vel.0.x += if vel.0.x > 0. {
                 -GROUND_FRICTION_STATIC_MULTIPLIER * friction
             } else {
                 GROUND_FRICTION_STATIC_MULTIPLIER * friction
             };
-            vel.0[0] *= 1.0 / (1.0 + GROUND_FRICTION_KINETIC_MULTIPLIER * friction);
-            if vel.0[0].abs() < GROUND_FRICTION_MIN_VEL {
-                vel.0[0] = 0.
+            vel.0.x *= 1.0 / (1.0 + GROUND_FRICTION_KINETIC_MULTIPLIER * friction);
+            if vel.0.x.abs() < GROUND_FRICTION_MIN_VEL {
+                vel.0.x = 0.
             }
         }
     } else {

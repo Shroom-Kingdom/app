@@ -20,8 +20,8 @@ pub fn jump(
             return;
         }
         if let PlayerStateEnum::Ground { .. } = player.state.state {
-            vel.0[1] = JUMP_FORCE;
-            let high_jump_tick = if vel.0[0].abs() > HIGH_JUMP_WALK_THRESHOLD {
+            vel.0.y = JUMP_FORCE;
+            let high_jump_tick = if vel.0.x.abs() > HIGH_JUMP_WALK_THRESHOLD {
                 HIGH_JUMP_TICK_WALK
             } else {
                 HIGH_JUMP_TICK
@@ -51,7 +51,7 @@ pub fn high_jump(
                     || keyboard_input.pressed(KeyCode::Up)
                     || keyboard_input.pressed(KeyCode::W);
 
-                vel.0[1] = JUMP_FORCE;
+                vel.0.y = JUMP_FORCE;
                 player.state.state = PlayerStateEnum::Air {
                     tick: tick + 1,
                     high_jump_tick,
@@ -71,7 +71,7 @@ pub fn jump_to_fall(
 ) {
     if let Ok((player, vel)) = query.get_single() {
         if let PlayerStateEnum::Air { .. } = player.state.state {
-            if vel.0[1] < 0. {
+            if vel.0.y < 0. {
                 jump_events.send(JumpEvent {
                     high_jump_tick: 0,
                     fall: true,

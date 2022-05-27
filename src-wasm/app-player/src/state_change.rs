@@ -67,7 +67,7 @@ pub fn state_change(
                 player.state.is_stooping = *is_stooping;
             }
             (Some(StoopEvent { is_stooping: false }), PlayerStateEnum::Air { .. })
-                if vel.0[1] <= 0. =>
+                if vel.0.y <= 0. =>
             {
                 send_state_update = true;
                 player.state.is_stooping = false;
@@ -161,13 +161,13 @@ fn handle_ground_intersect_events(
             }
         }
     }
-    if vel.0[1] <= 0. {
+    if vel.0.y <= 0. {
         if !ground_intersections.0.is_empty() {
             match player.state.state {
                 PlayerStateEnum::Ground { .. } => prev_state,
                 _ => Some(PlayerStateEnum::Ground {
                     frame: 1,
-                    is_walking: vel.0[0].abs() >= f32::EPSILON,
+                    is_walking: vel.0.x.abs() >= f32::EPSILON,
                     is_turning: false,
                 }),
             }

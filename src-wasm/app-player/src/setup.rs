@@ -19,8 +19,8 @@ pub fn setup(
     let scale_size = 2.;
     let sprite_size_x = scale_size * 7.0;
     let sprite_size_y = scale_size * 10.0;
-    let collider_size_x = sprite_size_x / RAPIER_SCALE;
-    let collider_size_y = sprite_size_y / RAPIER_SCALE;
+    let collider_size_x = sprite_size_x * 0.78;
+    let collider_size_y = sprite_size_y * 0.78;
 
     let mut texture_atlas_builder = TextureAtlasBuilder::default();
 
@@ -35,13 +35,15 @@ pub fn setup(
         .unwrap();
     let atlas_handle = texture_atlases.add(texture_atlas);
 
-    let world_pos = grid_to_world(&[5, 2]);
+    let world_pos = grid_to_world(&[5, 6]);
 
     commands
         .spawn()
         .insert(RigidBody::KinematicVelocityBased)
         .insert(Transform::from_xyz(world_pos.x, world_pos.y, 0.))
+        .insert(GlobalTransform::default())
         .insert(LockedAxes::ROTATION_LOCKED)
+        .insert(Velocity::default())
         .insert(PlayerVelocity::default())
         .insert(Collider::round_cuboid(
             collider_size_x - PLAYER_COLLIDER_BORDER_RADIUS,
@@ -86,5 +88,5 @@ pub fn setup(
             },
         })
         .insert(GroundIntersections::default())
-        .insert(WalkAnimationTimer(Timer::from_seconds(1.3, true)));
+        .insert(WalkAnimationTimer(Timer::from_seconds(13., true)));
 }

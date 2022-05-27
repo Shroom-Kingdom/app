@@ -6,7 +6,8 @@ use crate::{
     grid_to_world, Ground, GroundSurroundingMatrix, GroundVariant, ThemeVariant, Tile, TileVariant,
 };
 use app_config::{
-    GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, TILE_COLLIDER_SUB, TILE_SIZE,
+    GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, RAPIER_SCALE, TILE_COLLIDER_SUB,
+    TILE_SIZE, GRID_MULTIPLIER, TILE_GRID_SIZE,
 };
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{geometry::Friction, prelude::*};
@@ -93,9 +94,7 @@ impl Course {
         )>,
         surrounding_matrix: Option<[[bool; 3]; 3]>,
     ) {
-        web_sys::console::log_1(&format!("grid_pos {:?}", grid_pos).into());
         let world_pos = grid_to_world(grid_pos);
-        web_sys::console::log_1(&format!("world_pos {:?}", world_pos).into());
         if self.tiles.contains_key(grid_pos) {
             return;
         }
@@ -152,23 +151,23 @@ impl Course {
         let mut entity_commands = commands.spawn();
         entity_commands
             .insert(RigidBody::Fixed)
-            .insert(Transform::from_xyz(world_pos.x, world_pos.y, 0.));
+            .insert(Transform::from_xyz(world_pos.x, world_pos.y, 0.))
+            .insert(GlobalTransform::default());
         entity_commands.with_children(|parent| {
             parent
                 .spawn()
+                .insert(Sensor(true))
                 .insert(Collider::polyline(
                     vec![
                         Vec2::new(
-                            -TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN + 0.01,
-                            TILE_SIZE - TILE_COLLIDER_SUB
-                                + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
-                                + 0.02,
+                            (-TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN) * RAPIER_SCALE  + 0.7,
+                            (TILE_SIZE - TILE_COLLIDER_SUB + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN + 0.02)
+                        * RAPIER_SCALE
                         ),
                         Vec2::new(
-                            TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN - 0.01,
-                            TILE_SIZE - TILE_COLLIDER_SUB
-                                + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
-                                + 0.02,
+                            (TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN) * RAPIER_SCALE - 0.7,
+                            (TILE_SIZE - TILE_COLLIDER_SUB + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN + 0.02)
+                        * RAPIER_SCALE
                         ),
                     ],
                     None,
@@ -195,8 +194,8 @@ impl Course {
                     ..Default::default()
                 })
                 .insert(Collider::cuboid(
-                    TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
-                    TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN,
+                    TILE_GRID_SIZE,
+                    TILE_GRID_SIZE,
                 ))
                 .insert(Friction::new(0.));
         });

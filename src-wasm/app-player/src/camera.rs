@@ -1,5 +1,5 @@
 use crate::Player;
-use app_config::{CAMERA_MIN_X, RAPIER_SCALE};
+use app_config::CAMERA_MIN_X;
 use bevy::{
     prelude::*,
     render::{camera::Camera, primitives::Frustum},

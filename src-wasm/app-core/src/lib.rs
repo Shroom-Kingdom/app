@@ -9,7 +9,7 @@ pub use course::{
 };
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
 
-use app_config::GRID_SIZE;
+use app_config::{GRID_SIZE, RAPIER_SCALE};
 use bevy::{asset::LoadState, prelude::*};
 use course::sprites::load_course_sprites;
 use player_sprites::load_player_sprites;
@@ -45,8 +45,8 @@ pub enum AppLabel {
 
 pub fn grid_to_world(grid_pos: &[i32; 2]) -> Vec2 {
     [
-        grid_pos[0] as f32 * GRID_SIZE,
-        grid_pos[1] as f32 * GRID_SIZE,
+        grid_pos[0] as f32 * GRID_SIZE * RAPIER_SCALE,
+        grid_pos[1] as f32 * GRID_SIZE * RAPIER_SCALE,
     ]
     .into()
 }
