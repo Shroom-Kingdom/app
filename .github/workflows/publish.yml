@@ -33,6 +33,12 @@ jobs:
       - name: Install wasm bindgen
         run: cargo install --version 0.2.80 wasm-bindgen-cli
 
+      - name: Install wasm-opt
+        run: |
+          curl -L https://github.com/WebAssembly/binaryen/releases/download/version_108/binaryen-version_108-x86_64-linux.tar.gz --output binaryen.tar.gz
+          tar -zxvf binaryen.tar.gz binaryen-version_108/bin/wasm-opt
+          mv binaryen-version_108/bin/wasm-opt wasm-opt
+
       - uses: actions/cache@v2
         with:
           path: |
@@ -42,7 +48,9 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build site
-        run: yarn build
+        run: |
+          yarn build
+          ./wasm-opt -O4 dist/app_bg.wasm -o dist/app_bg.wasm
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
