@@ -1,7 +1,7 @@
 use crate::{Player, WalkAnimationTimer};
 use app_config::{
     COLLIDER_MAX_TOI, GROUND_FRICTION_KINETIC_MULTIPLIER, GROUND_FRICTION_MIN_VEL,
-    GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE, TILE_GRID_SIZE, GRID_COLLISION_PROJECTION_MULTIPLIER,
+    GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE,
 };
 use app_core::Ground;
 use bevy::{math::Vec3Swizzles, prelude::*, utils::HashSet};
@@ -136,7 +136,7 @@ fn collision_detection(
                 vel_x.x /= 2.;
                 vel.0.x = vel_x.x;
             } else {
-                break
+                break;
             }
         }
         if ctx

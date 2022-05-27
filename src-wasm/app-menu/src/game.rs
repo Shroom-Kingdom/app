@@ -1,5 +1,5 @@
 use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR, TILE_SIZE};
-use app_core::{TileSpriteHandles, GroundVariant, SelectedTile, TileVariant};
+use app_core::{GroundVariant, SelectedTile, TileSpriteHandles, TileVariant};
 use bevy::{prelude::*, ui::FocusPolicy};
 
 macro_rules! add_button {
