@@ -6,8 +6,8 @@ use crate::{
     grid_to_world, Ground, GroundSurroundingMatrix, GroundVariant, ThemeVariant, Tile, TileVariant,
 };
 use app_config::{
-    GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, RAPIER_SCALE, TILE_COLLIDER_SUB,
-    TILE_GRID_SIZE, TILE_SIZE,
+    GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, GROUND_PADDING, RAPIER_SCALE,
+    TILE_COLLIDER_SUB, TILE_GRID_SIZE, TILE_SIZE,
 };
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{geometry::Friction, prelude::*};
@@ -160,14 +160,16 @@ impl Course {
                 .insert(Collider::polyline(
                     vec![
                         Vec2::new(
-                            (-TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN) * RAPIER_SCALE + 0.7,
+                            (-TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN) * RAPIER_SCALE
+                                + GROUND_PADDING,
                             (TILE_SIZE - TILE_COLLIDER_SUB
                                 + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
                                 + 0.02)
                                 * RAPIER_SCALE,
                         ),
                         Vec2::new(
-                            (TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN) * RAPIER_SCALE - 0.7,
+                            (TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN) * RAPIER_SCALE
+                                - GROUND_PADDING,
                             (TILE_SIZE - TILE_COLLIDER_SUB
                                 + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
                                 + 0.02)
