@@ -34,7 +34,7 @@ pub fn movement(
             &MassProperties,
             &mut Friction,
             &Transform,
-            &Children
+            &Children,
         ),
         With<RigidBody>,
     >,

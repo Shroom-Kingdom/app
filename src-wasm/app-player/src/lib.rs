@@ -17,8 +17,8 @@ use jump::{high_jump, jump, jump_to_fall};
 use movement::{movement, run};
 use physics::{apply_vel, physics};
 use setup::setup;
-use stoop::stoop;
 use state_change::state_change;
+use stoop::stoop;
 use touch::touch;
 use walk::{walk_animation, walk_start};
 
