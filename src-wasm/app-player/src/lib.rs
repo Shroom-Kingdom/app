@@ -5,6 +5,7 @@ mod movement;
 mod physics;
 mod setup;
 mod state_change;
+mod stoop;
 mod touch;
 mod walk;
 
@@ -16,6 +17,7 @@ use jump::{high_jump, jump, jump_to_fall};
 use movement::{movement, run};
 use physics::{apply_vel, physics};
 use setup::setup;
+use stoop::stoop;
 use state_change::state_change;
 use touch::touch;
 use walk::{walk_animation, walk_start};
@@ -23,6 +25,7 @@ use walk::{walk_animation, walk_start};
 pub use jump::JumpEvent;
 pub use movement::{DashTurnEvent, FacingDirectionEvent};
 pub use physics::{GroundIntersectEvent, GroundIntersections, PlayerVelocity};
+pub use stoop::StoopEvent;
 pub use touch::TouchEvent;
 pub use walk::{WalkAnimationTimer, WalkEvent};
 
@@ -165,30 +168,6 @@ pub enum PlayerStateEnum {
 #[derive(Debug)]
 pub struct PlayerStateChangeEvent {
     pub state: PlayerState,
-}
-
-pub struct StoopEvent {
-    is_stooping: bool,
-}
-
-fn stoop(
-    query: Query<&Player>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut stoop_events: EventWriter<StoopEvent>,
-) {
-    if let Ok(player) = query.get_single() {
-        let stooped = !player.state.is_stooping
-            && (keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down));
-        let unstooped = player.state.is_stooping
-            && !keyboard_input.pressed(KeyCode::S)
-            && !keyboard_input.pressed(KeyCode::Down);
-
-        if stooped {
-            stoop_events.send(StoopEvent { is_stooping: true });
-        } else if unstooped {
-            stoop_events.send(StoopEvent { is_stooping: false });
-        }
-    }
 }
 
 fn set_sprite(

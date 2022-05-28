@@ -23,32 +23,33 @@ pub struct GroundIntersections(pub HashSet<Entity>);
 pub fn physics(
     mut query: Query<
         (
-            Entity,
             &mut WalkAnimationTimer,
             &mut Transform,
             &mut PlayerVelocity,
             &MassProperties,
-            &Collider,
+            &Children,
             &Friction,
             &mut GroundIntersections,
         ),
         (With<Player>, With<RigidBody>),
     >,
+    child_query: Query<(Entity, &Collider)>,
     ground_query: Query<(&Ground, &Friction)>,
     ctx: Res<RapierContext>,
     ground_intersect_events: EventWriter<GroundIntersectEvent>,
 ) {
     if let Ok((
-        entity,
         mut timer,
         mut rb_transform,
         mut vel,
         rb_mprops,
-        collider,
+        children,
         friction,
         mut ground_intersections,
     )) = query.get_single_mut()
     {
+        let child = children.get(1).unwrap();
+        let (entity, collider) = child_query.get(*child).unwrap();
         let (ground_friction, ground_colliders) = ground_collision(
             &ctx,
             &mut rb_transform,

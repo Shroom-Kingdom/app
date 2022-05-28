@@ -29,25 +29,27 @@ pub fn run(mut query: Query<&mut Player>, keyboard_input: Res<Input<KeyCode>>) {
 pub fn movement(
     mut query: Query<
         (
-            Entity,
             &mut Player,
             &mut PlayerVelocity,
             &MassProperties,
             &mut Friction,
             &Transform,
-            &Collider,
+            &Children
         ),
         With<RigidBody>,
     >,
+    child_query: Query<(Entity, &Collider)>,
     ground_query: Query<&Ground>,
     keyboard_input: Res<Input<KeyCode>>,
     mut facing_direction_events: EventWriter<FacingDirectionEvent>,
     mut dash_turn_events: EventWriter<DashTurnEvent>,
     ctx: Res<RapierContext>,
 ) {
-    if let Ok((entity, mut player, mut vel, rb_mprops, mut friction, rb_transform, collider)) =
+    if let Ok((mut player, mut vel, rb_mprops, mut friction, rb_transform, children)) =
         query.get_single_mut()
     {
+        let child = children.get(1).unwrap();
+        let (entity, collider) = child_query.get(*child).unwrap();
         match player.state {
             PlayerState {
                 is_stooping: false,

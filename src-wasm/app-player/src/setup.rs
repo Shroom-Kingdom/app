@@ -19,7 +19,7 @@ pub fn setup(
     let scale_size = 2.;
     let sprite_size_x = scale_size * 7.0;
     let sprite_size_y = scale_size * 10.0;
-    let collider_size_x = sprite_size_x * 0.78;
+    let collider_size_x = sprite_size_x * 0.72;
     let collider_size_y = sprite_size_y * 0.78;
 
     let mut texture_atlas_builder = TextureAtlasBuilder::default();
@@ -45,11 +45,6 @@ pub fn setup(
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity::default())
         .insert(PlayerVelocity::default())
-        .insert(Collider::round_cuboid(
-            collider_size_x - PLAYER_COLLIDER_BORDER_RADIUS,
-            collider_size_y - PLAYER_COLLIDER_BORDER_RADIUS,
-            PLAYER_COLLIDER_BORDER_RADIUS,
-        ))
         .insert(MassProperties::from_rapier(
             bevy_rapier::rapier::prelude::MassProperties::from_ball(10., 10.),
             RAPIER_SCALE,
@@ -70,6 +65,16 @@ pub fn setup(
                 texture_atlas: atlas_handle,
                 ..Default::default()
             });
+        })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(Collider::round_cuboid(
+                    collider_size_x - PLAYER_COLLIDER_BORDER_RADIUS,
+                    collider_size_y - PLAYER_COLLIDER_BORDER_RADIUS,
+                    PLAYER_COLLIDER_BORDER_RADIUS,
+                ))
+                .insert(Transform::default());
         })
         .insert(Player {
             state: PlayerState {
