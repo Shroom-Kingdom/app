@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use strum_macros::EnumIter;
+use enum_iterator::Sequence;
 
-#[derive(Clone, Component, Debug, EnumIter, Eq, Hash, PartialEq)]
+#[derive(Clone, Component, Debug, Eq, Hash, PartialEq, Sequence)]
 pub enum ThemeVariant {
     Plain,
     Underground,

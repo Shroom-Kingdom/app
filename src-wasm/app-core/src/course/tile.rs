@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use strum_macros::EnumIter;
+use enum_iterator::Sequence;
 
 #[derive(Clone, Debug)]
 pub struct Tile {
@@ -7,7 +7,7 @@ pub struct Tile {
     pub variant: TileVariant,
 }
 
-#[derive(Clone, Component, Debug, EnumIter, Eq, Hash, PartialEq)]
+#[derive(Clone, Component, Debug, Eq, Hash, PartialEq, Sequence)]
 pub enum TileVariant {
     Ground(GroundVariant),
     HardBlock,
@@ -16,7 +16,7 @@ pub enum TileVariant {
     CloudBlock,
 }
 
-#[derive(Clone, Debug, EnumIter, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, Sequence)]
 pub enum GroundVariant {
     TopLeft0,
     TopRight0,

@@ -1,8 +1,10 @@
 use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR, TILE_SIZE};
-use app_core::{GroundVariant, SelectedTile, TileSpriteHandles, TileVariant};
+use app_core::{
+    GroundVariant, SelectedTile, TileSpriteHandles, TileVariant, UiButtonSpriteHandles, UiButtonVariant, Course, GameMode,
+};
 use bevy::{prelude::*, ui::FocusPolicy};
 
-macro_rules! add_button {
+macro_rules! add_tile_button {
     ( $parent:expr, $color:expr, $sprite_handles:expr, $tile:expr, $is_selected:expr ) => {
         $parent
             .spawn_bundle(ButtonBundle {
@@ -41,7 +43,22 @@ pub struct SelectedTileButton(pub bool);
 
 pub struct SelectTileEvent(pub Entity);
 
-pub fn setup_game_ui(mut commands: Commands, sprite_handles: Res<TileSpriteHandles>) {
+#[derive(Component)]
+pub struct GameModeEdit;
+
+#[derive(Component)]
+pub struct GameModeToggleButton { pub is_editing: bool }
+
+#[derive(Component)]
+pub struct GameModeToggleButtonImage;
+
+pub struct GameModeToggleEvent { pub is_editing: bool }
+
+pub fn setup_game_ui(
+    mut commands: Commands,
+    tile_sprite_handles: Res<TileSpriteHandles>,
+    ui_button_sprite_handles: Res<UiButtonSpriteHandles>,
+) {
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -58,42 +75,90 @@ pub fn setup_game_ui(mut commands: Commands, sprite_handles: Res<TileSpriteHandl
             },
             ..Default::default()
         })
+        .insert(GameModeEdit)
         .with_children(|parent| {
-            add_button!(
+            add_tile_button!(
                 parent,
                 SELECTED_BUTTON_COLOR,
-                sprite_handles,
+                tile_sprite_handles,
                 TileVariant::Ground(GroundVariant::default()),
                 true
             );
-            add_button!(
+            add_tile_button!(
                 parent,
                 NORMAL_BUTTON_COLOR,
-                sprite_handles,
+                tile_sprite_handles,
                 TileVariant::HardBlock,
                 false
             );
-            add_button!(
+            add_tile_button!(
                 parent,
                 NORMAL_BUTTON_COLOR,
-                sprite_handles,
+                tile_sprite_handles,
                 TileVariant::RotatingBlock,
                 false
             );
-            add_button!(
+            add_tile_button!(
                 parent,
                 NORMAL_BUTTON_COLOR,
-                sprite_handles,
+                tile_sprite_handles,
                 TileVariant::DonutBlock,
                 false
             );
-            add_button!(
+            add_tile_button!(
                 parent,
                 NORMAL_BUTTON_COLOR,
-                sprite_handles,
+                tile_sprite_handles,
                 TileVariant::CloudBlock,
                 false
             );
+        });
+    commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                margin: Rect {
+                    top: Val::Px(6.),
+                    bottom: Val::Auto,
+                    left: Val::Auto,
+                    right: Val::Px(6.),
+                },
+                padding: Rect::all(Val::Px(6.)),
+                justify_content: JustifyContent::SpaceBetween,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .with_children(|parent| {
+            parent
+            .spawn_bundle(ButtonBundle {
+                style: Style {
+                    size: Size::new(Val::Px(48.), Val::Px(48.)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..Default::default()
+                },
+                color: NORMAL_BUTTON_COLOR.into(),
+                ..Default::default()
+            })
+            .with_children(|parent| {
+                parent
+                    .spawn_bundle(ImageBundle {
+                        image: UiImage(ui_button_sprite_handles.0.get(&UiButtonVariant::GameModeSwitch { is_editing: true }).unwrap().clone()),
+                        transform: Transform {
+                            scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+                            ..Default::default()
+                        },
+                        style: Style {
+                            margin: Rect::all(Val::Auto),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    })
+                    .insert(FocusPolicy::Pass)
+                    .insert(GameModeToggleButtonImage);
+            })
+            .insert(GameModeToggleButton { is_editing: true });
         });
 }
 
@@ -139,6 +204,42 @@ pub fn change_after_tile_select(
                     _ => {}
                 }
                 tile_button.0 = false;
+            }
+        }
+    }
+}
+
+pub fn toggle_game_mode(
+    mut query: Query<
+        (
+            &Interaction,
+            &mut GameModeToggleButton,
+        ),
+        Changed<Interaction>,
+    >,
+    mut game_mode_edit_query: Query<&mut Style, With<GameModeEdit>>,
+    mut game_mode_button_query: Query<&mut UiImage, With<GameModeToggleButtonImage>>,
+    mut course: ResMut<Course>,
+    mut game_mode_toggle_event: EventWriter<GameModeToggleEvent>,
+    ui_button_sprite_handles: Res<UiButtonSpriteHandles>,
+) {
+    for (interaction, mut button) in query.iter_mut() {
+        if *interaction == Interaction::Clicked {
+            let is_editing = !button.is_editing;
+            button.is_editing = is_editing;
+            course.game_mode = GameMode::Build { is_editing };
+            let mut game_mode_button = game_mode_button_query.single_mut();
+            *game_mode_button = UiImage(ui_button_sprite_handles.0.get(&UiButtonVariant::GameModeSwitch { is_editing }).unwrap().clone());
+            game_mode_toggle_event.send(GameModeToggleEvent {
+                is_editing
+            });
+
+            for mut style in game_mode_edit_query.iter_mut() {
+                style.display = if is_editing {
+                    Display::Flex
+                } else {
+                    Display::None
+                };
             }
         }
     }

@@ -124,6 +124,7 @@ dependencies = [
  "app-config",
  "bevy",
  "bevy_rapier2d",
+ "enum-iterator",
  "strum",
  "strum_macros",
  "web-sys",
@@ -1237,6 +1238,26 @@ name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
+
+[[package]]
+name = "enum-iterator"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a7cbade83f72b1330fa58dc6203176f374e61eb3682055b6d3df05f56723f85"
+dependencies = [
+ "enum-iterator-derive",
+]
+
+[[package]]
+name = "enum-iterator-derive"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a375a452d20c4dbbaa397e84cdfaa2712b4b3d22bf49426e9c8725d10fef005"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "env_logger"

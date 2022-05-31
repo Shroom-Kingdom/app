@@ -1,9 +1,11 @@
 pub(crate) mod sprites;
 pub(crate) mod theme;
 pub(crate) mod tile;
+pub(crate) mod ui_button;
 
 use crate::{
-    grid_to_world, Ground, GroundSurroundingMatrix, GroundVariant, ThemeVariant, Tile, TileVariant,
+    grid_to_world, GameMode, Ground, GroundSurroundingMatrix, GroundVariant, ThemeVariant, Tile,
+    TileVariant,
 };
 use app_config::{
     GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, GROUND_PADDING, RAPIER_SCALE,
@@ -18,6 +20,7 @@ pub struct Course {
     pub texture_atlas_handle: Handle<TextureAtlas>,
     pub tiles: HashMap<[i32; 2], Tile>,
     pub theme: ThemeVariant,
+    pub game_mode: GameMode,
 }
 
 impl Course {
@@ -34,6 +37,7 @@ impl Course {
             texture_atlas_handle,
             tiles: HashMap::default(),
             theme,
+            game_mode: GameMode::Build { is_editing: true },
         };
 
         for x in 0..7 {

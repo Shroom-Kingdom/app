@@ -1,12 +1,17 @@
+#![allow(clippy::needless_question_mark)]
+
 mod course;
+mod mode;
 mod player_sprites;
 
 pub use course::{
-    sprites::{ThemeSpriteHandles, TileSpriteHandles},
+    sprites::{ThemeSpriteHandles, TileSpriteHandles, UiButtonSpriteHandles},
     theme::ThemeVariant,
     tile::{GroundSurroundingMatrix, GroundVariant, SelectedTile, Tile, TileVariant},
+    ui_button::UiButtonVariant,
     Course,
 };
+pub use mode::GameMode;
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
 
 use app_config::{GRID_SIZE, RAPIER_SCALE};
@@ -24,6 +29,7 @@ impl Plugin for CorePlugin {
         app.init_resource::<PlayerSpriteHandles>()
             .init_resource::<TileSpriteHandles>()
             .init_resource::<ThemeSpriteHandles>()
+            .init_resource::<UiButtonSpriteHandles>()
             .init_resource::<SelectedTile>()
             .add_startup_system_to_stage(StartupStage::Startup, load_player_sprites)
             .add_startup_system_to_stage(StartupStage::Startup, load_course_sprites)
@@ -56,15 +62,18 @@ fn check_textures(
     player_sprite_handles: Res<PlayerSpriteHandles>,
     course_sprite_handles: Res<TileSpriteHandles>,
     theme_sprite_handles: Res<ThemeSpriteHandles>,
+    ui_button_sprite_handles: Res<UiButtonSpriteHandles>,
     asset_server: Res<AssetServer>,
 ) {
-    if let (LoadState::Loaded, LoadState::Loaded, LoadState::Loaded) = (
+    if let (LoadState::Loaded, LoadState::Loaded, LoadState::Loaded, LoadState::Loaded) = (
         asset_server
             .get_group_load_state(player_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
         asset_server
             .get_group_load_state(course_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
         asset_server
             .get_group_load_state(theme_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
+        asset_server
+            .get_group_load_state(ui_button_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
     ) {
         state.set(AppState::Menu).unwrap();
     }
