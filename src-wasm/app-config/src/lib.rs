@@ -11,6 +11,7 @@ pub const MOVE_IMPULSE_MULTIPLIER_AIR_RUN: f32 = 40.;
 pub const LINVEL_CAP_WALK: f32 = 170.;
 pub const LINVEL_CAP_RUN: f32 = 300.;
 pub const LINVEL_CAP_STOOP: f32 = 80.;
+pub const LINVEL_BUILD: f32 = 250.;
 
 pub const PLAYER_COLLIDER_BORDER_RADIUS: f32 = 0.4;
 pub const COLLIDER_MAX_TOI: f32 = 1. / 60.;

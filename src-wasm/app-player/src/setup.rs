@@ -1,7 +1,4 @@
-use crate::{
-    FacingDirection, GroundIntersections, Player, PlayerState, PlayerStateEnum, PlayerVelocity,
-    WalkAnimationTimer,
-};
+use crate::{GroundIntersections, Player, PlayerState, PlayerVelocity, WalkAnimationTimer};
 use app_config::{PLAYER_COLLIDER_BORDER_RADIUS, RAPIER_GRAVITY, RAPIER_SCALE};
 use app_core::{grid_to_world, PlayerFrame, PlayerSpriteHandles};
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
@@ -77,20 +74,7 @@ pub fn setup(
                 .insert(Transform::default());
         })
         .insert(Player {
-            state: PlayerState {
-                facing_direction: FacingDirection::Right,
-                state: PlayerStateEnum::Air {
-                    tick: 0,
-                    high_jump_tick: 0,
-                    impulse: false,
-                    released: true,
-                    fall: true,
-                },
-                is_running: false,
-                is_dashing: false,
-                is_stooping: false,
-                is_dash_turning: false,
-            },
+            state: PlayerState::default(),
         })
         .insert(GroundIntersections::default())
         .insert(WalkAnimationTimer(Timer::from_seconds(13., true)));

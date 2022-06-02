@@ -22,7 +22,7 @@ jobs:
         name: Install Toolchain
         with:
           profile: minimal
-          toolchain: nightly-2022-05-27
+          toolchain: nightly-2022-06-02
           override: true
           components: rustfmt, clippy
 

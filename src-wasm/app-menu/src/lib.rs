@@ -1,9 +1,9 @@
 mod game;
 
 use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR};
-use app_core::{AppLabel, AppState, SelectedTile, TileVariant};
+use app_core::{AppLabel, AppState, PlayerStages, SelectedTile, TileVariant};
 use bevy::prelude::*;
-use game::{change_after_tile_select, select_tile, SelectTileEvent, toggle_game_mode, GameModeToggleEvent};
+use game::{change_after_tile_select, select_tile, toggle_game_mode, SelectTileEvent};
 
 #[derive(Component)]
 struct MainMenu;
@@ -21,7 +21,6 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SelectTileEvent>()
-            .add_event::<GameModeToggleEvent>()
             .add_system_set(SystemSet::on_enter(AppState::Menu).with_system(setup_menu))
             .add_system_set(SystemSet::on_exit(AppState::Menu).with_system(exit_menu))
             .add_system_set(
@@ -31,7 +30,7 @@ impl Plugin for MenuPlugin {
             )
             .add_system_set(SystemSet::on_update(AppState::Menu).with_system(start_game))
             .add_system_set_to_stage(
-                CoreStage::PreUpdate,
+                PlayerStages::PlayerInput,
                 SystemSet::on_update(AppState::Game)
                     .with_system(select_tile.label(MenuLabel::SelectTile))
                     .with_system(change_after_tile_select.after(MenuLabel::SelectTile))

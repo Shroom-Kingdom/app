@@ -3,7 +3,7 @@ use app_config::{
     COLLIDER_MAX_TOI, GROUND_FRICTION_KINETIC_MULTIPLIER, GROUND_FRICTION_MIN_VEL,
     GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE,
 };
-use app_core::Ground;
+use app_core::{Ground, Course, GameMode};
 use bevy::{math::Vec3Swizzles, prelude::*, utils::HashSet};
 use bevy_rapier::prelude::*;
 
@@ -37,7 +37,11 @@ pub fn physics(
     ground_query: Query<(&Ground, &Friction)>,
     ctx: Res<RapierContext>,
     ground_intersect_events: EventWriter<GroundIntersectEvent>,
+    course: Res<Course>,
 ) {
+    if let GameMode::Build { is_editing: true } = course.game_mode {
+        return
+    }
     if let Ok((
         mut timer,
         mut rb_transform,

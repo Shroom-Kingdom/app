@@ -1,7 +1,7 @@
 #![allow(clippy::needless_question_mark)]
 
 mod course;
-mod mode;
+mod game_mode;
 mod player_sprites;
 
 pub use course::{
@@ -11,7 +11,7 @@ pub use course::{
     ui_button::UiButtonVariant,
     Course,
 };
-pub use mode::GameMode;
+pub use game_mode::{GameMode, GameModeToggleEvent};
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
 
 use app_config::{GRID_SIZE, RAPIER_SCALE};
@@ -31,6 +31,25 @@ impl Plugin for CorePlugin {
             .init_resource::<ThemeSpriteHandles>()
             .init_resource::<UiButtonSpriteHandles>()
             .init_resource::<SelectedTile>()
+            .add_event::<GameModeToggleEvent>()
+            .add_stage_after(
+                CoreStage::First,
+                PlayerStages::PlayerInput,
+                SystemStage::parallel(),
+            )
+            .add_stage_after(
+                CoreStage::PreUpdate,
+                PlayerStages::PrePhysics,
+                SystemStage::parallel(),
+            )
+            .add_stage_after(
+                CoreStage::PostUpdate,
+                PlayerStages::StateChange,
+                SystemStage::parallel(),
+            )
+            .add_system_set_to_stage(PlayerStages::PlayerInput, State::<AppState>::get_driver())
+            .add_system_set_to_stage(PlayerStages::PrePhysics, State::<AppState>::get_driver())
+            .add_system_set_to_stage(PlayerStages::StateChange, State::<AppState>::get_driver())
             .add_startup_system_to_stage(StartupStage::Startup, load_player_sprites)
             .add_startup_system_to_stage(StartupStage::Startup, load_course_sprites)
             .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures));
@@ -47,6 +66,13 @@ pub enum AppState {
 #[derive(SystemLabel, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AppLabel {
     InsertCourse,
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
+pub enum PlayerStages {
+    PlayerInput,
+    PrePhysics,
+    StateChange,
 }
 
 pub fn grid_to_world(grid_pos: &[i32; 2]) -> Vec2 {
@@ -72,8 +98,12 @@ fn check_textures(
             .get_group_load_state(course_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
         asset_server
             .get_group_load_state(theme_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
-        asset_server
-            .get_group_load_state(ui_button_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
+        asset_server.get_group_load_state(
+            ui_button_sprite_handles
+                .0
+                .iter()
+                .map(|(_, handle)| handle.id),
+        ),
     ) {
         state.set(AppState::Menu).unwrap();
     }

@@ -1,10 +1,10 @@
 use crate::{Player, PlayerState, PlayerStateEnum, PlayerVelocity};
 use app_config::{
-    COLLIDER_TOI_THRESHOLD, LINVEL_CAP_RUN, LINVEL_CAP_STOOP, LINVEL_CAP_WALK,
+    COLLIDER_TOI_THRESHOLD, LINVEL_BUILD, LINVEL_CAP_RUN, LINVEL_CAP_STOOP, LINVEL_CAP_WALK,
     MOVE_IMPULSE_MULTIPLIER_AIR, MOVE_IMPULSE_MULTIPLIER_AIR_RUN, MOVE_IMPULSE_MULTIPLIER_GROUND,
     MOVE_IMPULSE_MULTIPLIER_GROUND_RUN, RAPIER_SCALE, RUN_THRESHOLD,
 };
-use app_core::Ground;
+use app_core::{Course, GameMode, Ground};
 use bevy::{math::Vec3Swizzles, prelude::*};
 use bevy_rapier::prelude::*;
 
@@ -25,7 +25,7 @@ pub fn run(mut query: Query<&mut Player>, keyboard_input: Res<Input<KeyCode>>) {
     }
 }
 
-#[allow(clippy::type_complexity)]
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn movement(
     mut query: Query<
         (
@@ -44,8 +44,23 @@ pub fn movement(
     mut facing_direction_events: EventWriter<FacingDirectionEvent>,
     mut dash_turn_events: EventWriter<DashTurnEvent>,
     ctx: Res<RapierContext>,
+    course: Res<Course>,
 ) {
-    if let Ok((mut player, mut vel, rb_mprops, mut friction, rb_transform, children)) =
+    if let GameMode::Build { is_editing: true } = course.game_mode {
+        if let Ok((_, mut vel, _, _, _, _)) = query.get_single_mut() {
+            let left = keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
+            let right =
+                keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
+            let up = keyboard_input.pressed(KeyCode::W) || keyboard_input.pressed(KeyCode::Up);
+            let down = keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down);
+
+            let x_axis = -(left as i8) + right as i8;
+            let y_axis = -(down as i8) + up as i8;
+
+            vel.0.x = x_axis as f32 * LINVEL_BUILD;
+            vel.0.y = y_axis as f32 * LINVEL_BUILD;
+        }
+    } else if let Ok((mut player, mut vel, rb_mprops, mut friction, rb_transform, children)) =
         query.get_single_mut()
     {
         let child = children.get(1).unwrap();

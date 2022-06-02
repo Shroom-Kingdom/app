@@ -1,5 +1,6 @@
 mod camera;
 mod debug;
+mod game_mode;
 mod jump;
 mod movement;
 mod physics;
@@ -9,9 +10,10 @@ mod stoop;
 mod touch;
 mod walk;
 
-use app_core::AppState;
+use app_core::{AppState, PlayerStages};
 use bevy::prelude::*;
 use camera::position_camera;
+use game_mode::toggle_game_mode;
 // use debug::setup_ui;
 use jump::{high_jump, jump, jump_to_fall};
 use movement::{movement, run};
@@ -42,24 +44,7 @@ impl Plugin for PlayerPlugin {
             .add_event::<StoopEvent>()
             .add_event::<TouchEvent>()
             // .add_startup_system(setup_ui)
-            .add_stage_after(
-                CoreStage::First,
-                PlayerStages::PlayerInput,
-                SystemStage::parallel(),
-            )
-            .add_stage_after(
-                CoreStage::PreUpdate,
-                PlayerStages::PrePhysics,
-                SystemStage::parallel(),
-            )
-            .add_stage_after(
-                CoreStage::PostUpdate,
-                PlayerStages::StateChange,
-                SystemStage::parallel(),
-            )
-            .add_system_set_to_stage(PlayerStages::PlayerInput, State::<AppState>::get_driver())
-            .add_system_set_to_stage(PlayerStages::PrePhysics, State::<AppState>::get_driver())
-            .add_system_set_to_stage(PlayerStages::StateChange, State::<AppState>::get_driver())
+            // .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup))
             .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup))
             .add_system_set_to_stage(
                 CoreStage::First,
@@ -80,6 +65,10 @@ impl Plugin for PlayerPlugin {
             .add_system_set_to_stage(
                 PlayerStages::PlayerInput,
                 SystemSet::on_update(AppState::Game).with_system(movement),
+            )
+            .add_system_set_to_stage(
+                CoreStage::PreUpdate,
+                SystemSet::on_update(AppState::Game).with_system(toggle_game_mode),
             )
             .add_system_set_to_stage(
                 CoreStage::PreUpdate,
@@ -121,13 +110,6 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
-pub enum PlayerStages {
-    PlayerInput,
-    PrePhysics,
-    StateChange,
-}
-
 #[derive(Component, Debug)]
 pub struct Player {
     pub state: PlayerState,
@@ -141,6 +123,42 @@ pub struct PlayerState {
     is_dashing: bool,
     is_stooping: bool,
     is_dash_turning: bool,
+}
+
+impl Default for PlayerState {
+    fn default() -> Self {
+        PlayerState {
+            facing_direction: FacingDirection::Right,
+            state: PlayerStateEnum::Air {
+                tick: 0,
+                high_jump_tick: 0,
+                impulse: false,
+                released: true,
+                fall: true,
+            },
+            is_running: false,
+            is_dashing: false,
+            is_stooping: false,
+            is_dash_turning: false,
+        }
+    }
+}
+
+impl PlayerState {
+    pub fn float() -> Self {
+        PlayerState {
+            facing_direction: FacingDirection::Right,
+            state: PlayerStateEnum::Ground {
+                frame: 0,
+                is_walking: false,
+                is_turning: false,
+            },
+            is_running: false,
+            is_dashing: false,
+            is_stooping: false,
+            is_dash_turning: false,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

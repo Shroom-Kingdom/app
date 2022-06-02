@@ -3,6 +3,7 @@ use crate::{
     GroundIntersections, JumpEvent, Player, PlayerStateChangeEvent, PlayerStateEnum,
     PlayerVelocity, StoopEvent, TouchEvent, WalkEvent,
 };
+use app_core::{Course, GameMode};
 use bevy::prelude::*;
 
 #[allow(clippy::too_many_arguments)]
@@ -16,7 +17,11 @@ pub fn state_change(
     mut facing_direction_events: EventReader<FacingDirectionEvent>,
     mut dash_turn_events: EventReader<DashTurnEvent>,
     mut psc_events: EventWriter<PlayerStateChangeEvent>,
+    course: Res<Course>,
 ) {
+    if let GameMode::Build { is_editing: true } = course.game_mode {
+        return;
+    }
     if let Ok((mut player, mut ground_intersections, vel)) = query.get_single_mut() {
         let mut state = handle_walk_events(&mut player, walk_events);
 
