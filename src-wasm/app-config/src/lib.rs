@@ -45,3 +45,6 @@ pub const GRID_COLLISION_PROJECTION_MULTIPLIER: f32 = 2.15;
 
 pub const CAMERA_MIN_X: f32 = 620.;
 pub const CAMERA_MIN_Y: f32 = 340.;
+
+pub const MAX_COURSE_X: i32 = 150;
+pub const MAX_COURSE_Y: i32 = 24;

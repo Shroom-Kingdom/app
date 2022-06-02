@@ -1,9 +1,12 @@
+mod grid;
+
 use app_core::{
     AppLabel, AppState, Course, GroundSurroundingMatrix, GroundVariant, SelectedTile,
     ThemeSpriteHandles, ThemeVariant, Tile, TileVariant,
 };
 use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
+use grid::{setup_grid, toggle_grid};
 
 pub struct CoursePlugin;
 
@@ -12,8 +15,10 @@ impl Plugin for CoursePlugin {
         app.add_system_set(
             SystemSet::on_enter(AppState::Game)
                 .label(AppLabel::InsertCourse)
-                .with_system(setup),
+                .with_system(setup)
+                .with_system(setup_grid),
         )
+        .add_system_set(SystemSet::on_update(AppState::Game).with_system(toggle_grid))
         .add_system_set_to_stage(
             CoreStage::Last,
             SystemSet::on_update(AppState::Game).with_system(spawn_tile),

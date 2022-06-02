@@ -8,8 +8,8 @@ use crate::{
     TileVariant,
 };
 use app_config::{
-    GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, GROUND_PADDING, RAPIER_SCALE,
-    TILE_COLLIDER_SUB, TILE_GRID_SIZE, TILE_SIZE,
+    GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, GROUND_PADDING, MAX_COURSE_X,
+    MAX_COURSE_Y, RAPIER_SCALE, TILE_COLLIDER_SUB, TILE_GRID_SIZE, TILE_SIZE,
 };
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{geometry::Friction, prelude::*};
@@ -103,8 +103,11 @@ impl Course {
             return;
         }
 
-        // TODO min max course pos
-        if grid_pos[0] < 0 || grid_pos[1] < 0 || grid_pos[0] > 150 || grid_pos[1] > 24 {
+        if grid_pos[0] < 0
+            || grid_pos[1] < 0
+            || grid_pos[0] > MAX_COURSE_X
+            || grid_pos[1] > MAX_COURSE_Y
+        {
             return;
         }
 
