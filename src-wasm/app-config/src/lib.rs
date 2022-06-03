@@ -43,8 +43,9 @@ pub const GRID_MULTIPLIER: f32 = 4.8;
 pub const TILE_GRID_SIZE: f32 = (TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN) * GRID_MULTIPLIER;
 pub const GRID_COLLISION_PROJECTION_MULTIPLIER: f32 = 2.15;
 
-pub const CAMERA_MIN_X: f32 = 620.;
-pub const CAMERA_MIN_Y: f32 = 340.;
+pub const CAMERA_SCALE: f32 = 0.7;
+pub const CAMERA_MIN_X: f32 = 1240. * 0.7 / 2.;
+pub const CAMERA_MIN_Y: f32 = 680. * 0.7 / 2.;
 
 pub const MAX_COURSE_X: i32 = 150;
 pub const MAX_COURSE_Y: i32 = 24;

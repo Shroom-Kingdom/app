@@ -1,10 +1,14 @@
-use app_config::{CAMERA_MIN_X, CAMERA_MIN_Y};
+use app_config::{CAMERA_MIN_X, CAMERA_MIN_Y, CAMERA_SCALE};
 use bevy::{prelude::*, winit::WinitWindows};
 use winit::platform::web::WindowExtWebSys;
 
 pub fn setup_graphics(mut commands: Commands) {
     let mut camera = OrthographicCameraBundle::new_2d();
-    camera.transform = Transform::from_translation(Vec3::new(CAMERA_MIN_X, CAMERA_MIN_Y, 0.0));
+    camera.transform = Transform {
+        translation: Vec3::new(CAMERA_MIN_X, CAMERA_MIN_Y, 0.0),
+        scale: Vec3::new(CAMERA_SCALE, CAMERA_SCALE, 1.),
+        ..Default::default()
+    };
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_translation(Vec3::new(1000.0, 10.0, 2000.0)),
         point_light: PointLight {
