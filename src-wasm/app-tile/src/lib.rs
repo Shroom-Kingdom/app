@@ -1,5 +1,5 @@
 use app_config::{GRID_SIZE, RAPIER_SCALE};
-use app_core::{AppState, Course, SelectedTile, TileVariant};
+use app_core::{AppState, Course, GameMode, SelectedTile, TileVariant};
 use bevy::{
     prelude::*,
     render::{camera::Camera, primitives::Frustum},
@@ -38,23 +38,25 @@ fn spawn_tile(
     course: Res<Course>,
     selected_tile: Res<SelectedTile>,
 ) {
-    for interaction in button_query.iter() {
-        if interaction == &Interaction::Hovered || interaction == &Interaction::Clicked {
-            return;
+    if let GameMode::Build { is_editing: true } = course.game_mode {
+        for interaction in button_query.iter() {
+            if interaction == &Interaction::Hovered || interaction == &Interaction::Clicked {
+                return;
+            }
         }
-    }
-    let window = windows.get_primary().unwrap();
-    if mouse_button_input.pressed(MouseButton::Left) {
-        send_spawn_tile(
-            window,
-            &camera_query,
-            spawn_tile_events,
-            &course,
-            &selected_tile,
-        );
-    }
-    if mouse_button_input.pressed(MouseButton::Right) {
-        send_despawn_tile(window, &camera_query, despawn_tile_events, &course);
+        let window = windows.get_primary().unwrap();
+        if mouse_button_input.pressed(MouseButton::Left) {
+            send_spawn_tile(
+                window,
+                &camera_query,
+                spawn_tile_events,
+                &course,
+                &selected_tile,
+            );
+        }
+        if mouse_button_input.pressed(MouseButton::Right) {
+            send_despawn_tile(window, &camera_query, despawn_tile_events, &course);
+        }
     }
 }
 
