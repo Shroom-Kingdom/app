@@ -1,4 +1,4 @@
-use app_config::{GRID_SIZE, MAX_COURSE_X, MAX_COURSE_Y, RAPIER_SCALE, TILE_GRID_SIZE, TILE_SIZE};
+use app_config::{GRID_SIZE, MAX_COURSE_X, MAX_COURSE_Y, RAPIER_SCALE, TILE_SIZE};
 use app_core::GameModeToggleEvent;
 use bevy::prelude::*;
 
