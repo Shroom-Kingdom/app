@@ -37,8 +37,11 @@ pub fn setup(
     commands
         .spawn()
         .insert(RigidBody::KinematicVelocityBased)
-        .insert(Transform::from_xyz(world_pos.x, world_pos.y, 0.))
-        .insert(GlobalTransform::default())
+        .insert_bundle(TransformBundle::from(Transform::from_xyz(
+            world_pos.x,
+            world_pos.y,
+            0.,
+        )))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity::default())
         .insert(PlayerVelocity::default())

@@ -158,8 +158,11 @@ impl Course {
         let mut entity_commands = commands.spawn();
         entity_commands
             .insert(RigidBody::Fixed)
-            .insert(Transform::from_xyz(world_pos.x, world_pos.y, 0.))
-            .insert(GlobalTransform::default());
+            .insert_bundle(TransformBundle::from(Transform::from_xyz(
+                world_pos.x,
+                world_pos.y,
+                0.,
+            )));
         entity_commands.with_children(|parent| {
             parent
                 .spawn()
@@ -195,18 +198,21 @@ impl Course {
             } else {
                 TextureAtlasSprite::new(tile_variant.get_sprite_sheet_index())
             };
+            parent.spawn().insert_bundle(SpriteSheetBundle {
+                transform: Transform {
+                    scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+                    ..Default::default()
+                },
+                texture_atlas: self.texture_atlas_handle.clone(),
+                sprite,
+                ..Default::default()
+            });
             parent
                 .spawn()
-                .insert_bundle(SpriteSheetBundle {
-                    transform: Transform {
-                        scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
-                        ..Default::default()
-                    },
-                    texture_atlas: self.texture_atlas_handle.clone(),
-                    sprite,
-                    ..Default::default()
-                })
-                .insert(Collider::cuboid(TILE_GRID_SIZE, TILE_GRID_SIZE))
+                .insert(Collider::cuboid(
+                    TILE_GRID_SIZE * TILE_SIZE,
+                    TILE_GRID_SIZE * TILE_SIZE,
+                ))
                 .insert(Friction::new(0.));
         });
         if let Some(surrounding_matrix) = surrounding_matrix {
