@@ -5,7 +5,9 @@ mod game_mode;
 mod player_sprites;
 
 pub use course::{
-    sprites::{ThemeSpriteHandles, TileSpriteHandles, UiButtonSpriteHandles},
+    sprites::{
+        ThemeSpriteHandles, TileSpriteHandles, TileSpriteHandlesTransparent, UiButtonSpriteHandles,
+    },
     theme::ThemeVariant,
     tile::{GroundSurroundingMatrix, GroundVariant, SelectedTile, Tile, TileVariant},
     ui_button::UiButtonVariant,
@@ -28,6 +30,7 @@ impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerSpriteHandles>()
             .init_resource::<TileSpriteHandles>()
+            .init_resource::<TileSpriteHandlesTransparent>()
             .init_resource::<ThemeSpriteHandles>()
             .init_resource::<UiButtonSpriteHandles>()
             .init_resource::<SelectedTile>()
@@ -86,16 +89,29 @@ pub fn grid_to_world(grid_pos: &[i32; 2]) -> Vec2 {
 fn check_textures(
     mut state: ResMut<State<AppState>>,
     player_sprite_handles: Res<PlayerSpriteHandles>,
-    course_sprite_handles: Res<TileSpriteHandles>,
+    tile_sprite_handles: Res<TileSpriteHandles>,
+    tile_sprite_handles_transparent: Res<TileSpriteHandlesTransparent>,
     theme_sprite_handles: Res<ThemeSpriteHandles>,
     ui_button_sprite_handles: Res<UiButtonSpriteHandles>,
     asset_server: Res<AssetServer>,
 ) {
-    if let (LoadState::Loaded, LoadState::Loaded, LoadState::Loaded, LoadState::Loaded) = (
+    if let (
+        LoadState::Loaded,
+        LoadState::Loaded,
+        LoadState::Loaded,
+        LoadState::Loaded,
+        LoadState::Loaded,
+    ) = (
         asset_server
             .get_group_load_state(player_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
         asset_server
-            .get_group_load_state(course_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
+            .get_group_load_state(tile_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
+        asset_server.get_group_load_state(
+            tile_sprite_handles_transparent
+                .0
+                .iter()
+                .map(|(_, handle)| handle.id),
+        ),
         asset_server
             .get_group_load_state(theme_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
         asset_server.get_group_load_state(
