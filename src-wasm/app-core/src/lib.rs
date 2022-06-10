@@ -5,11 +5,15 @@ mod game_mode;
 mod player_sprites;
 
 pub use course::{
+    get_surrounding_matrix,
     sprites::{
         ThemeSpriteHandles, TileSpriteHandles, TileSpriteHandlesTransparent, UiButtonSpriteHandles,
     },
     theme::ThemeVariant,
-    tile::{GroundSurroundingMatrix, GroundVariant, SelectedTile, Tile, TileVariant},
+    tile::{
+        GroundSurroundingMatrix, GroundVariant, SelectedTile, Tile, TilePlacePreview, TilePreview,
+        TileVariant,
+    },
     ui_button::UiButtonVariant,
     Course,
 };
@@ -34,6 +38,7 @@ impl Plugin for CorePlugin {
             .init_resource::<ThemeSpriteHandles>()
             .init_resource::<UiButtonSpriteHandles>()
             .init_resource::<SelectedTile>()
+            .insert_resource(TilePlacePreview(None))
             .add_event::<GameModeToggleEvent>()
             .add_stage_after(
                 CoreStage::First,

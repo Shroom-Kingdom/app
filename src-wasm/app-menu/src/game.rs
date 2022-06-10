@@ -1,7 +1,7 @@
 use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR, TILE_SIZE};
 use app_core::{
-    Course, GameMode, GameModeToggleEvent, GroundVariant, SelectedTile, TileSpriteHandles,
-    TileVariant, UiButtonSpriteHandles, UiButtonVariant,
+    Course, GameMode, GameModeToggleEvent, GroundVariant, SelectedTile, TilePlacePreview,
+    TileSpriteHandles, TileVariant, UiButtonSpriteHandles, UiButtonVariant,
 };
 use bevy::{prelude::*, ui::FocusPolicy};
 
@@ -183,6 +183,8 @@ pub fn select_tile(
     >,
     mut selected_tile: ResMut<SelectedTile>,
     mut select_tile_event: EventWriter<SelectTileEvent>,
+    mut tile_place_preview: ResMut<TilePlacePreview>,
+    mut commands: Commands,
 ) {
     for (entity, interaction, tile_variant, mut color, mut is_selected) in query.iter_mut() {
         if *interaction == Interaction::Clicked {
@@ -190,6 +192,11 @@ pub fn select_tile(
             *color = SELECTED_BUTTON_COLOR.into();
             is_selected.0 = true;
             select_tile_event.send(SelectTileEvent(entity));
+
+            if let Some((entity, _)) = tile_place_preview.0 {
+                commands.entity(entity).despawn_recursive();
+                tile_place_preview.0 = None;
+            }
         }
     }
 }
@@ -224,6 +231,8 @@ pub fn toggle_game_mode(
     mut course: ResMut<Course>,
     mut game_mode_toggle_event: EventWriter<GameModeToggleEvent>,
     ui_button_sprite_handles: Res<UiButtonSpriteHandles>,
+    mut tile_place_preview: ResMut<TilePlacePreview>,
+    mut commands: Commands,
 ) {
     for (interaction, mut button) in query.iter_mut() {
         if *interaction == Interaction::Clicked {
@@ -246,6 +255,11 @@ pub fn toggle_game_mode(
                 } else {
                     Display::None
                 };
+            }
+
+            if let Some((entity, _)) = tile_place_preview.0 {
+                commands.entity(entity).despawn_recursive();
+                tile_place_preview.0 = None;
             }
         }
     }

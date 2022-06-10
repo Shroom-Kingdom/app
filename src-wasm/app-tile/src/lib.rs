@@ -1,9 +1,15 @@
-use app_config::{GRID_SIZE, RAPIER_SCALE};
-use app_core::{AppState, Course, GameMode, SelectedTile, TileVariant};
+use app_config::{GRID_SIZE, MAX_COURSE_X, MAX_COURSE_Y, RAPIER_SCALE, TILE_SIZE};
+use app_core::{
+    get_surrounding_matrix, grid_to_world, AppState, Course, GameMode, GroundSurroundingMatrix,
+    GroundVariant, SelectedTile, TilePlacePreview, TilePreview, TileVariant,
+};
 use bevy::{
     prelude::*,
     render::{camera::Camera, primitives::Frustum},
 };
+use bevy_rapier::prelude::RigidBody;
+use either::Either;
+use std::cell::RefCell;
 
 pub struct SpawnTileEvent {
     pub tile_variant: TileVariant,
@@ -22,7 +28,9 @@ impl Plugin for TilePlugin {
             .add_event::<DespawnTileEvent>()
             .add_system_set_to_stage(
                 CoreStage::PostUpdate,
-                SystemSet::on_update(AppState::Game).with_system(spawn_tile),
+                SystemSet::on_update(AppState::Game)
+                    .with_system(spawn_tile)
+                    .with_system(spawn_tile_preview),
             );
     }
 }
@@ -99,6 +107,100 @@ fn send_despawn_tile(
     let grid_pos = cursor_to_grid(cursor_position, camera_query, window);
     if course.tiles.contains_key(&grid_pos) {
         despawn_tile_events.send(DespawnTileEvent { grid_pos });
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::type_complexity)]
+fn spawn_tile_preview(
+    mut cursor_events: EventReader<CursorMoved>,
+    windows: Res<Windows>,
+    camera_query: Query<(&Transform, &Camera), With<Frustum>>,
+    course: Res<Course>,
+    mut commands: Commands,
+    selected_tile: Res<SelectedTile>,
+    mut tile_place_preview: ResMut<TilePlacePreview>,
+    mut query: Query<
+        (&mut Transform, &mut TextureAtlasSprite),
+        (With<TilePreview>, Without<Frustum>),
+    >,
+) {
+    if let Some(tile_variant) = &selected_tile.0 {
+        if let GameMode::Build { is_editing: true } = course.game_mode {
+            let window = windows.get_primary().unwrap();
+            for cursor_moved in cursor_events.iter() {
+                let grid_pos = cursor_to_grid(cursor_moved.position, &camera_query, window);
+
+                if grid_pos[0] < 0
+                    || grid_pos[1] < 0
+                    || grid_pos[0] >= MAX_COURSE_X
+                    || grid_pos[1] >= MAX_COURSE_Y
+                {
+                    if let Some((entity, _)) = tile_place_preview.0 {
+                        commands.entity(entity).despawn_recursive();
+                        tile_place_preview.0 = None;
+                    }
+                } else if course.tiles.get(&grid_pos).is_none() {
+                    let world_pos = grid_to_world(&grid_pos);
+                    let surrounding_matrix = if let TileVariant::Ground(_) = tile_variant {
+                        let surrounding_matrix = get_surrounding_matrix(
+                            &grid_pos,
+                            RefCell::new(Either::Left(&course.tiles)),
+                        );
+                        Some(GroundSurroundingMatrix(surrounding_matrix))
+                    } else {
+                        None
+                    };
+                    if let Some((entity, tile_pos)) = &mut tile_place_preview.0 {
+                        if *tile_pos != grid_pos {
+                            let mut transform =
+                                query.get_component_mut::<Transform>(*entity).unwrap();
+                            transform.translation.x = world_pos.x;
+                            transform.translation.y = world_pos.y;
+                            *tile_pos = grid_pos;
+                            if let Some(surrounding_matrix) = surrounding_matrix {
+                                let sprite = TextureAtlasSprite::new(
+                                    GroundVariant::from_surrounding_matrix(&surrounding_matrix.0)
+                                        .get_sprite_sheet_index(),
+                                );
+                                let mut texture_atlas_sprite = query
+                                    .get_component_mut::<TextureAtlasSprite>(*entity)
+                                    .unwrap();
+                                *texture_atlas_sprite = sprite;
+                            }
+                        }
+                    } else {
+                        let sprite = if let Some(surrounding_matrix) = &surrounding_matrix {
+                            TextureAtlasSprite::new(
+                                GroundVariant::from_surrounding_matrix(&surrounding_matrix.0)
+                                    .get_sprite_sheet_index(),
+                            )
+                        } else {
+                            TextureAtlasSprite::new(tile_variant.get_sprite_sheet_index())
+                        };
+                        let entity = commands
+                            .spawn()
+                            .insert(RigidBody::Fixed)
+                            .insert_bundle(SpriteSheetBundle {
+                                transform: Transform {
+                                    translation: Vec3::new(world_pos.x, world_pos.y, 0.),
+                                    scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+                                    ..Default::default()
+                                },
+                                texture_atlas: course.texture_atlas_handle_transparent.clone(),
+                                sprite,
+                                ..Default::default()
+                            })
+                            .insert(TilePreview)
+                            .id();
+                        tile_place_preview.0 = Some((entity, grid_pos));
+                    }
+                } else if let Some((entity, _)) = tile_place_preview.0 {
+                    commands.entity(entity).despawn_recursive();
+                    tile_place_preview.0 = None;
+                }
+            }
+        }
     }
 }
 

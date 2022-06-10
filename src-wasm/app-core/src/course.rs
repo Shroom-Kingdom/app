@@ -13,11 +13,14 @@ use app_config::{
 };
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{geometry::Friction, prelude::*};
+use either::Either;
+use std::cell::RefCell;
 
 #[derive(Debug, TypeUuid)]
 #[uuid = "81a23571-1f35-4f20-b1ea-30e5c2612049"]
 pub struct Course {
     pub texture_atlas_handle: Handle<TextureAtlas>,
+    pub texture_atlas_handle_transparent: Handle<TextureAtlas>,
     pub tiles: HashMap<[i32; 2], Tile>,
     pub theme: ThemeVariant,
     pub game_mode: GameMode,
@@ -33,8 +36,14 @@ impl Course {
         let texture_handle = asset_server.load(&format!("MW_Field_{}_0.png", theme.get_name()));
         let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
         let texture_atlas_handle = texture_atlases.add(texture_atlas);
+        let texture_handle_transparent =
+            asset_server.load(&format!("0MW_Field_{}_0.png", theme.get_name()));
+        let texture_atlas_transparent =
+            TextureAtlas::from_grid(texture_handle_transparent, Vec2::new(16.0, 16.0), 16, 48);
+        let texture_atlas_handle_transparent = texture_atlases.add(texture_atlas_transparent);
         let mut course = Course {
             texture_atlas_handle,
+            texture_atlas_handle_transparent,
             tiles: HashMap::default(),
             theme,
             game_mode: GameMode::Build { is_editing: true },
@@ -114,42 +123,10 @@ impl Course {
         let surrounding_matrix = if let Some(surrounding_matrix) = surrounding_matrix {
             Some(GroundSurroundingMatrix(surrounding_matrix))
         } else if let TileVariant::Ground(_) = tile_variant {
-            let mut surrounding_matrix = [
-                [false, false, false],
-                [false, false, false],
-                [false, false, false],
-            ];
-            for x in grid_pos[0] - 1..=grid_pos[0] + 1 {
-                for y in grid_pos[1] - 1..=grid_pos[1] + 1 {
-                    let pos = [x, y];
-                    if &pos == grid_pos {
-                        continue;
-                    }
-                    if x < 0 || y < 0 {
-                        surrounding_matrix[(grid_pos[1] - y + 1) as usize]
-                            [(x - grid_pos[0] + 1) as usize] = true;
-                        continue;
-                    }
-                    if let Some(Tile {
-                        entity,
-                        variant: TileVariant::Ground(ground_variant),
-                    }) = self.tiles.get_mut(&pos)
-                    {
-                        surrounding_matrix[(grid_pos[1] - y + 1) as usize]
-                            [(x - grid_pos[0] + 1) as usize] = true;
-                        if let Some(queries) = &mut queries {
-                            let (children, mut mtrx) = queries.0.get_mut(*entity).unwrap();
-                            mtrx.0[(y - grid_pos[1] + 1) as usize]
-                                [(grid_pos[0] - x + 1) as usize] = true;
-                            let child = children[1];
-                            *ground_variant = GroundVariant::from_surrounding_matrix(&mtrx.0);
-                            let mut sprite = queries.1.get_mut(child).unwrap();
-                            *sprite =
-                                TextureAtlasSprite::new(ground_variant.get_sprite_sheet_index());
-                        }
-                    }
-                }
-            }
+            let surrounding_matrix = get_surrounding_matrix(
+                grid_pos,
+                RefCell::new(Either::Right((&mut self.tiles, &mut queries))),
+            );
             Some(GroundSurroundingMatrix(surrounding_matrix))
         } else {
             None
@@ -227,4 +204,69 @@ impl Course {
         };
         self.tiles.insert(*grid_pos, tile);
     }
+}
+
+#[allow(clippy::type_complexity)]
+pub fn get_surrounding_matrix(
+    grid_pos: &[i32; 2],
+    tiles: RefCell<
+        Either<
+            &HashMap<[i32; 2], Tile>,
+            (
+                &mut HashMap<[i32; 2], Tile>,
+                &mut Option<(
+                    &mut Query<(&Children, &mut GroundSurroundingMatrix)>,
+                    &mut Query<&mut TextureAtlasSprite>,
+                )>,
+            ),
+        >,
+    >,
+) -> [[bool; 3]; 3] {
+    let mut surrounding_matrix = [
+        [false, false, false],
+        [false, false, false],
+        [false, false, false],
+    ];
+    for x in grid_pos[0] - 1..=grid_pos[0] + 1 {
+        for y in grid_pos[1] - 1..=grid_pos[1] + 1 {
+            let pos = [x, y];
+            if &pos == grid_pos {
+                continue;
+            }
+            if x < 0 || y < 0 {
+                surrounding_matrix[(grid_pos[1] - y + 1) as usize]
+                    [(x - grid_pos[0] + 1) as usize] = true;
+                continue;
+            }
+            match &mut *tiles.borrow_mut() {
+                Either::Left(tiles) => {
+                    if tiles.get(&pos).is_some() {
+                        surrounding_matrix[(grid_pos[1] - y + 1) as usize]
+                            [(x - grid_pos[0] + 1) as usize] = true;
+                    }
+                }
+                Either::Right((tiles, queries)) => {
+                    if let Some(Tile {
+                        entity,
+                        variant: TileVariant::Ground(ground_variant),
+                    }) = tiles.get_mut(&pos)
+                    {
+                        surrounding_matrix[(grid_pos[1] - y + 1) as usize]
+                            [(x - grid_pos[0] + 1) as usize] = true;
+                        if let Some(queries) = queries {
+                            let (children, mut mtrx) = queries.0.get_mut(*entity).unwrap();
+                            mtrx.0[(y - grid_pos[1] + 1) as usize]
+                                [(grid_pos[0] - x + 1) as usize] = true;
+                            let child = children[1];
+                            *ground_variant = GroundVariant::from_surrounding_matrix(&mtrx.0);
+                            let mut sprite = queries.1.get_mut(child).unwrap();
+                            *sprite =
+                                TextureAtlasSprite::new(ground_variant.get_sprite_sheet_index());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    surrounding_matrix
 }

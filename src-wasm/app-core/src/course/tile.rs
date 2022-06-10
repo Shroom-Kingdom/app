@@ -1,6 +1,11 @@
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 
+#[derive(Component)]
+pub struct TilePreview;
+
+pub struct TilePlacePreview(pub Option<(Entity, [i32; 2])>);
+
 #[derive(Clone, Debug)]
 pub struct Tile {
     pub entity: Entity,
