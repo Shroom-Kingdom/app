@@ -9,6 +9,18 @@
 		return false;
 	};
 
+	disableChromePerformanceBloat();
+
+	// https://github.com/bevyengine/bevy/issues/4851
+	function disableChromePerformanceBloat() {
+		if (performance.clearMeasures) {
+			performance.clearMeasures();
+		}
+		if (performance.clearMarks) {
+			performance.clearMarks();
+		}
+	}
+
 	let assetData: Uint8Array | null = null;
 	assets.subscribe(data => {
 		if (!data) return;
