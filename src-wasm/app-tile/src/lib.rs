@@ -153,20 +153,23 @@ fn spawn_tile_preview(
                     };
                     if let Some((entity, tile_pos)) = &mut tile_place_preview.0 {
                         if *tile_pos != grid_pos {
-                            let mut transform =
-                                query.get_component_mut::<Transform>(*entity).unwrap();
-                            transform.translation.x = world_pos.x;
-                            transform.translation.y = world_pos.y;
-                            *tile_pos = grid_pos;
-                            if let Some(surrounding_matrix) = surrounding_matrix {
-                                let sprite = TextureAtlasSprite::new(
-                                    GroundVariant::from_surrounding_matrix(&surrounding_matrix.0)
+                            if let Ok(mut transform) = query.get_component_mut::<Transform>(*entity)
+                            {
+                                transform.translation.x = world_pos.x;
+                                transform.translation.y = world_pos.y;
+                                *tile_pos = grid_pos;
+                                if let Some(surrounding_matrix) = surrounding_matrix {
+                                    let sprite = TextureAtlasSprite::new(
+                                        GroundVariant::from_surrounding_matrix(
+                                            &surrounding_matrix.0,
+                                        )
                                         .get_sprite_sheet_index(),
-                                );
-                                let mut texture_atlas_sprite = query
-                                    .get_component_mut::<TextureAtlasSprite>(*entity)
-                                    .unwrap();
-                                *texture_atlas_sprite = sprite;
+                                    );
+                                    let mut texture_atlas_sprite = query
+                                        .get_component_mut::<TextureAtlasSprite>(*entity)
+                                        .unwrap();
+                                    *texture_atlas_sprite = sprite;
+                                }
                             }
                         }
                     } else {
