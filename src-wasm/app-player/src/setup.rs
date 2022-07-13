@@ -45,10 +45,10 @@ pub fn setup(
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity::default())
         .insert(PlayerVelocity::default())
-        .insert(MassProperties::from_rapier(
-            bevy_rapier::rapier::prelude::MassProperties::from_ball(10., 10.),
+        .insert(ReadMassProperties(MassProperties::from_rapier(
+            bevy_rapier::rapier::prelude::MassProperties::from_ball(100., 100.),
             RAPIER_SCALE,
-        ))
+        )))
         .insert(Friction {
             combine_rule: CoefficientCombineRule::Multiply,
             ..Default::default()

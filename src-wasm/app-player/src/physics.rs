@@ -26,7 +26,7 @@ pub fn physics(
             &mut WalkAnimationTimer,
             &mut Transform,
             &mut PlayerVelocity,
-            &MassProperties,
+            &ReadMassProperties,
             &Children,
             &Friction,
             &mut GroundIntersections,
@@ -52,6 +52,7 @@ pub fn physics(
         mut ground_intersections,
     )) = query.get_single_mut()
     {
+        // web_sys::console::log_1(&format!("{:?}", rb_mprops).into());
         let child = children.get(1).unwrap();
         let (entity, collider) = child_query.get(*child).unwrap();
         let (ground_friction, ground_colliders) = ground_collision(
@@ -106,10 +107,12 @@ fn collision_detection(
         vel.0,
         collider,
         COLLIDER_MAX_TOI,
-        InteractionGroups::default(),
-        Some(&|collider_entity| {
-            collider_entity != entity && ground_query.get(collider_entity).is_err()
-        }),
+        QueryFilter {
+            predicate: Some(&|collider_entity| {
+                collider_entity != entity && ground_query.get(collider_entity).is_err()
+            }),
+            ..Default::default()
+        },
     ) {
         let mut vel_x = vel.0;
         vel_x.y = 0.;
@@ -122,16 +125,20 @@ fn collision_detection(
                 vel_x,
                 collider,
                 COLLIDER_MAX_TOI,
-                InteractionGroups::default(),
-                Some(&|c| c == collider_entity),
+                QueryFilter {
+                    predicate: Some(&|c| c == collider_entity),
+                    ..Default::default()
+                },
             )
             .is_some()
         {
             if let Some((_, projection)) = ctx.project_point(
                 rb_transform.translation.xy(),
                 true,
-                InteractionGroups::default(),
-                Some(&|c| c == collider_entity),
+                QueryFilter {
+                    predicate: Some(&|c| c == collider_entity),
+                    ..Default::default()
+                },
             ) {
                 rb_transform.translation.x += if rb_transform.translation.x < projection.point.x {
                     -0.02
@@ -151,8 +158,10 @@ fn collision_detection(
                 vel_y,
                 collider,
                 COLLIDER_MAX_TOI,
-                InteractionGroups::default(),
-                Some(&|c| c == collider_entity),
+                QueryFilter {
+                    predicate: Some(&|c| c == collider_entity),
+                    ..Default::default()
+                },
             )
             .is_some()
         {
@@ -180,10 +189,12 @@ fn ground_collision(
         rb_transform.translation.xy(),
         rb_transform.rotation.to_axis_angle().1,
         shape,
-        InteractionGroups::default(),
-        Some(&|collider_entity| {
-            collider_entity != entity && ground_query.get(collider_entity).is_ok()
-        }),
+        QueryFilter {
+            predicate: Some(&|collider_entity| {
+                collider_entity != entity && ground_query.get(collider_entity).is_ok()
+            }),
+            ..Default::default()
+        },
         |collider_entity| {
             let entity = collider_entity;
             let (_, collider_friction) = ground_query.get(collider_entity).unwrap();
@@ -235,8 +246,10 @@ fn set_pos_to_closest_ground_collider(
     if let Some((_, projection)) = ctx.project_point(
         rb_transform.translation.xy(),
         true,
-        InteractionGroups::default(),
-        Some(&|collider_entity| ground_intersections.0.contains(&collider_entity)),
+        QueryFilter {
+            predicate: Some(&|collider_entity| ground_intersections.0.contains(&collider_entity)),
+            ..Default::default()
+        },
     ) {
         rb_transform.translation.y = projection.point.y + 1.9 * RAPIER_SCALE;
     }
@@ -245,7 +258,7 @@ fn set_pos_to_closest_ground_collider(
 fn ground_friction_or_gravity(
     ground_friction: Option<f32>,
     vel: &mut PlayerVelocity,
-    rb_mprops: &MassProperties,
+    rb_mprops: &ReadMassProperties,
 ) {
     if let Some(friction) = ground_friction {
         if vel.0.y < 0. {
@@ -263,7 +276,7 @@ fn ground_friction_or_gravity(
             }
         }
     } else {
-        vel.0.y -= RAPIER_GRAVITY * rb_mprops.into_rapier(RAPIER_SCALE).inv_mass;
+        vel.0.y -= RAPIER_GRAVITY * rb_mprops.0.into_rapier(RAPIER_SCALE).inv_mass;
     }
 }
 

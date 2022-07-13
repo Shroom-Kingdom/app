@@ -143,7 +143,7 @@ impl Course {
         entity_commands.with_children(|parent| {
             parent
                 .spawn()
-                .insert(Sensor(true))
+                .insert(Sensor)
                 .insert(Collider::polyline(
                     vec![
                         Vec2::new(

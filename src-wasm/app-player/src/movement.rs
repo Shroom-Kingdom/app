@@ -31,7 +31,7 @@ pub fn movement(
         (
             &mut Player,
             &mut PlayerVelocity,
-            &MassProperties,
+            &ReadMassProperties,
             &mut Friction,
             &Transform,
             &Children,
@@ -161,16 +161,18 @@ pub fn movement(
                             move_delta,
                             collider,
                             COLLIDER_TOI_THRESHOLD * 10.,
-                            InteractionGroups::default(),
-                            Some(&|collider_entity| {
-                                collider_entity != entity
-                                    && ground_query.get(collider_entity).is_err()
-                            }),
+                            QueryFilter {
+                                predicate: Some(&|collider_entity| {
+                                    collider_entity != entity
+                                        && ground_query.get(collider_entity).is_err()
+                                }),
+                                ..Default::default()
+                            },
                         )
                         .is_none()
                     {
                         vel.0.x += x_axis as f32
-                            * rb_mprops.into_rapier(RAPIER_SCALE).inv_mass
+                            * rb_mprops.0.into_rapier(RAPIER_SCALE).inv_mass
                             * multiplier;
                     }
                 }
