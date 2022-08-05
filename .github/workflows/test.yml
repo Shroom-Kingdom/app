@@ -3,7 +3,7 @@ name: Test
 on: [push]
 
 env:
-  WASM_BINDGEN_VERSION: 0.2.80
+  WASM_BINDGEN_VERSION: 0.2.82
 
 jobs:
   test:
