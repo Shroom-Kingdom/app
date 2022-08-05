@@ -27,7 +27,7 @@ macro_rules! add_tile_button {
                             ..Default::default()
                         },
                         style: Style {
-                            margin: Rect::all(Val::Auto),
+                            margin: UiRect::all(Val::Auto),
                             ..Default::default()
                         },
                         ..Default::default()
@@ -63,13 +63,13 @@ pub fn setup_game_ui(
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
-                margin: Rect {
+                margin: UiRect {
                     top: Val::Px(6.),
                     bottom: Val::Auto,
                     left: Val::Auto,
                     right: Val::Auto,
                 },
-                padding: Rect::all(Val::Px(6.)),
+                padding: UiRect::all(Val::Px(6.)),
                 justify_content: JustifyContent::SpaceBetween,
                 align_items: AlignItems::Center,
                 ..Default::default()
@@ -117,13 +117,13 @@ pub fn setup_game_ui(
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
-                margin: Rect {
+                margin: UiRect {
                     top: Val::Px(6.),
                     bottom: Val::Auto,
                     left: Val::Auto,
                     right: Val::Px(6.),
                 },
-                padding: Rect::all(Val::Px(6.)),
+                padding: UiRect::all(Val::Px(6.)),
                 justify_content: JustifyContent::SpaceBetween,
                 align_items: AlignItems::Center,
                 ..Default::default()
@@ -157,7 +157,7 @@ pub fn setup_game_ui(
                                 ..Default::default()
                             },
                             style: Style {
-                                margin: Rect::all(Val::Auto),
+                                margin: UiRect::all(Val::Auto),
                                 ..Default::default()
                             },
                             ..Default::default()

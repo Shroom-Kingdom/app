@@ -35,11 +35,13 @@ impl Plugin for TilePlugin {
     }
 }
 
+type CameraQuery<'w, 's, 'q> = Query<'w, 's, (&'q Transform, &'q Camera), With<Frustum>>;
+
 #[allow(clippy::too_many_arguments)]
 fn spawn_tile(
     mouse_button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
-    camera_query: Query<(&Transform, &Camera), With<Frustum>>,
+    camera_query: CameraQuery,
     button_query: Query<&Interaction, With<Button>>,
     spawn_tile_events: EventWriter<SpawnTileEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
@@ -70,7 +72,7 @@ fn spawn_tile(
 
 fn send_spawn_tile(
     window: &Window,
-    camera_query: &Query<(&Transform, &Camera), With<Frustum>>,
+    camera_query: &CameraQuery,
     mut spawn_tile_events: EventWriter<SpawnTileEvent>,
     course: &Course,
     selected_tile: &SelectedTile,
@@ -94,7 +96,7 @@ fn send_spawn_tile(
 
 fn send_despawn_tile(
     window: &Window,
-    camera_query: &Query<(&Transform, &Camera), With<Frustum>>,
+    camera_query: &CameraQuery,
     mut despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: &Course,
 ) {
@@ -115,7 +117,7 @@ fn send_despawn_tile(
 fn spawn_tile_preview(
     mut cursor_events: EventReader<CursorMoved>,
     windows: Res<Windows>,
-    camera_query: Query<(&Transform, &Camera), With<Frustum>>,
+    camera_query: CameraQuery,
     course: Res<Course>,
     mut commands: Commands,
     selected_tile: Res<SelectedTile>,
@@ -207,17 +209,13 @@ fn spawn_tile_preview(
     }
 }
 
-fn cursor_to_grid(
-    cursor: Vec2,
-    camera_query: &Query<(&Transform, &Camera), With<Frustum>>,
-    window: &Window,
-) -> [i32; 2] {
+fn cursor_to_grid(cursor: Vec2, camera_query: &CameraQuery, window: &Window) -> [i32; 2] {
     let cursor = cursor / Vec2::new(window.width(), window.height());
 
     let (transform, camera) = camera_query.single();
 
     let camera_position = transform.compute_matrix();
-    let projection_matrix = camera.projection_matrix;
+    let projection_matrix = camera.projection_matrix();
 
     let cursor_ndc = (cursor) * 2.0 - Vec2::from([1.0, 1.0]);
     let cursor_pos_ndc_far = cursor_ndc.extend(1.0);

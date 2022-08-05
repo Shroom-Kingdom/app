@@ -1,4 +1,4 @@
-use crate::graphics::{setup_graphics, setup_resolution_scaling};
+use crate::graphics::{setup_camera, setup_graphics, setup_resolution_scaling};
 use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
 use app_config::RAPIER_SCALE;
 use app_core::{AppState, CorePlugin};
@@ -7,7 +7,7 @@ use app_menu::MenuPlugin;
 use app_player::PlayerPlugin;
 use app_tile::TilePlugin;
 // use app_debug::{DebugPlugin, DebugPluginState};
-use bevy::{input::keyboard::keyboard_input_system, prelude::*};
+use bevy::{input::keyboard::keyboard_input_system, prelude::*, render::texture::ImageSettings};
 use bevy_rapier::{plugin::RapierPhysicsPlugin, prelude::*};
 use wasm_bindgen::prelude::*;
 
@@ -30,6 +30,7 @@ pub fn main(assets: Vec<u8>) {
     // })
     .insert_resource(AssetIoTarConfig(assets))
     .insert_resource(State::new(AppState::Setup))
+    .insert_resource(ImageSettings::default_nearest())
     .add_plugins_with(bevy::DefaultPlugins, |group| {
         group.add_before::<bevy::asset::AssetPlugin, _>(AssetIoTarPlugin)
     })
@@ -43,6 +44,7 @@ pub fn main(assets: Vec<u8>) {
     .add_plugin(CoursePlugin)
     .add_plugin(MenuPlugin)
     // .add_plugin(DebugPlugin)
+    .add_system_set(SystemSet::on_enter(AppState::Menu).with_system(setup_camera))
     .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup_graphics))
     .add_startup_system(setup_resolution_scaling)
     .add_startup_system(keyboard_input_system)

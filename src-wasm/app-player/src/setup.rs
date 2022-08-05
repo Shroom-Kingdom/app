@@ -37,11 +37,11 @@ pub fn setup(
     commands
         .spawn()
         .insert(RigidBody::KinematicVelocityBased)
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(
-            world_pos.x,
-            world_pos.y,
-            0.,
-        )))
+        .insert_bundle(SpatialBundle {
+            transform: Transform::from_xyz(world_pos.x, world_pos.y, 0.),
+            visibility: Visibility { is_visible: true },
+            ..default()
+        })
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity::default())
         .insert(PlayerVelocity::default())

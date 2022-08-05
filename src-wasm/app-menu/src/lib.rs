@@ -81,12 +81,11 @@ fn start_game(
 }
 
 fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn_bundle(UiCameraBundle::default());
     commands
         .spawn_bundle(ButtonBundle {
             style: Style {
                 size: Size::new(Val::Px(150.0), Val::Px(65.0)),
-                margin: Rect::all(Val::Auto),
+                margin: UiRect::all(Val::Auto),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..Default::default()
@@ -98,14 +97,13 @@ fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(MainMenuBuildButton)
         .with_children(|parent| {
             parent.spawn_bundle(TextBundle {
-                text: Text::with_section(
+                text: Text::from_section(
                     "Build",
                     TextStyle {
                         font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                         font_size: 40.0,
                         color: Color::rgb(0.9, 0.9, 0.9),
                     },
-                    Default::default(),
                 ),
                 ..Default::default()
             });

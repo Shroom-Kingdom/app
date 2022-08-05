@@ -35,16 +35,16 @@ impl AssetIo for AssetIoTar {
         self.default_io.read_directory(path)
     }
 
-    fn is_directory(&self, path: &Path) -> bool {
-        self.archive.keys().any(|k| k.starts_with(path))
-    }
-
     fn watch_path_for_changes(&self, path: &Path) -> Result<(), AssetIoError> {
         self.default_io.watch_path_for_changes(path)
     }
 
     fn watch_for_changes(&self) -> Result<(), AssetIoError> {
         self.default_io.watch_for_changes()
+    }
+
+    fn get_metadata(&self, path: &Path) -> Result<bevy::asset::Metadata, AssetIoError> {
+        self.default_io.get_metadata(path)
     }
 }
 
@@ -53,13 +53,6 @@ pub struct AssetIoTarPlugin;
 
 impl Plugin for AssetIoTarPlugin {
     fn build(&self, app: &mut App) {
-        let task_pool = app
-            .world
-            .get_resource::<bevy::tasks::IoTaskPool>()
-            .expect("`IoTaskPool` resource not found.")
-            .0
-            .clone();
-
         let asset_io = {
             let default_io = bevy::asset::create_platform_default_asset_io(app);
 
@@ -84,6 +77,6 @@ impl Plugin for AssetIoTarPlugin {
             }
         };
 
-        app.insert_resource(AssetServer::new(asset_io, task_pool));
+        app.insert_resource(AssetServer::new(asset_io));
     }
 }

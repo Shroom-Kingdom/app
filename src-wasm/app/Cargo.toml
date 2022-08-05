@@ -23,7 +23,7 @@ wee_alloc = "0.4"
 winit = "0.26"
 
 [dependencies.bevy]
-version = "0.7"
+version = "0.8"
 # path = "../../bevy"
 # git = "https://github.com/bevyengine/bevy.git"
 # rev = "a89a954a1706bcffa497309388b993ff82016829"
@@ -33,7 +33,7 @@ features = ["bevy_winit", "png", "render"]
 
 [dependencies.bevy_rapier]
 package = "bevy_rapier2d"
-version = "0.15"
+version = "0.16"
 # path = "../../../bevy_rapier/bevy_rapier2d"
 # git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"
 

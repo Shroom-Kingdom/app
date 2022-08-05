@@ -2,13 +2,20 @@ use app_config::{CAMERA_MIN_X, CAMERA_MIN_Y, CAMERA_SCALE};
 use bevy::{prelude::*, winit::WinitWindows};
 use winit::platform::web::WindowExtWebSys;
 
+pub fn setup_camera(mut commands: Commands) {
+    commands
+        .spawn_bundle(Camera2dBundle {
+            transform: Transform {
+                translation: Vec3::new(CAMERA_MIN_X, CAMERA_MIN_Y, 0.0),
+                scale: Vec3::new(CAMERA_SCALE, CAMERA_SCALE, 1.),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(UiCameraConfig { show_ui: true });
+}
+
 pub fn setup_graphics(mut commands: Commands) {
-    let mut camera = OrthographicCameraBundle::new_2d();
-    camera.transform = Transform {
-        translation: Vec3::new(CAMERA_MIN_X, CAMERA_MIN_Y, 0.0),
-        scale: Vec3::new(CAMERA_SCALE, CAMERA_SCALE, 1.),
-        ..Default::default()
-    };
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_translation(Vec3::new(1000.0, 10.0, 2000.0)),
         point_light: PointLight {
@@ -18,7 +25,6 @@ pub fn setup_graphics(mut commands: Commands) {
         },
         ..Default::default()
     });
-    commands.spawn_bundle(camera);
 }
 
 pub fn setup_resolution_scaling(mut windows: ResMut<Windows>, winit_windows: Res<WinitWindows>) {

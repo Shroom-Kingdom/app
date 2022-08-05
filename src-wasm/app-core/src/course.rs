@@ -132,14 +132,22 @@ impl Course {
             None
         };
 
+        let sprite = if let Some(surrounding_matrix) = &surrounding_matrix {
+            TextureAtlasSprite::new(
+                GroundVariant::from_surrounding_matrix(&surrounding_matrix.0)
+                    .get_sprite_sheet_index(),
+            )
+        } else {
+            TextureAtlasSprite::new(tile_variant.get_sprite_sheet_index())
+        };
         let mut entity_commands = commands.spawn();
         entity_commands
             .insert(RigidBody::Fixed)
-            .insert_bundle(TransformBundle::from(Transform::from_xyz(
-                world_pos.x,
-                world_pos.y,
-                0.,
-            )));
+            .insert_bundle(SpatialBundle {
+                transform: Transform::from_xyz(world_pos.x, world_pos.y, 0.),
+                visibility: Visibility { is_visible: true },
+                ..default()
+            });
         entity_commands.with_children(|parent| {
             parent
                 .spawn()
@@ -167,14 +175,6 @@ impl Course {
                 ))
                 .insert(Friction::new(GROUND_FRICTION))
                 .insert(Ground);
-            let sprite = if let Some(surrounding_matrix) = &surrounding_matrix {
-                TextureAtlasSprite::new(
-                    GroundVariant::from_surrounding_matrix(&surrounding_matrix.0)
-                        .get_sprite_sheet_index(),
-                )
-            } else {
-                TextureAtlasSprite::new(tile_variant.get_sprite_sheet_index())
-            };
             parent.spawn().insert_bundle(SpriteSheetBundle {
                 transform: Transform {
                     scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
