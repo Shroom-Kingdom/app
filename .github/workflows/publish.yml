@@ -28,7 +28,7 @@ jobs:
         name: Install Toolchain
         with:
           profile: minimal
-          toolchain: nightly-2022-06-02
+          toolchain: nightly-2022-08-22
           override: true
 
       - name: Install Rust WebAssembly

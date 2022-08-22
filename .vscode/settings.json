@@ -1,6 +1,7 @@
 {
   "rust-analyzer.diagnostics.disabled": [
     "missing-unsafe",
-    "mismatched-arg-count"
+    "mismatched-arg-count",
+    "unresolved-proc-macro"
   ]
 }
