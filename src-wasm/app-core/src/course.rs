@@ -1,15 +1,17 @@
+pub(crate) mod object;
 pub(crate) mod sprites;
 pub(crate) mod theme;
 pub(crate) mod tile;
 pub(crate) mod ui_button;
 
 use crate::{
-    grid_to_world, GameMode, Ground, GroundSurroundingMatrix, GroundVariant, ThemeVariant, Tile,
-    TileVariant,
+    grid_to_world, grid_to_world_f32, GameMode, Ground, GroundSurroundingMatrix, GroundVariant,
+    ObjectSpriteHandles, ObjectVariant, ThemeVariant, Tile, TileNotEditable, TileVariant,
 };
 use app_config::{
-    GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, GROUND_PADDING, MAX_COURSE_X,
-    MAX_COURSE_Y, RAPIER_SCALE, TILE_COLLIDER_SUB, TILE_GRID_SIZE, TILE_SIZE,
+    GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, GROUND_PADDING,
+    MAX_COURSE_GOAL_OFFSET_X, MAX_COURSE_Y, RAPIER_SCALE, TILE_COLLIDER_SUB, TILE_GRID_SIZE,
+    TILE_SIZE,
 };
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{geometry::Friction, prelude::*};
@@ -24,6 +26,7 @@ pub struct Course {
     pub tiles: HashMap<[i32; 2], Tile>,
     pub theme: ThemeVariant,
     pub game_mode: GameMode,
+    pub goal_pos_x: i32,
 }
 
 impl Course {
@@ -32,6 +35,7 @@ impl Course {
         theme: ThemeVariant,
         asset_server: &AssetServer,
         texture_atlases: &mut Assets<TextureAtlas>,
+        object_sprite_handles: Res<ObjectSpriteHandles>,
     ) -> Self {
         let texture_handle = asset_server.load(&format!("MW_Field_{}_0.png", theme.get_name()));
         let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
@@ -47,6 +51,7 @@ impl Course {
             tiles: HashMap::default(),
             theme,
             game_mode: GameMode::Build { is_editing: true },
+            goal_pos_x: 32,
         };
 
         for x in 0..7 {
@@ -56,6 +61,7 @@ impl Course {
                 &TileVariant::Ground(GroundVariant::Full0),
                 None,
                 Some([[true, true, true], [true, false, true], [true, true, true]]),
+                false,
             );
             course.spawn_tile(
                 commands,
@@ -67,6 +73,7 @@ impl Course {
                     [true, false, true],
                     [true, true, true],
                 ]),
+                false,
             );
         }
         course.spawn_tile(
@@ -79,6 +86,7 @@ impl Course {
                 [true, false, false],
                 [true, true, true],
             ]),
+            false,
         );
         course.spawn_tile(
             commands,
@@ -90,12 +98,16 @@ impl Course {
                 [true, false, false],
                 [true, true, false],
             ]),
+            false,
         );
+
+        course.spawn_goal(commands, object_sprite_handles, course.goal_pos_x);
 
         course
     }
 
     #[allow(clippy::type_complexity)]
+    #[allow(clippy::too_many_arguments)]
     pub fn spawn_tile(
         &mut self,
         commands: &mut Commands,
@@ -106,6 +118,7 @@ impl Course {
             &mut Query<&mut TextureAtlasSprite>,
         )>,
         surrounding_matrix: Option<[[bool; 3]; 3]>,
+        is_editable: bool,
     ) {
         let world_pos = grid_to_world(grid_pos);
         if self.tiles.contains_key(grid_pos) {
@@ -114,7 +127,7 @@ impl Course {
 
         if grid_pos[0] < 0
             || grid_pos[1] < 0
-            || grid_pos[0] > MAX_COURSE_X
+            || grid_pos[0] > self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X
             || grid_pos[1] > MAX_COURSE_Y
         {
             return;
@@ -147,53 +160,56 @@ impl Course {
                 transform: Transform::from_xyz(world_pos.x, world_pos.y, 0.),
                 visibility: Visibility { is_visible: true },
                 ..default()
-            });
-        entity_commands.with_children(|parent| {
-            parent
-                .spawn()
-                .insert(Sensor)
-                .insert(Collider::polyline(
-                    vec![
-                        Vec2::new(
-                            (-TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN) * RAPIER_SCALE
-                                + GROUND_PADDING,
-                            (TILE_SIZE - TILE_COLLIDER_SUB
-                                + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
-                                + 0.02)
-                                * RAPIER_SCALE,
-                        ),
-                        Vec2::new(
-                            (TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN) * RAPIER_SCALE
-                                - GROUND_PADDING,
-                            (TILE_SIZE - TILE_COLLIDER_SUB
-                                + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
-                                + 0.02)
-                                * RAPIER_SCALE,
-                        ),
-                    ],
-                    None,
-                ))
-                .insert(Friction::new(GROUND_FRICTION))
-                .insert(Ground);
-            parent.spawn().insert_bundle(SpriteSheetBundle {
-                transform: Transform {
-                    scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+            })
+            .with_children(|parent| {
+                parent
+                    .spawn()
+                    .insert(Sensor)
+                    .insert(Collider::polyline(
+                        vec![
+                            Vec2::new(
+                                (-TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN) * RAPIER_SCALE
+                                    + GROUND_PADDING,
+                                (TILE_SIZE - TILE_COLLIDER_SUB
+                                    + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
+                                    + 0.02)
+                                    * RAPIER_SCALE,
+                            ),
+                            Vec2::new(
+                                (TILE_SIZE - TILE_COLLIDER_SUB + GRID_MARGIN) * RAPIER_SCALE
+                                    - GROUND_PADDING,
+                                (TILE_SIZE - TILE_COLLIDER_SUB
+                                    + GROUND_MARGIN_MULTIPLIER * GRID_MARGIN
+                                    + 0.02)
+                                    * RAPIER_SCALE,
+                            ),
+                        ],
+                        None,
+                    ))
+                    .insert(Friction::new(GROUND_FRICTION))
+                    .insert(Ground);
+                parent.spawn().insert_bundle(SpriteSheetBundle {
+                    transform: Transform {
+                        scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+                        ..Default::default()
+                    },
+                    texture_atlas: self.texture_atlas_handle.clone(),
+                    sprite,
                     ..Default::default()
-                },
-                texture_atlas: self.texture_atlas_handle.clone(),
-                sprite,
-                ..Default::default()
+                });
+                parent
+                    .spawn()
+                    .insert(Collider::cuboid(
+                        TILE_GRID_SIZE * TILE_SIZE,
+                        TILE_GRID_SIZE * TILE_SIZE,
+                    ))
+                    .insert(Friction::new(0.));
             });
-            parent
-                .spawn()
-                .insert(Collider::cuboid(
-                    TILE_GRID_SIZE * TILE_SIZE,
-                    TILE_GRID_SIZE * TILE_SIZE,
-                ))
-                .insert(Friction::new(0.));
-        });
         if let Some(surrounding_matrix) = surrounding_matrix {
             entity_commands.insert(surrounding_matrix);
+        }
+        if !is_editable {
+            entity_commands.insert(TileNotEditable);
         }
 
         let entity = entity_commands.id();
@@ -203,6 +219,108 @@ impl Course {
             variant: tile_variant.clone(),
         };
         self.tiles.insert(*grid_pos, tile);
+    }
+
+    pub fn spawn_goal(
+        &mut self,
+        commands: &mut Commands,
+        object_sprite_handles: Res<ObjectSpriteHandles>,
+        pos_x: i32,
+    ) {
+        for x in (pos_x + 1)..(pos_x + MAX_COURSE_GOAL_OFFSET_X) {
+            self.spawn_tile(
+                commands,
+                &[x, 0],
+                &TileVariant::Ground(GroundVariant::Full0),
+                None,
+                Some([[true, true, true], [true, false, true], [true, true, true]]),
+                false,
+            );
+            self.spawn_tile(
+                commands,
+                &[x, 1],
+                &TileVariant::Ground(GroundVariant::Top0),
+                None,
+                Some([
+                    [false, false, x == pos_x + MAX_COURSE_GOAL_OFFSET_X - 1],
+                    [true, false, true],
+                    [true, true, true],
+                ]),
+                false,
+            );
+        }
+        self.spawn_tile(
+            commands,
+            &[pos_x, 0],
+            &TileVariant::Ground(GroundVariant::Left0),
+            None,
+            Some([
+                [false, true, true],
+                [false, false, true],
+                [true, true, true],
+            ]),
+            false,
+        );
+        self.spawn_tile(
+            commands,
+            &[pos_x, 1],
+            &TileVariant::Ground(GroundVariant::TopLeft0),
+            None,
+            Some([
+                [false, false, false],
+                [false, false, true],
+                [false, true, true],
+            ]),
+            false,
+        );
+
+        let world_pos = grid_to_world_f32(&[pos_x as f32, 5.5]);
+        let texture = object_sprite_handles
+            .0
+            .get(&ObjectVariant::GoalPoleL)
+            .unwrap()
+            .clone();
+        commands.spawn().insert_bundle(SpriteBundle {
+            texture,
+            transform: Transform {
+                translation: Vec3::new(world_pos.x, world_pos.y, -0.5),
+                scale: Vec3::new(2., 2., 0.),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+
+        let world_pos = grid_to_world_f32(&[pos_x as f32 + 2., 5.5]);
+        let texture = object_sprite_handles
+            .0
+            .get(&ObjectVariant::GoalPoleR)
+            .unwrap()
+            .clone();
+        commands.spawn().insert_bundle(SpriteBundle {
+            texture,
+            transform: Transform {
+                translation: Vec3::new(world_pos.x, world_pos.y, 0.),
+                scale: Vec3::new(2., 2., 0.),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+
+        let world_pos = grid_to_world_f32(&[pos_x as f32 + 1., 5.5]);
+        let texture = object_sprite_handles
+            .0
+            .get(&ObjectVariant::GoalPole)
+            .unwrap()
+            .clone();
+        commands.spawn().insert_bundle(SpriteBundle {
+            texture,
+            transform: Transform {
+                translation: Vec3::new(world_pos.x, world_pos.y, -0.1),
+                scale: Vec3::new(2., 2., 0.),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
     }
 }
 

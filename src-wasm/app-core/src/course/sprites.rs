@@ -2,6 +2,8 @@ use crate::{ThemeVariant, TileVariant, UiButtonVariant};
 use bevy::{prelude::*, utils::HashMap};
 use enum_iterator::all;
 
+use super::object::ObjectVariant;
+
 #[derive(Default)]
 pub struct TileSpriteHandles(pub HashMap<TileVariant, Handle<Image>>);
 
@@ -14,11 +16,15 @@ pub struct ThemeSpriteHandles(pub HashMap<ThemeVariant, Handle<Image>>);
 #[derive(Default)]
 pub struct UiButtonSpriteHandles(pub HashMap<UiButtonVariant, Handle<Image>>);
 
+#[derive(Default)]
+pub struct ObjectSpriteHandles(pub HashMap<ObjectVariant, Handle<Image>>);
+
 pub(crate) fn load_course_sprites(
     mut tile_sprite_handles: ResMut<TileSpriteHandles>,
     mut tile_sprite_handles_transparent: ResMut<TileSpriteHandlesTransparent>,
     mut theme_sprite_handles: ResMut<ThemeSpriteHandles>,
     mut ui_button_sprite_handles: ResMut<UiButtonSpriteHandles>,
+    mut object_sprite_handles: ResMut<ObjectSpriteHandles>,
     asset_server: Res<AssetServer>,
 ) {
     tile_sprite_handles.0 = HashMap::default();
@@ -54,5 +60,14 @@ pub(crate) fn load_course_sprites(
         ui_button_sprite_handles
             .0
             .insert(ui_button_variant, asset_server.load(&name));
+    }
+
+    object_sprite_handles.0 = HashMap::default();
+    for object_variant in all::<ObjectVariant>().collect::<Vec<_>>().into_iter() {
+        let name = object_variant.get_name().to_string();
+        object_sprite_handles.0.insert(
+            object_variant,
+            asset_server.load(&format!("MW_Object_{}_0.png", name)),
+        );
     }
 }

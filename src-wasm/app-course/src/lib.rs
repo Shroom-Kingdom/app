@@ -1,8 +1,8 @@
 mod grid;
 
 use app_core::{
-    AppLabel, AppState, Course, GroundSurroundingMatrix, GroundVariant, SelectedTile,
-    ThemeSpriteHandles, ThemeVariant, Tile, TileVariant,
+    AppLabel, AppState, Course, GroundSurroundingMatrix, GroundVariant, ObjectSpriteHandles,
+    SelectedTile, ThemeSpriteHandles, ThemeVariant, Tile, TileNotEditable, TileVariant,
 };
 use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
@@ -30,18 +30,21 @@ impl Plugin for CoursePlugin {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut selected_tile: ResMut<SelectedTile>,
     theme_sprite_handles: Res<ThemeSpriteHandles>,
+    object_sprite_handles: Res<ObjectSpriteHandles>,
 ) {
     let course = Course::empty(
         &mut commands,
         ThemeVariant::Plain,
         &asset_server,
         &mut texture_atlases,
+        object_sprite_handles,
     );
 
     commands.insert_resource(course);
@@ -91,6 +94,7 @@ fn spawn_tile(
             tile_variant,
             Some((&mut query, &mut child_query)),
             None,
+            true,
         );
     }
 }
@@ -100,10 +104,15 @@ fn despawn_tile(
     mut course: ResMut<Course>,
     mut despawn_tile_events: EventReader<DespawnTileEvent>,
     mut query: Query<(&Children, &mut GroundSurroundingMatrix)>,
+    mut test_query: Query<Entity, Without<TileNotEditable>>,
     mut child_query: Query<&mut TextureAtlasSprite>,
 ) {
     for DespawnTileEvent { grid_pos } in despawn_tile_events.iter() {
         if let Some(tile) = course.tiles.remove(grid_pos) {
+            if test_query.get_mut(tile.entity).is_err() {
+                course.tiles.insert(*grid_pos, tile);
+                return;
+            }
             for x in grid_pos[0] - 1..=grid_pos[0] + 1 {
                 for y in grid_pos[1] - 1..=grid_pos[1] + 1 {
                     let pos = [x, y];
@@ -125,7 +134,6 @@ fn despawn_tile(
                     }
                 }
             }
-            // TODO does not despawn rigid body. bevy_rapier crashes
             commands.entity(tile.entity).despawn_recursive();
         }
     }

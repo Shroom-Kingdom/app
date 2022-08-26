@@ -6,13 +6,15 @@ mod player_sprites;
 
 pub use course::{
     get_surrounding_matrix,
+    object::ObjectVariant,
     sprites::{
-        ThemeSpriteHandles, TileSpriteHandles, TileSpriteHandlesTransparent, UiButtonSpriteHandles,
+        ObjectSpriteHandles, ThemeSpriteHandles, TileSpriteHandles, TileSpriteHandlesTransparent,
+        UiButtonSpriteHandles,
     },
     theme::ThemeVariant,
     tile::{
-        GroundSurroundingMatrix, GroundVariant, SelectedTile, Tile, TilePlacePreview, TilePreview,
-        TileVariant,
+        GroundSurroundingMatrix, GroundVariant, SelectedTile, Tile, TileNotEditable,
+        TilePlacePreview, TilePreview, TileVariant,
     },
     ui_button::UiButtonVariant,
     Course,
@@ -37,6 +39,7 @@ impl Plugin for CorePlugin {
             .init_resource::<TileSpriteHandlesTransparent>()
             .init_resource::<ThemeSpriteHandles>()
             .init_resource::<UiButtonSpriteHandles>()
+            .init_resource::<ObjectSpriteHandles>()
             .init_resource::<SelectedTile>()
             .insert_resource(TilePlacePreview(None))
             .add_event::<GameModeToggleEvent>()
@@ -83,10 +86,21 @@ pub enum PlayerStages {
     StateChange,
 }
 
+#[inline]
+pub fn pos_to_world(pos: i32) -> f32 {
+    pos as f32 * GRID_SIZE * RAPIER_SCALE
+}
+
+#[inline]
 pub fn grid_to_world(grid_pos: &[i32; 2]) -> Vec2 {
+    [pos_to_world(grid_pos[0]), pos_to_world(grid_pos[1])].into()
+}
+
+#[inline]
+pub fn grid_to_world_f32(grid_pos: &[f32; 2]) -> Vec2 {
     [
-        grid_pos[0] as f32 * GRID_SIZE * RAPIER_SCALE,
-        grid_pos[1] as f32 * GRID_SIZE * RAPIER_SCALE,
+        grid_pos[0] * GRID_SIZE * RAPIER_SCALE,
+        grid_pos[1] * GRID_SIZE * RAPIER_SCALE,
     ]
     .into()
 }

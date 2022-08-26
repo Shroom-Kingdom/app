@@ -4,6 +4,9 @@ use enum_iterator::Sequence;
 #[derive(Component)]
 pub struct TilePreview;
 
+#[derive(Component)]
+pub struct TileNotEditable;
+
 pub struct TilePlacePreview(pub Option<(Entity, [i32; 2])>);
 
 #[derive(Clone, Debug)]

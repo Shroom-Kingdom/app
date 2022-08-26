@@ -1,5 +1,6 @@
 use crate::Player;
 use app_config::CAMERA_MIN_X;
+use app_core::{pos_to_world, Course};
 use bevy::{
     prelude::*,
     render::{camera::Camera, primitives::Frustum},
@@ -8,12 +9,17 @@ use bevy::{
 pub fn position_camera(
     mut query: Query<&mut Transform, (With<Camera>, With<Frustum>)>,
     player_query: Query<&Transform, (With<Player>, Without<Camera>)>,
+    course: Res<Course>,
 ) {
     if let Ok(mut transform) = query.get_single_mut() {
         if let Ok(rb_transform) = player_query.get_single() {
-            transform.translation.x = rb_transform.translation.x; // * RAPIER_SCALE;
+            transform.translation.x = rb_transform.translation.x;
             if transform.translation.x < CAMERA_MIN_X {
                 transform.translation.x = CAMERA_MIN_X;
+            }
+            let max_pos_x = pos_to_world(course.goal_pos_x);
+            if transform.translation.x > max_pos_x {
+                transform.translation.x = max_pos_x;
             }
         }
     }
