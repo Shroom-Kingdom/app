@@ -1,6 +1,6 @@
 mod game;
 
-use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR};
+use app_config::*;
 use app_core::{AppLabel, AppState, PlayerStages, SelectedTile, TileVariant};
 use bevy::prelude::*;
 use game::{change_after_tile_select, select_tile, toggle_game_mode, SelectTileEvent};

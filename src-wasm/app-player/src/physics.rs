@@ -1,8 +1,5 @@
 use crate::{Player, WalkAnimationTimer};
-use app_config::{
-    COLLIDER_MAX_TOI, GROUND_FRICTION_KINETIC_MULTIPLIER, GROUND_FRICTION_MIN_VEL,
-    GROUND_FRICTION_STATIC_MULTIPLIER, RAPIER_GRAVITY, RAPIER_SCALE,
-};
+use app_config::*;
 use app_core::{Course, GameMode, Ground};
 use bevy::{math::Vec3Swizzles, prelude::*, utils::HashSet};
 use bevy_rapier::prelude::*;

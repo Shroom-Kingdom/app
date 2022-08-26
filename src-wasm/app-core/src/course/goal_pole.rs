@@ -1,8 +1,8 @@
 use crate::{
-    grid_to_world_f32, pos_to_world, Course, GroundVariant, ObjectSpriteHandles, ObjectVariant,
-    TileVariant,
+    grid_to_world, grid_to_world_f32, pos_to_world, Course, Draggable, GroundVariant,
+    ObjectSpriteHandles, ObjectVariant, TileVariant,
 };
-use app_config::MAX_COURSE_GOAL_OFFSET_X;
+use app_config::*;
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -17,6 +17,7 @@ impl Course {
     pub fn spawn_goal(
         &mut self,
         commands: &mut Commands,
+        asset_server: &AssetServer,
         object_sprite_handles: Res<ObjectSpriteHandles>,
         pos_x: i32,
     ) {
@@ -78,7 +79,7 @@ impl Course {
             .insert_bundle(SpriteBundle {
                 texture,
                 transform: Transform {
-                    translation: Vec3::new(world_pos.x, world_pos.y, -0.5),
+                    translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_GOAL_L),
                     scale: Vec3::new(2., 2., 0.),
                     ..Default::default()
                 },
@@ -97,7 +98,7 @@ impl Course {
             .insert_bundle(SpriteBundle {
                 texture,
                 transform: Transform {
-                    translation: Vec3::new(world_pos.x, world_pos.y, 0.),
+                    translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_GOAL_R),
                     scale: Vec3::new(2., 2., 0.),
                     ..Default::default()
                 },
@@ -116,13 +117,29 @@ impl Course {
             .insert_bundle(SpriteBundle {
                 texture,
                 transform: Transform {
-                    translation: Vec3::new(world_pos.x, world_pos.y, -0.1),
+                    translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_GOAL),
                     scale: Vec3::new(2., 2., 0.),
                     ..Default::default()
                 },
                 ..Default::default()
             })
             .insert(GoalPole(pos_x + 1));
+
+        let world_pos = grid_to_world(&[pos_x + 1, 1]);
+        let texture = asset_server.load("icons/leftright.png");
+        commands
+            .spawn()
+            .insert_bundle(SpriteBundle {
+                texture,
+                transform: Transform {
+                    translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_GOAL_DRAG),
+                    scale: Vec3::new(0.07, 0.07, 0.),
+                    ..Default::default()
+                },
+                ..default()
+            })
+            .insert(GoalPole(pos_x + 1))
+            .insert(Draggable);
     }
 }
 

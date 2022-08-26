@@ -1,5 +1,5 @@
 use crate::{GroundIntersections, Player, PlayerState, PlayerVelocity, WalkAnimationTimer};
-use app_config::{PLAYER_COLLIDER_BORDER_RADIUS, RAPIER_GRAVITY, RAPIER_SCALE};
+use app_config::*;
 use app_core::{grid_to_world, PlayerFrame, PlayerSpriteHandles};
 use bevy::{prelude::*, sprite::TextureAtlasBuilder};
 use bevy_rapier::prelude::*;
@@ -38,7 +38,7 @@ pub fn setup(
         .spawn()
         .insert(RigidBody::KinematicVelocityBased)
         .insert_bundle(SpatialBundle {
-            transform: Transform::from_xyz(world_pos.x, world_pos.y, 0.),
+            transform: Transform::from_xyz(world_pos.x, world_pos.y, Z_INDEX_PLAYER),
             visibility: Visibility { is_visible: true },
             ..default()
         })
@@ -57,8 +57,8 @@ pub fn setup(
         .with_children(|parent| {
             parent.spawn_bundle(SpriteSheetBundle {
                 transform: Transform {
-                    scale: Vec3::new(scale_size, scale_size, 1.),
                     translation: Vec3::new(0., 6. * scale_size, 0.),
+                    scale: Vec3::new(scale_size, scale_size, 1.),
                     ..Default::default()
                 },
                 sprite: TextureAtlasSprite::new(wait_index),

@@ -1,9 +1,5 @@
 use crate::{Player, PlayerState, PlayerStateEnum, PlayerVelocity};
-use app_config::{
-    COLLIDER_TOI_THRESHOLD, LINVEL_BUILD, LINVEL_CAP_RUN, LINVEL_CAP_STOOP, LINVEL_CAP_WALK,
-    MOVE_IMPULSE_MULTIPLIER_AIR, MOVE_IMPULSE_MULTIPLIER_AIR_RUN, MOVE_IMPULSE_MULTIPLIER_GROUND,
-    MOVE_IMPULSE_MULTIPLIER_GROUND_RUN, RAPIER_SCALE, RUN_THRESHOLD,
-};
+use app_config::*;
 use app_core::{Course, GameMode, Ground};
 use bevy::{math::Vec3Swizzles, prelude::*};
 use bevy_rapier::prelude::*;

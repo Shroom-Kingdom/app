@@ -1,6 +1,8 @@
 mod colors;
+mod z_index;
 
 pub use colors::*;
+pub use z_index::*;
 
 pub const MOVE_IMPULSE_MULTIPLIER_GROUND: f32 = 0.04 * GROUND_FRICTION_MULTIPLIER * RAPIER_GRAVITY;
 pub const MOVE_IMPULSE_MULTIPLIER_GROUND_RUN: f32 =

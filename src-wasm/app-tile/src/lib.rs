@@ -1,4 +1,4 @@
-use app_config::{GRID_SIZE, MAX_COURSE_X, MAX_COURSE_Y, RAPIER_SCALE, TILE_SIZE};
+use app_config::*;
 use app_core::{
     get_surrounding_matrix, grid_to_world, AppState, Course, GameMode, GroundSurroundingMatrix,
     GroundVariant, SelectedTile, TilePlacePreview, TilePreview, TileVariant,
@@ -188,7 +188,7 @@ fn spawn_tile_preview(
                             .insert(RigidBody::Fixed)
                             .insert_bundle(SpriteSheetBundle {
                                 transform: Transform {
-                                    translation: Vec3::new(world_pos.x, world_pos.y, 0.),
+                                    translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_TILE),
                                     scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
                                     ..Default::default()
                                 },

@@ -1,5 +1,5 @@
 use crate::{Player, PlayerStateEnum, PlayerVelocity};
-use app_config::{HIGH_JUMP_TICK, HIGH_JUMP_TICK_WALK, HIGH_JUMP_WALK_THRESHOLD, JUMP_FORCE};
+use app_config::*;
 use bevy::prelude::*;
 
 pub struct JumpEvent {

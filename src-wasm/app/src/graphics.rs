@@ -1,4 +1,4 @@
-use app_config::{CAMERA_MIN_X, CAMERA_MIN_Y, CAMERA_SCALE};
+use app_config::*;
 use bevy::{prelude::*, winit::WinitWindows};
 use winit::platform::web::WindowExtWebSys;
 

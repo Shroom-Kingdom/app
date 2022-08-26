@@ -1,5 +1,6 @@
 mod grid;
 
+use app_config::*;
 use app_core::{
     AppLabel, AppState, Course, GroundSurroundingMatrix, GroundVariant, ObjectSpriteHandles,
     SelectedTile, ThemeSpriteHandles, ThemeVariant, Tile, TileNotEditable, TileVariant,
@@ -66,7 +67,7 @@ fn setup(
                 translation: Vec3::new(
                     scale / 2. * image_size * (i as f32) + offset,
                     image_size,
-                    -1.,
+                    Z_INDEX_BACKGROUND,
                 ),
                 scale: Vec3::new(scale, scale, 0.),
                 ..Default::default()

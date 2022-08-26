@@ -1,4 +1,4 @@
-use app_config::{GRID_SIZE, MAX_COURSE_X, MAX_COURSE_Y, RAPIER_SCALE, TILE_SIZE};
+use app_config::*;
 use app_core::GameModeToggleEvent;
 use bevy::prelude::*;
 
@@ -19,7 +19,7 @@ pub fn setup_grid(mut commands: Commands) {
                         translation: Vec3::new(
                             x as f32 * GRID_SIZE * RAPIER_SCALE + GRID_SIZE * RAPIER_SCALE / 2.,
                             y as f32 * GRID_SIZE * RAPIER_SCALE + GRID_SIZE * RAPIER_SCALE / 2.,
-                            0.,
+                            Z_INDEX_GRID,
                         ),
                         ..default()
                     },

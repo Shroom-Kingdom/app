@@ -9,11 +9,7 @@ use crate::{
     grid_to_world, GameMode, Ground, GroundSurroundingMatrix, GroundVariant, ObjectSpriteHandles,
     ThemeVariant, Tile, TileNotEditable, TileVariant,
 };
-use app_config::{
-    GRID_MARGIN, GROUND_FRICTION, GROUND_MARGIN_MULTIPLIER, GROUND_PADDING,
-    MAX_COURSE_GOAL_OFFSET_X, MAX_COURSE_Y, RAPIER_SCALE, TILE_COLLIDER_SUB, TILE_GRID_SIZE,
-    TILE_SIZE,
-};
+use app_config::*;
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{geometry::Friction, prelude::*};
 use either::Either;
@@ -102,7 +98,12 @@ impl Course {
             false,
         );
 
-        course.spawn_goal(commands, object_sprite_handles, course.goal_pos_x);
+        course.spawn_goal(
+            commands,
+            asset_server,
+            object_sprite_handles,
+            course.goal_pos_x,
+        );
 
         course
     }
@@ -158,7 +159,7 @@ impl Course {
         entity_commands
             .insert(RigidBody::Fixed)
             .insert_bundle(SpatialBundle {
-                transform: Transform::from_xyz(world_pos.x, world_pos.y, 0.),
+                transform: Transform::from_xyz(world_pos.x, world_pos.y, Z_INDEX_TILE),
                 visibility: Visibility { is_visible: true },
                 ..default()
             })

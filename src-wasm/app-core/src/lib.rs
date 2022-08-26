@@ -1,6 +1,7 @@
 #![allow(clippy::needless_question_mark)]
 
 mod course;
+mod drag;
 mod game_mode;
 mod player_sprites;
 
@@ -19,10 +20,11 @@ pub use course::{
     ui_button::UiButtonVariant,
     Course,
 };
+pub use drag::{Draggable, Dragging};
 pub use game_mode::{GameMode, GameModeToggleEvent};
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
 
-use app_config::{GRID_SIZE, RAPIER_SCALE};
+use app_config::*;
 use bevy::{asset::LoadState, prelude::*};
 use course::sprites::load_course_sprites;
 use player_sprites::load_player_sprites;
@@ -41,6 +43,7 @@ impl Plugin for CorePlugin {
             .init_resource::<UiButtonSpriteHandles>()
             .init_resource::<ObjectSpriteHandles>()
             .init_resource::<SelectedTile>()
+            .init_resource::<Dragging>()
             .insert_resource(TilePlacePreview(None))
             .add_event::<GameModeToggleEvent>()
             .add_stage_after(

@@ -1,4 +1,4 @@
-use app_config::{HOVERED_BUTTON_COLOR, NORMAL_BUTTON_COLOR, SELECTED_BUTTON_COLOR, TILE_SIZE};
+use app_config::*;
 use app_core::{
     Course, GameMode, GameModeToggleEvent, GroundVariant, SelectedTile, TilePlacePreview,
     TileSpriteHandles, TileVariant, UiButtonSpriteHandles, UiButtonVariant,
