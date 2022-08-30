@@ -7,6 +7,3 @@ use wasm_bindgen::prelude::*;
 pub fn setup_panic_hook() {
     console_error_panic_hook::set_once();
 }
-
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
