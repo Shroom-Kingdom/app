@@ -163,7 +163,8 @@ pub fn movement(
                                         && ground_query.get(collider_entity).is_err()
                                 }),
                                 ..Default::default()
-                            },
+                            }
+                            .exclude_sensors(),
                         )
                         .is_none()
                     {

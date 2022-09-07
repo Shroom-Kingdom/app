@@ -4,6 +4,7 @@ use crate::{
 };
 use app_config::*;
 use bevy::prelude::*;
+use bevy_rapier::prelude::*;
 
 #[derive(Component)]
 pub struct GoalPole(i32);
@@ -126,18 +127,31 @@ impl Course {
             .insert(GoalPole(pos_x + 1));
 
         let world_pos = grid_to_world(&[pos_x + 1, 1]);
+        web_sys::console::log_1(&format!("GOAL {:?}", world_pos).into());
         let texture = asset_server.load("icons/leftright.png");
         commands
             .spawn()
-            .insert_bundle(SpriteBundle {
-                texture,
-                transform: Transform {
-                    translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_GOAL_DRAG),
-                    scale: Vec3::new(0.07, 0.07, 0.),
-                    ..Default::default()
-                },
+            .insert(RigidBody::Fixed)
+            .insert_bundle(SpatialBundle {
+                transform: Transform::from_xyz(world_pos.x, world_pos.y, Z_INDEX_GOAL_DRAG),
+                visibility: Visibility { is_visible: true },
                 ..default()
             })
+            .with_children(|parent| {
+                parent.spawn_bundle(SpriteBundle {
+                    texture,
+                    transform: Transform {
+                        scale: Vec3::new(0.07, 0.07, 1.),
+                        ..Default::default()
+                    },
+                    ..default()
+                });
+            })
+            .insert(Collider::cuboid(
+                TILE_GRID_SIZE * TILE_SIZE,
+                TILE_GRID_SIZE * TILE_SIZE,
+            ))
+            .insert(Sensor)
             .insert(GoalPole(pos_x + 1))
             .insert(Draggable);
     }

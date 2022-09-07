@@ -109,7 +109,8 @@ fn collision_detection(
                 collider_entity != entity && ground_query.get(collider_entity).is_err()
             }),
             ..Default::default()
-        },
+        }
+        .exclude_sensors(),
     ) {
         let mut vel_x = vel.0;
         vel_x.y = 0.;
@@ -125,7 +126,8 @@ fn collision_detection(
                 QueryFilter {
                     predicate: Some(&|c| c == collider_entity),
                     ..Default::default()
-                },
+                }
+                .exclude_sensors(),
             )
             .is_some()
         {
@@ -135,7 +137,8 @@ fn collision_detection(
                 QueryFilter {
                     predicate: Some(&|c| c == collider_entity),
                     ..Default::default()
-                },
+                }
+                .exclude_sensors(),
             ) {
                 rb_transform.translation.x += if rb_transform.translation.x < projection.point.x {
                     -0.02
@@ -158,7 +161,8 @@ fn collision_detection(
                 QueryFilter {
                     predicate: Some(&|c| c == collider_entity),
                     ..Default::default()
-                },
+                }
+                .exclude_sensors(),
             )
             .is_some()
         {
@@ -191,7 +195,8 @@ fn ground_collision(
                 collider_entity != entity && ground_query.get(collider_entity).is_ok()
             }),
             ..Default::default()
-        },
+        }
+        .exclude_sensors(),
         |collider_entity| {
             let entity = collider_entity;
             let (_, collider_friction) = ground_query.get(collider_entity).unwrap();
@@ -246,7 +251,8 @@ fn set_pos_to_closest_ground_collider(
         QueryFilter {
             predicate: Some(&|collider_entity| ground_intersections.0.contains(&collider_entity)),
             ..Default::default()
-        },
+        }
+        .exclude_sensors(),
     ) {
         rb_transform.translation.y = projection.point.y + 1.9 * RAPIER_SCALE;
     }

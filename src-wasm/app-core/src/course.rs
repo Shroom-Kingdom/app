@@ -166,7 +166,6 @@ impl Course {
             .with_children(|parent| {
                 parent
                     .spawn()
-                    .insert(Sensor)
                     .insert(Collider::polyline(
                         vec![
                             Vec2::new(

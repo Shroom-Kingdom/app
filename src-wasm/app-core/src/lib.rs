@@ -4,6 +4,7 @@ mod course;
 mod drag;
 mod game_mode;
 mod player_sprites;
+mod utils;
 
 pub use course::{
     get_surrounding_matrix,
@@ -23,10 +24,11 @@ pub use course::{
 pub use drag::{Draggable, Dragging};
 pub use game_mode::{GameMode, GameModeToggleEvent};
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
+pub use utils::*;
 
-use app_config::*;
 use bevy::{asset::LoadState, prelude::*};
 use course::sprites::load_course_sprites;
+use drag::{drag_mouse_button, drag_mouse_motion};
 use player_sprites::load_player_sprites;
 
 #[derive(Component, Debug)]
@@ -66,6 +68,14 @@ impl Plugin for CorePlugin {
             .add_system_set_to_stage(PlayerStages::StateChange, State::<AppState>::get_driver())
             .add_startup_system_to_stage(StartupStage::Startup, load_player_sprites)
             .add_startup_system_to_stage(StartupStage::Startup, load_course_sprites)
+            .add_system_set_to_stage(
+                CoreStage::PreUpdate,
+                SystemSet::on_update(AppState::Game).with_system(drag_mouse_button),
+            )
+            .add_system_set_to_stage(
+                CoreStage::Update,
+                SystemSet::on_update(AppState::Game).with_system(drag_mouse_motion),
+            )
             .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures));
     }
 }
@@ -87,25 +97,6 @@ pub enum PlayerStages {
     PlayerInput,
     PrePhysics,
     StateChange,
-}
-
-#[inline]
-pub fn pos_to_world(pos: i32) -> f32 {
-    pos as f32 * GRID_SIZE * RAPIER_SCALE
-}
-
-#[inline]
-pub fn grid_to_world(grid_pos: &[i32; 2]) -> Vec2 {
-    [pos_to_world(grid_pos[0]), pos_to_world(grid_pos[1])].into()
-}
-
-#[inline]
-pub fn grid_to_world_f32(grid_pos: &[f32; 2]) -> Vec2 {
-    [
-        grid_pos[0] * GRID_SIZE * RAPIER_SCALE,
-        grid_pos[1] * GRID_SIZE * RAPIER_SCALE,
-    ]
-    .into()
 }
 
 fn check_textures(

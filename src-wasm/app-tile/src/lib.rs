@@ -1,12 +1,10 @@
 use app_config::*;
 use app_core::{
-    get_surrounding_matrix, grid_to_world, AppState, Course, GameMode, GroundSurroundingMatrix,
-    GroundVariant, SelectedTile, TilePlacePreview, TilePreview, TileVariant,
+    cursor_to_world, get_surrounding_matrix, grid_to_world, world_to_grid, AppState, Course,
+    Dragging, GameMode, GroundSurroundingMatrix, GroundVariant, MainCameraQuery, SelectedTile,
+    TilePlacePreview, TilePreview, TileVariant,
 };
-use bevy::{
-    prelude::*,
-    render::{camera::Camera, primitives::Frustum},
-};
+use bevy::{prelude::*, render::primitives::Frustum};
 use bevy_rapier::prelude::RigidBody;
 use either::Either;
 use std::cell::RefCell;
@@ -35,24 +33,26 @@ impl Plugin for TilePlugin {
     }
 }
 
-type CameraQuery<'w, 's, 'q> = Query<'w, 's, (&'q Transform, &'q Camera), With<Frustum>>;
-
 #[allow(clippy::too_many_arguments)]
 fn spawn_tile(
     mouse_button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
-    camera_query: CameraQuery,
+    camera_query: MainCameraQuery,
     button_query: Query<&Interaction, With<Button>>,
     spawn_tile_events: EventWriter<SpawnTileEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: Res<Course>,
     selected_tile: Res<SelectedTile>,
+    dragging: Res<Dragging>,
 ) {
     if let GameMode::Build { is_editing: true } = course.game_mode {
         for interaction in button_query.iter() {
             if interaction == &Interaction::Hovered || interaction == &Interaction::Clicked {
                 return;
             }
+        }
+        if dragging.0.is_some() {
+            return;
         }
         let window = windows.get_primary().unwrap();
         if mouse_button_input.pressed(MouseButton::Left) {
@@ -72,7 +72,7 @@ fn spawn_tile(
 
 fn send_spawn_tile(
     window: &Window,
-    camera_query: &CameraQuery,
+    camera_query: &MainCameraQuery,
     mut spawn_tile_events: EventWriter<SpawnTileEvent>,
     course: &Course,
     selected_tile: &SelectedTile,
@@ -83,7 +83,8 @@ fn send_spawn_tile(
         return;
     };
 
-    let grid_pos = cursor_to_grid(cursor_position, camera_query, window);
+    let world_pos = cursor_to_world(cursor_position, camera_query, window);
+    let grid_pos = world_to_grid(&world_pos);
     if let Some(selected_tile) = &selected_tile.0 {
         if !course.tiles.contains_key(&grid_pos) {
             spawn_tile_events.send(SpawnTileEvent {
@@ -96,7 +97,7 @@ fn send_spawn_tile(
 
 fn send_despawn_tile(
     window: &Window,
-    camera_query: &CameraQuery,
+    camera_query: &MainCameraQuery,
     mut despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: &Course,
 ) {
@@ -106,7 +107,8 @@ fn send_despawn_tile(
         return;
     };
 
-    let grid_pos = cursor_to_grid(cursor_position, camera_query, window);
+    let world_pos = cursor_to_world(cursor_position, camera_query, window);
+    let grid_pos = world_to_grid(&world_pos);
     if course.tiles.contains_key(&grid_pos) {
         despawn_tile_events.send(DespawnTileEvent { grid_pos });
     }
@@ -117,7 +119,7 @@ fn send_despawn_tile(
 fn spawn_tile_preview(
     mut cursor_events: EventReader<CursorMoved>,
     windows: Res<Windows>,
-    camera_query: CameraQuery,
+    camera_query: MainCameraQuery,
     course: Res<Course>,
     mut commands: Commands,
     selected_tile: Res<SelectedTile>,
@@ -131,7 +133,8 @@ fn spawn_tile_preview(
         if let GameMode::Build { is_editing: true } = course.game_mode {
             let window = windows.get_primary().unwrap();
             for cursor_moved in cursor_events.iter() {
-                let grid_pos = cursor_to_grid(cursor_moved.position, &camera_query, window);
+                let world_pos = cursor_to_world(cursor_moved.position, &camera_query, window);
+                let grid_pos = world_to_grid(&world_pos);
 
                 if grid_pos[0] < 0
                     || grid_pos[1] < 0
@@ -207,29 +210,4 @@ fn spawn_tile_preview(
             }
         }
     }
-}
-
-fn cursor_to_grid(cursor: Vec2, camera_query: &CameraQuery, window: &Window) -> [i32; 2] {
-    let cursor = cursor / Vec2::new(window.width(), window.height());
-
-    let (transform, camera) = camera_query.single();
-
-    let camera_position = transform.compute_matrix();
-    let projection_matrix = camera.projection_matrix();
-
-    let cursor_ndc = (cursor) * 2.0 - Vec2::from([1.0, 1.0]);
-    let cursor_pos_ndc_far = cursor_ndc.extend(1.0);
-
-    let ndc_to_world = camera_position * projection_matrix.inverse();
-    let cursor_pos_far = ndc_to_world.project_point3(cursor_pos_ndc_far);
-
-    let world_pos = [
-        cursor_pos_far.truncate().x / RAPIER_SCALE,
-        cursor_pos_far.truncate().y / RAPIER_SCALE,
-    ];
-
-    [
-        (world_pos[0] / GRID_SIZE).round() as i32,
-        (world_pos[1] / GRID_SIZE).round() as i32,
-    ]
 }
