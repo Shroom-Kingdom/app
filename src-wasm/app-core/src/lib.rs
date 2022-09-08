@@ -4,10 +4,12 @@ mod course;
 mod drag;
 mod game_mode;
 mod player_sprites;
+mod tile;
 mod utils;
 
 pub use course::{
     get_surrounding_matrix,
+    goal_pole::{GoalPole, GoalPoleDragEvent},
     object::ObjectVariant,
     sprites::{
         ObjectSpriteHandles, ThemeSpriteHandles, TileSpriteHandles, TileSpriteHandlesTransparent,
@@ -21,14 +23,18 @@ pub use course::{
     ui_button::UiButtonVariant,
     Course,
 };
-pub use drag::{Draggable, Dragging};
+pub use drag::{DragEvent, DragEventFlags, Draggable, Dragging};
 pub use game_mode::{GameMode, GameModeToggleEvent};
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
+pub use tile::{DespawnTileEvent, SpawnTileEvent};
 pub use utils::*;
 
 use bevy::{asset::LoadState, prelude::*};
-use course::sprites::load_course_sprites;
-use drag::{drag_mouse_button, drag_mouse_motion};
+use course::{
+    goal_pole::{move_goal_pole, respawn_goal_pole, RespawnGoalPoleEvent},
+    sprites::load_course_sprites,
+};
+use drag::{drag_mouse_button, drag_mouse_motion, handle_drag_events};
 use player_sprites::load_player_sprites;
 
 #[derive(Component, Debug)]
@@ -48,6 +54,9 @@ impl Plugin for CorePlugin {
             .init_resource::<Dragging>()
             .insert_resource(TilePlacePreview(None))
             .add_event::<GameModeToggleEvent>()
+            .add_event::<DragEvent>()
+            .add_event::<GoalPoleDragEvent>()
+            .add_event::<RespawnGoalPoleEvent>()
             .add_stage_after(
                 CoreStage::First,
                 PlayerStages::PlayerInput,
@@ -76,6 +85,22 @@ impl Plugin for CorePlugin {
                 CoreStage::Update,
                 SystemSet::on_update(AppState::Game).with_system(drag_mouse_motion),
             )
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::on_update(AppState::Game).with_system(handle_drag_events),
+            )
+            .add_system_set_to_stage(
+                CoreStage::Last,
+                SystemSet::on_update(AppState::Game)
+                    .with_system(move_goal_pole)
+                    .before(AppLabel::DespawnTile),
+            )
+            .add_system_set_to_stage(
+                CoreStage::Last,
+                SystemSet::on_update(AppState::Game)
+                    .with_system(respawn_goal_pole)
+                    .after(AppLabel::DespawnTile),
+            )
             .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures));
     }
 }
@@ -90,6 +115,7 @@ pub enum AppState {
 #[derive(SystemLabel, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AppLabel {
     InsertCourse,
+    DespawnTile,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]

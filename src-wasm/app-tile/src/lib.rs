@@ -1,22 +1,13 @@
 use app_config::*;
 use app_core::{
     cursor_to_world, get_surrounding_matrix, grid_to_world, world_to_grid, AppState, Course,
-    Dragging, GameMode, GroundSurroundingMatrix, GroundVariant, MainCameraQuery, SelectedTile,
-    TilePlacePreview, TilePreview, TileVariant,
+    DespawnTileEvent, Dragging, GameMode, GroundSurroundingMatrix, GroundVariant, MainCameraQuery,
+    SelectedTile, SpawnTileEvent, TilePlacePreview, TilePreview, TileVariant,
 };
 use bevy::{prelude::*, render::primitives::Frustum};
 use bevy_rapier::prelude::RigidBody;
 use either::Either;
 use std::cell::RefCell;
-
-pub struct SpawnTileEvent {
-    pub tile_variant: TileVariant,
-    pub grid_pos: [i32; 2],
-}
-
-pub struct DespawnTileEvent {
-    pub grid_pos: [i32; 2],
-}
 
 pub struct TilePlugin;
 
@@ -110,7 +101,10 @@ fn send_despawn_tile(
     let world_pos = cursor_to_world(cursor_position, camera_query, window);
     let grid_pos = world_to_grid(&world_pos);
     if course.tiles.contains_key(&grid_pos) {
-        despawn_tile_events.send(DespawnTileEvent { grid_pos });
+        despawn_tile_events.send(DespawnTileEvent {
+            grid_pos,
+            ..Default::default()
+        });
     }
 }
 

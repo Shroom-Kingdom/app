@@ -98,12 +98,7 @@ impl Course {
             false,
         );
 
-        course.spawn_goal(
-            commands,
-            asset_server,
-            object_sprite_handles,
-            course.goal_pos_x,
-        );
+        course.spawn_goal(commands, asset_server, &object_sprite_handles);
 
         course
     }

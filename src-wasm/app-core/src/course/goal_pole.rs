@@ -1,6 +1,6 @@
 use crate::{
-    grid_to_world, grid_to_world_f32, pos_to_world, Course, Draggable, GroundVariant,
-    ObjectSpriteHandles, ObjectVariant, TileVariant,
+    grid_to_world, grid_to_world_f32, Course, DespawnTileEvent, DragEventFlags, Draggable,
+    GroundVariant, ObjectSpriteHandles, ObjectVariant, TileVariant,
 };
 use app_config::*;
 use bevy::prelude::*;
@@ -9,20 +9,20 @@ use bevy_rapier::prelude::*;
 #[derive(Component)]
 pub struct GoalPole(i32);
 
-pub enum MoveDirection {
-    Left,
-    Right,
+pub struct GoalPoleDragEvent {
+    pub grid_pos: [i32; 2],
 }
+
+pub struct RespawnGoalPoleEvent;
 
 impl Course {
     pub fn spawn_goal(
         &mut self,
         commands: &mut Commands,
         asset_server: &AssetServer,
-        object_sprite_handles: Res<ObjectSpriteHandles>,
-        pos_x: i32,
+        object_sprite_handles: &ObjectSpriteHandles,
     ) {
-        for x in (pos_x + 1)..(pos_x + MAX_COURSE_GOAL_OFFSET_X) {
+        for x in (self.goal_pos_x + 1)..(self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X) {
             self.spawn_tile(
                 commands,
                 &[x, 0],
@@ -37,7 +37,11 @@ impl Course {
                 &TileVariant::Ground(GroundVariant::Top0),
                 None,
                 Some([
-                    [false, false, x == pos_x + MAX_COURSE_GOAL_OFFSET_X - 1],
+                    [
+                        false,
+                        false,
+                        x == self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X - 1,
+                    ],
                     [true, false, true],
                     [true, true, true],
                 ]),
@@ -46,7 +50,7 @@ impl Course {
         }
         self.spawn_tile(
             commands,
-            &[pos_x, 0],
+            &[self.goal_pos_x, 0],
             &TileVariant::Ground(GroundVariant::Left0),
             None,
             Some([
@@ -58,7 +62,7 @@ impl Course {
         );
         self.spawn_tile(
             commands,
-            &[pos_x, 1],
+            &[self.goal_pos_x, 1],
             &TileVariant::Ground(GroundVariant::TopLeft0),
             None,
             Some([
@@ -69,7 +73,7 @@ impl Course {
             false,
         );
 
-        let world_pos = grid_to_world_f32(&[pos_x as f32, 5.5]);
+        let world_pos = grid_to_world_f32(&[self.goal_pos_x as f32, 5.5]);
         let texture = object_sprite_handles
             .0
             .get(&ObjectVariant::GoalPoleL)
@@ -86,9 +90,9 @@ impl Course {
                 },
                 ..Default::default()
             })
-            .insert(GoalPole(pos_x));
+            .insert(GoalPole(self.goal_pos_x));
 
-        let world_pos = grid_to_world_f32(&[pos_x as f32 + 2., 5.5]);
+        let world_pos = grid_to_world_f32(&[self.goal_pos_x as f32 + 2., 5.5]);
         let texture = object_sprite_handles
             .0
             .get(&ObjectVariant::GoalPoleR)
@@ -105,9 +109,9 @@ impl Course {
                 },
                 ..Default::default()
             })
-            .insert(GoalPole(pos_x + 2));
+            .insert(GoalPole(self.goal_pos_x + 2));
 
-        let world_pos = grid_to_world_f32(&[pos_x as f32 + 1., 5.5]);
+        let world_pos = grid_to_world_f32(&[self.goal_pos_x as f32 + 1., 5.5]);
         let texture = object_sprite_handles
             .0
             .get(&ObjectVariant::GoalPole)
@@ -124,10 +128,9 @@ impl Course {
                 },
                 ..Default::default()
             })
-            .insert(GoalPole(pos_x + 1));
+            .insert(GoalPole(self.goal_pos_x + 1));
 
-        let world_pos = grid_to_world(&[pos_x + 1, 1]);
-        web_sys::console::log_1(&format!("GOAL {:?}", world_pos).into());
+        let world_pos = grid_to_world(&[self.goal_pos_x + 1, 1]);
         let texture = asset_server.load("icons/leftright.png");
         commands
             .spawn()
@@ -152,16 +155,64 @@ impl Course {
                 TILE_GRID_SIZE * TILE_SIZE,
             ))
             .insert(Sensor)
-            .insert(GoalPole(pos_x + 1))
-            .insert(Draggable);
+            .insert(GoalPole(self.goal_pos_x + 1))
+            .insert(Draggable {
+                flags: DragEventFlags::ONLY_HORIZONTAL,
+            });
+    }
+
+    pub fn despawn_goal(
+        &mut self,
+        query: Query<Entity, (With<GoalPole>, Without<Draggable>)>,
+        mut commands: Commands,
+        mut despawn_tile_events: EventWriter<DespawnTileEvent>,
+    ) {
+        despawn_tile_events.send_batch(
+            (self.goal_pos_x..(self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X)).map(|x| {
+                DespawnTileEvent {
+                    grid_pos: [x, 0],
+                    force: true,
+                }
+            }),
+        );
+        despawn_tile_events.send_batch(
+            (self.goal_pos_x..(self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X)).map(|x| {
+                DespawnTileEvent {
+                    grid_pos: [x, 1],
+                    force: true,
+                }
+            }),
+        );
+        for entity in query.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
     }
 }
 
-pub fn move_goal_pole(mut query: Query<(&mut Transform, &GoalPole)>, direction: MoveDirection) {
-    for (mut transform, goal_pole) in query.iter_mut() {
-        transform.translation.x = pos_to_world(match direction {
-            MoveDirection::Left => goal_pole.0 - 1,
-            MoveDirection::Right => goal_pole.0 + 1,
-        })
+pub fn move_goal_pole(
+    query: Query<Entity, (With<GoalPole>, Without<Draggable>)>,
+    commands: Commands,
+    mut drag_events: EventReader<GoalPoleDragEvent>,
+    despawn_tile_events: EventWriter<DespawnTileEvent>,
+    mut respawn_events: EventWriter<RespawnGoalPoleEvent>,
+    mut course: ResMut<Course>,
+) {
+    if let Some(GoalPoleDragEvent { grid_pos }) = drag_events.iter().next() {
+        course.despawn_goal(query, commands, despawn_tile_events);
+        course.goal_pos_x = grid_pos[0];
+
+        respawn_events.send(RespawnGoalPoleEvent);
+    }
+}
+
+pub fn respawn_goal_pole(
+    mut commands: Commands,
+    mut course: ResMut<Course>,
+    asset_server: Res<AssetServer>,
+    object_sprite_handles: Res<ObjectSpriteHandles>,
+    mut respawn_events: EventReader<RespawnGoalPoleEvent>,
+) {
+    for _ in respawn_events.iter() {
+        course.spawn_goal(&mut commands, &asset_server, &object_sprite_handles);
     }
 }

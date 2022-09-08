@@ -2,10 +2,10 @@ mod grid;
 
 use app_config::*;
 use app_core::{
-    AppLabel, AppState, Course, GroundSurroundingMatrix, GroundVariant, ObjectSpriteHandles,
-    SelectedTile, ThemeSpriteHandles, ThemeVariant, Tile, TileNotEditable, TileVariant,
+    AppLabel, AppState, Course, DespawnTileEvent, GroundSurroundingMatrix, GroundVariant,
+    ObjectSpriteHandles, SelectedTile, SpawnTileEvent, ThemeSpriteHandles, ThemeVariant, Tile,
+    TileNotEditable, TileVariant,
 };
-use app_tile::{DespawnTileEvent, SpawnTileEvent};
 use bevy::prelude::*;
 use grid::{setup_grid, toggle_grid};
 
@@ -22,11 +22,15 @@ impl Plugin for CoursePlugin {
         .add_system_set(SystemSet::on_update(AppState::Game).with_system(toggle_grid))
         .add_system_set_to_stage(
             CoreStage::Last,
-            SystemSet::on_update(AppState::Game).with_system(spawn_tile),
+            SystemSet::on_update(AppState::Game)
+                .with_system(spawn_tile)
+                .after(AppLabel::DespawnTile),
         )
         .add_system_set_to_stage(
             CoreStage::Last,
-            SystemSet::on_update(AppState::Game).with_system(despawn_tile),
+            SystemSet::on_update(AppState::Game)
+                .with_system(despawn_tile)
+                .label(AppLabel::DespawnTile),
         );
     }
 }
@@ -108,11 +112,11 @@ fn despawn_tile(
     mut test_query: Query<Entity, Without<TileNotEditable>>,
     mut child_query: Query<&mut TextureAtlasSprite>,
 ) {
-    for DespawnTileEvent { grid_pos } in despawn_tile_events.iter() {
+    for DespawnTileEvent { grid_pos, force } in despawn_tile_events.iter() {
         if let Some(tile) = course.tiles.remove(grid_pos) {
-            if test_query.get_mut(tile.entity).is_err() {
+            if !force && test_query.get_mut(tile.entity).is_err() {
                 course.tiles.insert(*grid_pos, tile);
-                return;
+                continue;
             }
             for x in grid_pos[0] - 1..=grid_pos[0] + 1 {
                 for y in grid_pos[1] - 1..=grid_pos[1] + 1 {

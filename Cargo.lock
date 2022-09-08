@@ -138,6 +138,7 @@ dependencies = [
  "app-config",
  "bevy",
  "bevy_rapier2d",
+ "bitflags",
  "either",
  "enum-iterator",
  "strum",
@@ -151,7 +152,6 @@ version = "0.1.0"
 dependencies = [
  "app-config",
  "app-core",
- "app-tile",
  "bevy",
  "bevy_rapier2d",
  "wasm-bindgen",
