@@ -2,7 +2,7 @@ mod grid;
 
 use app_config::*;
 use app_core::{
-    AppLabel, AppState, Course, DespawnTileEvent, GroundSurroundingMatrix, GroundVariant,
+    AppLabel, AppState, Course, DespawnTileEvent, GroundTileUpdateEvent, GroundVariant,
     ObjectSpriteHandles, SelectedTile, SpawnTileEvent, ThemeSpriteHandles, ThemeVariant, Tile,
     TileNotEditable, TileVariant,
 };
@@ -24,6 +24,7 @@ impl Plugin for CoursePlugin {
             CoreStage::Last,
             SystemSet::on_update(AppState::Game)
                 .with_system(spawn_tile)
+                .label(AppLabel::SpawnTile)
                 .after(AppLabel::DespawnTile),
         )
         .add_system_set_to_stage(
@@ -43,6 +44,7 @@ fn setup(
     mut selected_tile: ResMut<SelectedTile>,
     theme_sprite_handles: Res<ThemeSpriteHandles>,
     object_sprite_handles: Res<ObjectSpriteHandles>,
+    mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
 ) {
     let course = Course::empty(
         &mut commands,
@@ -50,6 +52,7 @@ fn setup(
         &asset_server,
         &mut texture_atlases,
         object_sprite_handles,
+        &mut Some(&mut ground_tile_update_events),
     );
 
     commands.insert_resource(course);
@@ -85,8 +88,7 @@ fn spawn_tile(
     mut commands: Commands,
     mut course: ResMut<Course>,
     mut spawn_tile_events: EventReader<SpawnTileEvent>,
-    mut query: Query<(&Children, &mut GroundSurroundingMatrix)>,
-    mut child_query: Query<&mut TextureAtlasSprite>,
+    mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
 ) {
     for SpawnTileEvent {
         grid_pos,
@@ -97,8 +99,7 @@ fn spawn_tile(
             &mut commands,
             grid_pos,
             tile_variant,
-            Some((&mut query, &mut child_query)),
-            None,
+            &mut Some(&mut ground_tile_update_events),
             true,
         );
     }
@@ -108,9 +109,8 @@ fn despawn_tile(
     mut commands: Commands,
     mut course: ResMut<Course>,
     mut despawn_tile_events: EventReader<DespawnTileEvent>,
-    mut query: Query<(&Children, &mut GroundSurroundingMatrix)>,
     mut test_query: Query<Entity, Without<TileNotEditable>>,
-    mut child_query: Query<&mut TextureAtlasSprite>,
+    mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
 ) {
     for DespawnTileEvent { grid_pos, force } in despawn_tile_events.iter() {
         if let Some(tile) = course.tiles.remove(grid_pos) {
@@ -125,17 +125,18 @@ fn despawn_tile(
                         continue;
                     }
                     if let Some(Tile {
-                        variant: TileVariant::Ground(ground_variant),
                         entity,
+                        variant: TileVariant::Ground(ground_variant),
+                        mtrx: Some(mtrx),
                     }) = course.tiles.get_mut(&pos)
                     {
-                        let (children, mut mtrx) = query.get_mut(*entity).unwrap();
                         mtrx.0[(y - grid_pos[1] + 1) as usize][(grid_pos[0] - x + 1) as usize] =
                             false;
-                        let child = children[1];
                         *ground_variant = GroundVariant::from_surrounding_matrix(&mtrx.0);
-                        let mut sprite = child_query.get_mut(child).unwrap();
-                        *sprite = TextureAtlasSprite::new(ground_variant.get_sprite_sheet_index());
+                        ground_tile_update_events.send(GroundTileUpdateEvent {
+                            entity: *entity,
+                            index: ground_variant.get_sprite_sheet_index(),
+                        });
                     }
                 }
             }

@@ -1,6 +1,7 @@
 use crate::{
     cursor_to_world, grid_to_world, world_to_grid, GoalPole, GoalPoleDragEvent, MainCameraQuery,
 };
+use app_config::{MAX_GOAL_POS_X, MIN_GOAL_POS_X};
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_rapier::prelude::*;
 
@@ -106,13 +107,16 @@ pub fn handle_drag_events(
     for DragEvent { entity, grid_pos } in drag_events.iter() {
         if let Ok(mut transform) = query.get_mut(*entity) {
             let world_pos = grid_to_world(grid_pos);
-            transform.translation = world_pos.extend(0.);
 
             if goal_pole_query.get(*entity).is_ok() {
+                if grid_pos[0] < MIN_GOAL_POS_X || grid_pos[0] > MAX_GOAL_POS_X {
+                    return;
+                }
                 goal_pole_drag_events.send(GoalPoleDragEvent {
                     grid_pos: *grid_pos,
                 })
             }
+            transform.translation = world_pos.extend(0.);
         }
     }
 }

@@ -6,14 +6,12 @@ pub(crate) mod tile;
 pub(crate) mod ui_button;
 
 use crate::{
-    grid_to_world, GameMode, Ground, GroundSurroundingMatrix, GroundVariant, ObjectSpriteHandles,
-    ThemeVariant, Tile, TileNotEditable, TileVariant,
+    grid_to_world, GameMode, Ground, GroundSurroundingMatrix, GroundTileUpdateEvent, GroundVariant,
+    ObjectSpriteHandles, ThemeVariant, Tile, TileNotEditable, TileVariant,
 };
 use app_config::*;
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{geometry::Friction, prelude::*};
-use either::Either;
-use std::cell::RefCell;
 
 #[derive(Debug, TypeUuid)]
 #[uuid = "81a23571-1f35-4f20-b1ea-30e5c2612049"]
@@ -33,6 +31,7 @@ impl Course {
         asset_server: &AssetServer,
         texture_atlases: &mut Assets<TextureAtlas>,
         object_sprite_handles: Res<ObjectSpriteHandles>,
+        ground_tile_update_events: &mut Option<&mut EventWriter<GroundTileUpdateEvent>>,
     ) -> Self {
         let texture_handle = asset_server.load(&format!("MW_Field_{}_0.png", theme.get_name()));
         let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
@@ -56,20 +55,14 @@ impl Course {
                 commands,
                 &[x, 0],
                 &TileVariant::Ground(GroundVariant::Full0),
-                None,
-                Some([[true, true, true], [true, false, true], [true, true, true]]),
+                ground_tile_update_events,
                 false,
             );
             course.spawn_tile(
                 commands,
                 &[x, 1],
                 &TileVariant::Ground(GroundVariant::Top0),
-                None,
-                Some([
-                    [x == 0, false, false],
-                    [true, false, true],
-                    [true, true, true],
-                ]),
+                ground_tile_update_events,
                 false,
             );
         }
@@ -77,44 +70,29 @@ impl Course {
             commands,
             &[7, 0],
             &TileVariant::Ground(GroundVariant::Right0),
-            None,
-            Some([
-                [true, true, false],
-                [true, false, false],
-                [true, true, true],
-            ]),
+            ground_tile_update_events,
             false,
         );
         course.spawn_tile(
             commands,
             &[7, 1],
             &TileVariant::Ground(GroundVariant::TopRight0),
-            None,
-            Some([
-                [false, false, false],
-                [true, false, false],
-                [true, true, false],
-            ]),
+            ground_tile_update_events,
             false,
         );
 
-        course.spawn_goal(commands, asset_server, &object_sprite_handles);
+        course.spawn_goal(commands, &object_sprite_handles, ground_tile_update_events);
+        course.spawn_goal_drag(commands, asset_server);
 
         course
     }
 
-    #[allow(clippy::type_complexity)]
-    #[allow(clippy::too_many_arguments)]
     pub fn spawn_tile(
         &mut self,
         commands: &mut Commands,
         grid_pos: &[i32; 2],
         tile_variant: &TileVariant,
-        mut queries: Option<(
-            &mut Query<(&Children, &mut GroundSurroundingMatrix)>,
-            &mut Query<&mut TextureAtlasSprite>,
-        )>,
-        surrounding_matrix: Option<[[bool; 3]; 3]>,
+        ground_tile_update_events: &mut Option<&mut EventWriter<GroundTileUpdateEvent>>,
         is_editable: bool,
     ) {
         let world_pos = grid_to_world(grid_pos);
@@ -130,13 +108,9 @@ impl Course {
             return;
         }
 
-        let surrounding_matrix = if let Some(surrounding_matrix) = surrounding_matrix {
-            Some(GroundSurroundingMatrix(surrounding_matrix))
-        } else if let TileVariant::Ground(_) = tile_variant {
-            let surrounding_matrix = get_surrounding_matrix(
-                grid_pos,
-                RefCell::new(Either::Right((&mut self.tiles, &mut queries))),
-            );
+        let surrounding_matrix = if let TileVariant::Ground(_) = tile_variant {
+            let surrounding_matrix =
+                get_surrounding_matrix(grid_pos, &mut self.tiles, ground_tile_update_events);
             Some(GroundSurroundingMatrix(surrounding_matrix))
         } else {
             None
@@ -201,9 +175,6 @@ impl Course {
                     ))
                     .insert(Friction::new(0.));
             });
-        if let Some(surrounding_matrix) = surrounding_matrix {
-            entity_commands.insert(surrounding_matrix);
-        }
         if !is_editable {
             entity_commands.insert(TileNotEditable);
         }
@@ -213,6 +184,7 @@ impl Course {
         let tile = Tile {
             entity,
             variant: tile_variant.clone(),
+            mtrx: surrounding_matrix,
         };
         self.tiles.insert(*grid_pos, tile);
     }
@@ -221,18 +193,8 @@ impl Course {
 #[allow(clippy::type_complexity)]
 pub fn get_surrounding_matrix(
     grid_pos: &[i32; 2],
-    tiles: RefCell<
-        Either<
-            &HashMap<[i32; 2], Tile>,
-            (
-                &mut HashMap<[i32; 2], Tile>,
-                &mut Option<(
-                    &mut Query<(&Children, &mut GroundSurroundingMatrix)>,
-                    &mut Query<&mut TextureAtlasSprite>,
-                )>,
-            ),
-        >,
-    >,
+    tiles: &mut HashMap<[i32; 2], Tile>,
+    ground_tile_update_events: &mut Option<&mut EventWriter<GroundTileUpdateEvent>>,
 ) -> [[bool; 3]; 3] {
     let mut surrounding_matrix = [
         [false, false, false],
@@ -250,31 +212,23 @@ pub fn get_surrounding_matrix(
                     [(x - grid_pos[0] + 1) as usize] = true;
                 continue;
             }
-            match &mut *tiles.borrow_mut() {
-                Either::Left(tiles) => {
-                    if tiles.get(&pos).is_some() {
-                        surrounding_matrix[(grid_pos[1] - y + 1) as usize]
-                            [(x - grid_pos[0] + 1) as usize] = true;
-                    }
-                }
-                Either::Right((tiles, queries)) => {
-                    if let Some(Tile {
-                        entity,
-                        variant: TileVariant::Ground(ground_variant),
-                    }) = tiles.get_mut(&pos)
-                    {
-                        surrounding_matrix[(grid_pos[1] - y + 1) as usize]
-                            [(x - grid_pos[0] + 1) as usize] = true;
-                        if let Some(queries) = queries {
-                            let (children, mut mtrx) = queries.0.get_mut(*entity).unwrap();
-                            mtrx.0[(y - grid_pos[1] + 1) as usize]
-                                [(grid_pos[0] - x + 1) as usize] = true;
-                            let child = children[1];
-                            *ground_variant = GroundVariant::from_surrounding_matrix(&mtrx.0);
-                            let mut sprite = queries.1.get_mut(child).unwrap();
-                            *sprite =
-                                TextureAtlasSprite::new(ground_variant.get_sprite_sheet_index());
-                        }
+
+            if let Some(Tile {
+                entity,
+                variant: TileVariant::Ground(ground_variant),
+                mtrx,
+            }) = tiles.get_mut(&pos)
+            {
+                surrounding_matrix[(grid_pos[1] - y + 1) as usize]
+                    [(x - grid_pos[0] + 1) as usize] = true;
+                if let Some(mtrx) = mtrx {
+                    mtrx.0[(y - grid_pos[1] + 1) as usize][(grid_pos[0] - x + 1) as usize] = true;
+                    *ground_variant = GroundVariant::from_surrounding_matrix(&mtrx.0);
+                    if let Some(ref mut ground_tile_update_events) = ground_tile_update_events {
+                        ground_tile_update_events.send(GroundTileUpdateEvent {
+                            entity: *entity,
+                            index: ground_variant.get_sprite_sheet_index(),
+                        });
                     }
                 }
             }

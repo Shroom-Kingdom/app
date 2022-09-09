@@ -52,3 +52,5 @@ pub const CAMERA_MIN_Y: f32 = 680. * 0.7 / 2.;
 pub const MAX_COURSE_X: i32 = 150;
 pub const MAX_COURSE_Y: i32 = 24;
 pub const MAX_COURSE_GOAL_OFFSET_X: i32 = 16;
+pub const MIN_GOAL_POS_X: i32 = 32;
+pub const MAX_GOAL_POS_X: i32 = MAX_COURSE_X - MAX_COURSE_GOAL_OFFSET_X;

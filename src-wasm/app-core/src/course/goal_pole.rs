@@ -1,6 +1,6 @@
 use crate::{
     grid_to_world, grid_to_world_f32, Course, DespawnTileEvent, DragEventFlags, Draggable,
-    GroundVariant, ObjectSpriteHandles, ObjectVariant, TileVariant,
+    GroundTileUpdateEvent, GroundVariant, ObjectSpriteHandles, ObjectVariant, TileVariant,
 };
 use app_config::*;
 use bevy::prelude::*;
@@ -19,32 +19,22 @@ impl Course {
     pub fn spawn_goal(
         &mut self,
         commands: &mut Commands,
-        asset_server: &AssetServer,
         object_sprite_handles: &ObjectSpriteHandles,
+        ground_tile_update_events: &mut Option<&mut EventWriter<GroundTileUpdateEvent>>,
     ) {
         for x in (self.goal_pos_x + 1)..(self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X) {
             self.spawn_tile(
                 commands,
                 &[x, 0],
                 &TileVariant::Ground(GroundVariant::Full0),
-                None,
-                Some([[true, true, true], [true, false, true], [true, true, true]]),
+                ground_tile_update_events,
                 false,
             );
             self.spawn_tile(
                 commands,
                 &[x, 1],
                 &TileVariant::Ground(GroundVariant::Top0),
-                None,
-                Some([
-                    [
-                        false,
-                        false,
-                        x == self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X - 1,
-                    ],
-                    [true, false, true],
-                    [true, true, true],
-                ]),
+                ground_tile_update_events,
                 false,
             );
         }
@@ -52,24 +42,14 @@ impl Course {
             commands,
             &[self.goal_pos_x, 0],
             &TileVariant::Ground(GroundVariant::Left0),
-            None,
-            Some([
-                [false, true, true],
-                [false, false, true],
-                [true, true, true],
-            ]),
+            ground_tile_update_events,
             false,
         );
         self.spawn_tile(
             commands,
             &[self.goal_pos_x, 1],
             &TileVariant::Ground(GroundVariant::TopLeft0),
-            None,
-            Some([
-                [false, false, false],
-                [false, false, true],
-                [false, true, true],
-            ]),
+            ground_tile_update_events,
             false,
         );
 
@@ -129,7 +109,9 @@ impl Course {
                 ..Default::default()
             })
             .insert(GoalPole(self.goal_pos_x + 1));
+    }
 
+    pub(crate) fn spawn_goal_drag(&mut self, commands: &mut Commands, asset_server: &AssetServer) {
         let world_pos = grid_to_world(&[self.goal_pos_x + 1, 1]);
         let texture = asset_server.load("icons/leftright.png");
         commands
@@ -199,7 +181,7 @@ pub fn move_goal_pole(
 ) {
     if let Some(GoalPoleDragEvent { grid_pos }) = drag_events.iter().next() {
         course.despawn_goal(query, commands, despawn_tile_events);
-        course.goal_pos_x = grid_pos[0];
+        course.goal_pos_x = grid_pos[0] - 1;
 
         respawn_events.send(RespawnGoalPoleEvent);
     }
@@ -208,11 +190,15 @@ pub fn move_goal_pole(
 pub fn respawn_goal_pole(
     mut commands: Commands,
     mut course: ResMut<Course>,
-    asset_server: Res<AssetServer>,
     object_sprite_handles: Res<ObjectSpriteHandles>,
     mut respawn_events: EventReader<RespawnGoalPoleEvent>,
+    mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
 ) {
     for _ in respawn_events.iter() {
-        course.spawn_goal(&mut commands, &asset_server, &object_sprite_handles);
+        course.spawn_goal(
+            &mut commands,
+            &object_sprite_handles,
+            &mut Some(&mut ground_tile_update_events),
+        );
     }
 }

@@ -13,6 +13,7 @@ pub struct TilePlacePreview(pub Option<(Entity, [i32; 2])>);
 pub struct Tile {
     pub entity: Entity,
     pub variant: TileVariant,
+    pub mtrx: Option<GroundSurroundingMatrix>,
 }
 
 #[derive(Clone, Component, Debug, Eq, Hash, PartialEq, Sequence)]
@@ -99,7 +100,7 @@ pub enum GroundVariant {
     CornerBR,
 }
 
-#[derive(Component)]
+#[derive(Clone, Debug)]
 pub struct GroundSurroundingMatrix(pub [[bool; 3]; 3]);
 
 #[derive(Debug, Default)]

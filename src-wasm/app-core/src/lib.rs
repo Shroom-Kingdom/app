@@ -26,7 +26,8 @@ pub use course::{
 pub use drag::{DragEvent, DragEventFlags, Draggable, Dragging};
 pub use game_mode::{GameMode, GameModeToggleEvent};
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
-pub use tile::{DespawnTileEvent, SpawnTileEvent};
+use tile::update_ground_tile;
+pub use tile::{DespawnTileEvent, GroundTileUpdateEvent, SpawnTileEvent};
 pub use utils::*;
 
 use bevy::{asset::LoadState, prelude::*};
@@ -101,6 +102,12 @@ impl Plugin for CorePlugin {
                     .with_system(respawn_goal_pole)
                     .after(AppLabel::DespawnTile),
             )
+            .add_system_set_to_stage(
+                CoreStage::Last,
+                SystemSet::on_update(AppState::Game)
+                    .with_system(update_ground_tile)
+                    .after(AppLabel::SpawnTile),
+            )
             .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures));
     }
 }
@@ -116,6 +123,7 @@ pub enum AppState {
 pub enum AppLabel {
     InsertCourse,
     DespawnTile,
+    SpawnTile,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
@@ -160,6 +168,6 @@ fn check_textures(
                 .map(|(_, handle)| handle.id),
         ),
     ) {
-        state.set(AppState::Menu).unwrap();
+        state.overwrite_set(AppState::Menu).unwrap();
     }
 }
