@@ -9,7 +9,7 @@ mod utils;
 
 pub use course::{
     get_surrounding_matrix,
-    goal_pole::{GoalPole, GoalPoleDragEvent},
+    goal_pole::{GoalPole, GoalPoleDragDirection, GoalPoleDragEvent},
     object::ObjectVariant,
     sprites::{
         ObjectSpriteHandles, ThemeSpriteHandles, TileSpriteHandles, TileSpriteHandlesTransparent,
@@ -52,7 +52,7 @@ impl Plugin for CorePlugin {
             .init_resource::<UiButtonSpriteHandles>()
             .init_resource::<ObjectSpriteHandles>()
             .init_resource::<SelectedTile>()
-            .init_resource::<Dragging>()
+            .init_resource::<Option<Dragging>>()
             .insert_resource(TilePlacePreview(None))
             .add_event::<GameModeToggleEvent>()
             .add_event::<DragEvent>()

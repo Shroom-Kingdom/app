@@ -32,7 +32,7 @@ fn spawn_tile(
     despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: Res<Course>,
     selected_tile: Res<SelectedTile>,
-    dragging: Res<Dragging>,
+    dragging: Res<Option<Dragging>>,
 ) {
     if let GameMode::Build { is_editing: true } = course.game_mode {
         for interaction in button_query.iter() {
@@ -40,7 +40,7 @@ fn spawn_tile(
                 return;
             }
         }
-        if dragging.0.is_some() {
+        if dragging.is_some() {
             return;
         }
         let window = windows.get_primary().unwrap();

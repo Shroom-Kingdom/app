@@ -1,5 +1,6 @@
 use crate::{
-    cursor_to_world, grid_to_world, world_to_grid, GoalPole, GoalPoleDragEvent, MainCameraQuery,
+    cursor_to_world, grid_to_world, world_to_grid, world_to_grid_pos, GoalPole,
+    GoalPoleDragDirection, GoalPoleDragEvent, MainCameraQuery,
 };
 use app_config::{MAX_GOAL_POS_X, MIN_GOAL_POS_X};
 use bevy::{input::mouse::MouseMotion, prelude::*};
@@ -10,14 +11,17 @@ pub struct Draggable {
     pub flags: DragEventFlags,
 }
 
-#[derive(Default)]
-pub struct Dragging(pub Option<(Entity, DragEventFlags)>);
+pub struct Dragging {
+    entity: Entity,
+    flags: DragEventFlags,
+}
 
 bitflags::bitflags! {
     #[derive(Default)]
     pub struct DragEventFlags: u32 {
         const ONLY_HORIZONTAL = 0b0001;
         const ONLY_VERTICAL = 0b0010;
+        const WITHOUT_MOUSE_MOTION = 0b0100;
     }
 }
 
@@ -29,12 +33,12 @@ pub struct DragEvent {
 pub fn drag_mouse_motion(
     query: Query<&Transform, Without<Camera>>,
     camera_query: MainCameraQuery,
-    dragging: Res<Dragging>,
+    dragging: Res<Option<Dragging>>,
     windows: Res<Windows>,
     mut motion_event: EventReader<MouseMotion>,
     mut drag_events: EventWriter<DragEvent>,
 ) {
-    if let Some((entity, flags)) = dragging.0 {
+    if let Some(Dragging { entity, flags }) = *dragging {
         if let Ok(transform) = query.get(entity) {
             let window = windows.get_primary().unwrap();
             let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
@@ -42,17 +46,19 @@ pub fn drag_mouse_motion(
             } else {
                 return;
             };
-            if motion_event.iter().next().is_none() {
+            if flags & DragEventFlags::WITHOUT_MOUSE_MOTION != DragEventFlags::WITHOUT_MOUSE_MOTION
+                && motion_event.iter().next().is_none()
+            {
                 return;
             }
             let world_pos = cursor_to_world(cursor_position, &camera_query, window);
             let mut grid_pos = world_to_grid(&world_pos);
             let grid_pos_entity = world_to_grid(&transform.translation.truncate().into());
 
-            if flags == DragEventFlags::ONLY_HORIZONTAL {
+            if flags & DragEventFlags::ONLY_HORIZONTAL == DragEventFlags::ONLY_HORIZONTAL {
                 grid_pos[1] = grid_pos_entity[1];
             }
-            if flags == DragEventFlags::ONLY_VERTICAL {
+            if flags & DragEventFlags::ONLY_VERTICAL == DragEventFlags::ONLY_VERTICAL {
                 grid_pos[0] = grid_pos_entity[0];
             }
 
@@ -67,7 +73,7 @@ pub fn drag_mouse_button(
     draggable_query: Query<&Draggable>,
     camera_query: MainCameraQuery,
     ctx: Res<RapierContext>,
-    mut dragging: ResMut<Dragging>,
+    mut dragging: ResMut<Option<Dragging>>,
     mouse: Res<Input<MouseButton>>,
     windows: Res<Windows>,
 ) {
@@ -89,12 +95,15 @@ pub fn drag_mouse_button(
             },
             |entity| {
                 let Draggable { flags } = draggable_query.get(entity).unwrap();
-                dragging.0 = Some((entity, *flags));
+                *dragging = Some(Dragging {
+                    entity,
+                    flags: *flags,
+                });
                 false
             },
         );
     } else if mouse.just_released(MouseButton::Left) {
-        dragging.0 = None;
+        *dragging = None;
     }
 }
 
@@ -109,11 +118,20 @@ pub fn handle_drag_events(
             let world_pos = grid_to_world(grid_pos);
 
             if goal_pole_query.get(*entity).is_ok() {
-                if grid_pos[0] < MIN_GOAL_POS_X || grid_pos[0] > MAX_GOAL_POS_X {
+                let old_grid_pos = world_to_grid_pos(transform.translation.x);
+                if old_grid_pos == grid_pos[0]
+                    || grid_pos[0] < MIN_GOAL_POS_X
+                    || grid_pos[0] > MAX_GOAL_POS_X
+                {
                     return;
                 }
                 goal_pole_drag_events.send(GoalPoleDragEvent {
                     grid_pos: *grid_pos,
+                    direction: if old_grid_pos > grid_pos[0] {
+                        GoalPoleDragDirection::Left
+                    } else {
+                        GoalPoleDragDirection::Right
+                    },
                 })
             }
             transform.translation = world_pos.extend(0.);

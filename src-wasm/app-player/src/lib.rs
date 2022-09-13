@@ -12,7 +12,7 @@ mod walk;
 
 use app_core::{AppState, PlayerStages};
 use bevy::prelude::*;
-use camera::position_camera;
+use camera::{move_player_on_goal_pole_drag, position_camera};
 use game_mode::toggle_game_mode;
 // use debug::setup_ui;
 use jump::{high_jump, jump, jump_to_fall};
@@ -106,6 +106,10 @@ impl Plugin for PlayerPlugin {
             .add_system_set_to_stage(
                 CoreStage::Last,
                 SystemSet::on_update(AppState::Game).with_system(set_sprite),
+            )
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::on_update(AppState::Game).with_system(move_player_on_goal_pole_drag),
             );
     }
 }

@@ -23,10 +23,15 @@ pub fn grid_to_world_f32(grid_pos: &[f32; 2]) -> Vec2 {
 }
 
 #[inline]
+pub fn world_to_grid_pos(pos: f32) -> i32 {
+    (pos / (GRID_SIZE * RAPIER_SCALE)).round() as i32
+}
+
+#[inline]
 pub fn world_to_grid(world_pos: &[f32; 2]) -> [i32; 2] {
     [
-        (world_pos[0] / (GRID_SIZE * RAPIER_SCALE)).round() as i32,
-        (world_pos[1] / (GRID_SIZE * RAPIER_SCALE)).round() as i32,
+        world_to_grid_pos(world_pos[0]),
+        world_to_grid_pos(world_pos[1]),
     ]
 }
 

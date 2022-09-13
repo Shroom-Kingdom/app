@@ -11,6 +11,12 @@ pub struct GoalPole(i32);
 
 pub struct GoalPoleDragEvent {
     pub grid_pos: [i32; 2],
+    pub direction: GoalPoleDragDirection,
+}
+
+pub enum GoalPoleDragDirection {
+    Left,
+    Right,
 }
 
 pub struct RespawnGoalPoleEvent;
@@ -139,7 +145,7 @@ impl Course {
             .insert(Sensor)
             .insert(GoalPole(self.goal_pos_x + 1))
             .insert(Draggable {
-                flags: DragEventFlags::ONLY_HORIZONTAL,
+                flags: DragEventFlags::ONLY_HORIZONTAL | DragEventFlags::WITHOUT_MOUSE_MOTION,
             });
     }
 
@@ -179,7 +185,7 @@ pub fn move_goal_pole(
     mut respawn_events: EventWriter<RespawnGoalPoleEvent>,
     mut course: ResMut<Course>,
 ) {
-    if let Some(GoalPoleDragEvent { grid_pos }) = drag_events.iter().next() {
+    if let Some(GoalPoleDragEvent { grid_pos, .. }) = drag_events.iter().next() {
         course.despawn_goal(query, commands, despawn_tile_events);
         course.goal_pos_x = grid_pos[0] - 1;
 
