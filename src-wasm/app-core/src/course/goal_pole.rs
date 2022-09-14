@@ -1,6 +1,7 @@
 use crate::{
-    grid_to_world, grid_to_world_f32, Course, DespawnTileEvent, DragEventFlags, Draggable,
-    GroundTileUpdateEvent, GroundVariant, ObjectSpriteHandles, ObjectVariant, TileVariant,
+    grid_to_world, grid_to_world_f32, pos_to_world, Course, DespawnTileEvent, DragEventFlags,
+    Draggable, GroundTileUpdateEvent, GroundVariant, ObjectSpriteHandles, ObjectVariant,
+    TileVariant,
 };
 use app_config::*;
 use bevy::{prelude::*, utils::HashMap};
@@ -10,7 +11,6 @@ use bevy_rapier::prelude::*;
 pub struct GoalPole(i32);
 
 pub struct GoalPoleDragEvent {
-    pub grid_pos: [i32; 2],
     pub direction: GoalPoleDragDirection,
 }
 
@@ -156,25 +156,27 @@ impl Course {
     pub fn despawn_goal(
         &mut self,
         query: Query<Entity, (With<GoalPole>, Without<Draggable>)>,
+        direction: &GoalPoleDragDirection,
         mut commands: Commands,
         mut despawn_tile_events: EventWriter<DespawnTileEvent>,
     ) {
-        despawn_tile_events.send_batch(
-            (self.goal_pos_x..(self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X)).map(|x| {
-                DespawnTileEvent {
-                    grid_pos: [x, 0],
-                    force: true,
-                }
-            }),
-        );
-        despawn_tile_events.send_batch(
-            (self.goal_pos_x..(self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X)).map(|x| {
-                DespawnTileEvent {
-                    grid_pos: [x, 1],
-                    force: true,
-                }
-            }),
-        );
+        let pos_x = if let GoalPoleDragDirection::Left = direction {
+            self.goal_pos_x - 1
+        } else {
+            self.goal_pos_x
+        };
+        despawn_tile_events.send_batch((pos_x..(self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X)).map(
+            |x| DespawnTileEvent {
+                grid_pos: [x, 0],
+                force: true,
+            },
+        ));
+        despawn_tile_events.send_batch((pos_x..(self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X)).map(
+            |x| DespawnTileEvent {
+                grid_pos: [x, 1],
+                force: true,
+            },
+        ));
         for entity in query.iter() {
             commands.entity(entity).despawn_recursive();
         }
@@ -183,15 +185,23 @@ impl Course {
 
 pub fn move_goal_pole(
     query: Query<Entity, (With<GoalPole>, Without<Draggable>)>,
+    mut drag_query: Query<&mut Transform, (With<GoalPole>, With<Draggable>)>,
     commands: Commands,
     mut drag_events: EventReader<GoalPoleDragEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
     mut respawn_events: EventWriter<RespawnGoalPoleEvent>,
     mut course: ResMut<Course>,
 ) {
-    if let Some(GoalPoleDragEvent { grid_pos, .. }) = drag_events.iter().next() {
-        course.despawn_goal(query, commands, despawn_tile_events);
-        course.goal_pos_x = grid_pos[0] - 1;
+    if let Some(GoalPoleDragEvent { direction }) = drag_events.iter().next() {
+        course.despawn_goal(query, direction, commands, despawn_tile_events);
+        course.goal_pos_x += match direction {
+            GoalPoleDragDirection::Left => -1,
+            GoalPoleDragDirection::Right => 1,
+        };
+        if let Ok(mut transform) = drag_query.get_single_mut() {
+            let world_pos = pos_to_world(course.goal_pos_x + 1);
+            transform.translation.x = world_pos;
+        }
 
         respawn_events.send(RespawnGoalPoleEvent);
     }

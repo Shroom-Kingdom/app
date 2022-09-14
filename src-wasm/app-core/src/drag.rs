@@ -119,22 +119,23 @@ pub fn handle_drag_events(
 
             if goal_pole_query.get(*entity).is_ok() {
                 let old_grid_pos = world_to_grid_pos(transform.translation.x);
-                if old_grid_pos == grid_pos[0]
-                    || grid_pos[0] < MIN_GOAL_POS_X
-                    || grid_pos[0] > MAX_GOAL_POS_X
-                {
+                if old_grid_pos == grid_pos[0] {
                     return;
                 }
-                goal_pole_drag_events.send(GoalPoleDragEvent {
-                    grid_pos: *grid_pos,
-                    direction: if old_grid_pos > grid_pos[0] {
-                        GoalPoleDragDirection::Left
-                    } else {
-                        GoalPoleDragDirection::Right
-                    },
-                })
+                let direction = if old_grid_pos > grid_pos[0] {
+                    GoalPoleDragDirection::Left
+                } else {
+                    GoalPoleDragDirection::Right
+                };
+                match direction {
+                    GoalPoleDragDirection::Left if old_grid_pos - 1 < MIN_GOAL_POS_X => return,
+                    GoalPoleDragDirection::Right if old_grid_pos + 1 > MAX_GOAL_POS_X => return,
+                    _ => {}
+                };
+                goal_pole_drag_events.send(GoalPoleDragEvent { direction });
+            } else {
+                transform.translation = world_pos.extend(0.);
             }
-            transform.translation = world_pos.extend(0.);
         }
     }
 }

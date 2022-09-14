@@ -198,7 +198,6 @@ pub fn get_surrounding_matrix(
     tiles: &mut HashMap<[i32; 2], Tile>,
     events: &mut HashMap<Entity, GroundTileUpdateEvent>,
 ) -> [[bool; 3]; 3] {
-    web_sys::console::log_1(&format!("get_surrounding_matrix {:?}", grid_pos).into());
     let mut surrounding_matrix = [
         [false, false, false],
         [false, false, false],

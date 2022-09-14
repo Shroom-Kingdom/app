@@ -30,7 +30,7 @@ pub fn move_player_on_goal_pole_drag(
     mut drag_events: EventReader<GoalPoleDragEvent>,
     course: Res<Course>,
 ) {
-    if let Some(GoalPoleDragEvent { direction, .. }) = drag_events.iter().next() {
+    if let Some(GoalPoleDragEvent { direction }) = drag_events.iter().next() {
         let pos_diff = pos_to_world(match direction {
             GoalPoleDragDirection::Left => -1,
             GoalPoleDragDirection::Right => 1,
