@@ -60,22 +60,28 @@ impl Plugin for CorePlugin {
             .add_event::<RespawnGoalPoleEvent>()
             .add_stage_after(
                 CoreStage::First,
-                PlayerStages::PlayerInput,
+                AppStage::PlayerInput,
                 SystemStage::parallel(),
             )
             .add_stage_after(
                 CoreStage::PreUpdate,
-                PlayerStages::PrePhysics,
+                AppStage::PrePhysics,
                 SystemStage::parallel(),
             )
             .add_stage_after(
                 CoreStage::PostUpdate,
-                PlayerStages::StateChange,
+                AppStage::StateChange,
                 SystemStage::parallel(),
             )
-            .add_system_set_to_stage(PlayerStages::PlayerInput, State::<AppState>::get_driver())
-            .add_system_set_to_stage(PlayerStages::PrePhysics, State::<AppState>::get_driver())
-            .add_system_set_to_stage(PlayerStages::StateChange, State::<AppState>::get_driver())
+            .add_stage_after(
+                CoreStage::PostUpdate,
+                AppStage::TileSpawning,
+                SystemStage::parallel(),
+            )
+            .add_system_set_to_stage(AppStage::PlayerInput, State::<AppState>::get_driver())
+            .add_system_set_to_stage(AppStage::PrePhysics, State::<AppState>::get_driver())
+            .add_system_set_to_stage(AppStage::StateChange, State::<AppState>::get_driver())
+            .add_system_set_to_stage(AppStage::TileSpawning, State::<AppState>::get_driver())
             .add_startup_system_to_stage(StartupStage::Startup, load_player_sprites)
             .add_startup_system_to_stage(StartupStage::Startup, load_course_sprites)
             .add_system_set_to_stage(
@@ -91,22 +97,20 @@ impl Plugin for CorePlugin {
                 SystemSet::on_update(AppState::Game).with_system(handle_drag_events),
             )
             .add_system_set_to_stage(
-                CoreStage::Last,
+                AppStage::TileSpawning,
                 SystemSet::on_update(AppState::Game)
                     .with_system(move_goal_pole)
                     .before(AppLabel::DespawnTile),
             )
             .add_system_set_to_stage(
-                CoreStage::Last,
+                AppStage::TileSpawning,
                 SystemSet::on_update(AppState::Game)
                     .with_system(respawn_goal_pole)
                     .after(AppLabel::DespawnTile),
             )
             .add_system_set_to_stage(
                 CoreStage::Last,
-                SystemSet::on_update(AppState::Game)
-                    .with_system(update_ground_tile)
-                    .after(AppLabel::SpawnTile),
+                SystemSet::on_update(AppState::Game).with_system(update_ground_tile),
             )
             .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures));
     }
@@ -123,14 +127,14 @@ pub enum AppState {
 pub enum AppLabel {
     InsertCourse,
     DespawnTile,
-    SpawnTile,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
-pub enum PlayerStages {
+pub enum AppStage {
     PlayerInput,
     PrePhysics,
     StateChange,
+    TileSpawning,
 }
 
 fn check_textures(

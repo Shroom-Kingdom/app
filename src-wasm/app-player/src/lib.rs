@@ -10,7 +10,7 @@ mod stoop;
 mod touch;
 mod walk;
 
-use app_core::{AppState, PlayerStages};
+use app_core::{AppStage, AppState};
 use bevy::prelude::*;
 use camera::{move_player_on_goal_pole_drag, position_camera};
 use game_mode::toggle_game_mode;
@@ -63,7 +63,7 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(AppState::Game).with_system(walk_animation),
             )
             .add_system_set_to_stage(
-                PlayerStages::PlayerInput,
+                AppStage::PlayerInput,
                 SystemSet::on_update(AppState::Game).with_system(movement),
             )
             .add_system_set_to_stage(
@@ -79,11 +79,11 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(AppState::Game).with_system(stoop),
             )
             .add_system_set_to_stage(
-                PlayerStages::PrePhysics,
+                AppStage::PrePhysics,
                 SystemSet::on_update(AppState::Game).with_system(apply_vel),
             )
             .add_system_set_to_stage(
-                PlayerStages::PrePhysics,
+                AppStage::PrePhysics,
                 SystemSet::on_update(AppState::Game).with_system(walk_start),
             )
             // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
@@ -100,7 +100,7 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(AppState::Game).with_system(position_camera),
             )
             .add_system_set_to_stage(
-                PlayerStages::StateChange,
+                AppStage::StateChange,
                 SystemSet::on_update(AppState::Game).with_system(state_change),
             )
             .add_system_set_to_stage(

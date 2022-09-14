@@ -3,7 +3,7 @@ use crate::{
     GroundTileUpdateEvent, GroundVariant, ObjectSpriteHandles, ObjectVariant, TileVariant,
 };
 use app_config::*;
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use bevy_rapier::prelude::*;
 
 #[derive(Component)]
@@ -26,21 +26,22 @@ impl Course {
         &mut self,
         commands: &mut Commands,
         object_sprite_handles: &ObjectSpriteHandles,
-        ground_tile_update_events: &mut Option<&mut EventWriter<GroundTileUpdateEvent>>,
+        ground_tile_update_events: &mut EventWriter<GroundTileUpdateEvent>,
     ) {
+        let mut events = HashMap::new();
         for x in (self.goal_pos_x + 1)..(self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X) {
             self.spawn_tile(
                 commands,
                 &[x, 0],
                 &TileVariant::Ground(GroundVariant::Full0),
-                ground_tile_update_events,
+                &mut events,
                 false,
             );
             self.spawn_tile(
                 commands,
                 &[x, 1],
                 &TileVariant::Ground(GroundVariant::Top0),
-                ground_tile_update_events,
+                &mut events,
                 false,
             );
         }
@@ -48,16 +49,19 @@ impl Course {
             commands,
             &[self.goal_pos_x, 0],
             &TileVariant::Ground(GroundVariant::Left0),
-            ground_tile_update_events,
+            &mut events,
             false,
         );
         self.spawn_tile(
             commands,
             &[self.goal_pos_x, 1],
             &TileVariant::Ground(GroundVariant::TopLeft0),
-            ground_tile_update_events,
+            &mut events,
             false,
         );
+        for event in events.into_values() {
+            ground_tile_update_events.send(event);
+        }
 
         let world_pos = grid_to_world_f32(&[self.goal_pos_x as f32, 5.5]);
         let texture = object_sprite_handles
@@ -200,11 +204,11 @@ pub fn respawn_goal_pole(
     mut respawn_events: EventReader<RespawnGoalPoleEvent>,
     mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
 ) {
-    for _ in respawn_events.iter() {
+    if respawn_events.iter().next().is_some() {
         course.spawn_goal(
             &mut commands,
             &object_sprite_handles,
-            &mut Some(&mut ground_tile_update_events),
+            &mut ground_tile_update_events,
         );
     }
 }

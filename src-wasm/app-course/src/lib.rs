@@ -2,11 +2,11 @@ mod grid;
 
 use app_config::*;
 use app_core::{
-    AppLabel, AppState, Course, DespawnTileEvent, GroundTileUpdateEvent, GroundVariant,
+    AppLabel, AppStage, AppState, Course, DespawnTileEvent, GroundTileUpdateEvent, GroundVariant,
     ObjectSpriteHandles, SelectedTile, SpawnTileEvent, ThemeSpriteHandles, ThemeVariant, Tile,
     TileNotEditable, TileVariant,
 };
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use grid::{setup_grid, toggle_grid};
 
 pub struct CoursePlugin;
@@ -21,14 +21,13 @@ impl Plugin for CoursePlugin {
         )
         .add_system_set(SystemSet::on_update(AppState::Game).with_system(toggle_grid))
         .add_system_set_to_stage(
-            CoreStage::Last,
+            AppStage::TileSpawning,
             SystemSet::on_update(AppState::Game)
                 .with_system(spawn_tile)
-                .label(AppLabel::SpawnTile)
                 .after(AppLabel::DespawnTile),
         )
         .add_system_set_to_stage(
-            CoreStage::Last,
+            AppStage::TileSpawning,
             SystemSet::on_update(AppState::Game)
                 .with_system(despawn_tile)
                 .label(AppLabel::DespawnTile),
@@ -52,7 +51,7 @@ fn setup(
         &asset_server,
         &mut texture_atlases,
         object_sprite_handles,
-        &mut Some(&mut ground_tile_update_events),
+        &mut ground_tile_update_events,
     );
 
     commands.insert_resource(course);
@@ -90,18 +89,16 @@ fn spawn_tile(
     mut spawn_tile_events: EventReader<SpawnTileEvent>,
     mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
 ) {
+    let mut events = HashMap::new();
     for SpawnTileEvent {
         grid_pos,
         tile_variant,
     } in spawn_tile_events.iter()
     {
-        course.spawn_tile(
-            &mut commands,
-            grid_pos,
-            tile_variant,
-            &mut Some(&mut ground_tile_update_events),
-            true,
-        );
+        course.spawn_tile(&mut commands, grid_pos, tile_variant, &mut events, true);
+    }
+    for event in events.into_values() {
+        ground_tile_update_events.send(event);
     }
 }
 

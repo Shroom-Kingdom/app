@@ -31,7 +31,7 @@ impl Course {
         asset_server: &AssetServer,
         texture_atlases: &mut Assets<TextureAtlas>,
         object_sprite_handles: Res<ObjectSpriteHandles>,
-        ground_tile_update_events: &mut Option<&mut EventWriter<GroundTileUpdateEvent>>,
+        ground_tile_update_events: &mut EventWriter<GroundTileUpdateEvent>,
     ) -> Self {
         let texture_handle = asset_server.load(&format!("MW_Field_{}_0.png", theme.get_name()));
         let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
@@ -50,19 +50,20 @@ impl Course {
             goal_pos_x: 32,
         };
 
+        let mut events = HashMap::new();
         for x in 0..7 {
             course.spawn_tile(
                 commands,
                 &[x, 0],
                 &TileVariant::Ground(GroundVariant::Full0),
-                ground_tile_update_events,
+                &mut events,
                 false,
             );
             course.spawn_tile(
                 commands,
                 &[x, 1],
                 &TileVariant::Ground(GroundVariant::Top0),
-                ground_tile_update_events,
+                &mut events,
                 false,
             );
         }
@@ -70,16 +71,19 @@ impl Course {
             commands,
             &[7, 0],
             &TileVariant::Ground(GroundVariant::Right0),
-            ground_tile_update_events,
+            &mut events,
             false,
         );
         course.spawn_tile(
             commands,
             &[7, 1],
             &TileVariant::Ground(GroundVariant::TopRight0),
-            ground_tile_update_events,
+            &mut events,
             false,
         );
+        for event in events.into_values() {
+            ground_tile_update_events.send(event);
+        }
 
         course.spawn_goal(commands, &object_sprite_handles, ground_tile_update_events);
         course.spawn_goal_drag(commands, asset_server);
@@ -92,7 +96,7 @@ impl Course {
         commands: &mut Commands,
         grid_pos: &[i32; 2],
         tile_variant: &TileVariant,
-        ground_tile_update_events: &mut Option<&mut EventWriter<GroundTileUpdateEvent>>,
+        events: &mut HashMap<Entity, GroundTileUpdateEvent>,
         is_editable: bool,
     ) {
         let world_pos = grid_to_world(grid_pos);
@@ -109,8 +113,7 @@ impl Course {
         }
 
         let surrounding_matrix = if let TileVariant::Ground(_) = tile_variant {
-            let surrounding_matrix =
-                get_surrounding_matrix(grid_pos, &mut self.tiles, ground_tile_update_events);
+            let surrounding_matrix = get_surrounding_matrix(grid_pos, &mut self.tiles, events);
             Some(GroundSurroundingMatrix(surrounding_matrix))
         } else {
             None
@@ -190,12 +193,12 @@ impl Course {
     }
 }
 
-#[allow(clippy::type_complexity)]
 pub fn get_surrounding_matrix(
     grid_pos: &[i32; 2],
     tiles: &mut HashMap<[i32; 2], Tile>,
-    ground_tile_update_events: &mut Option<&mut EventWriter<GroundTileUpdateEvent>>,
+    events: &mut HashMap<Entity, GroundTileUpdateEvent>,
 ) -> [[bool; 3]; 3] {
+    web_sys::console::log_1(&format!("get_surrounding_matrix {:?}", grid_pos).into());
     let mut surrounding_matrix = [
         [false, false, false],
         [false, false, false],
@@ -224,12 +227,13 @@ pub fn get_surrounding_matrix(
                 if let Some(mtrx) = mtrx {
                     mtrx.0[(y - grid_pos[1] + 1) as usize][(grid_pos[0] - x + 1) as usize] = true;
                     *ground_variant = GroundVariant::from_surrounding_matrix(&mtrx.0);
-                    if let Some(ref mut ground_tile_update_events) = ground_tile_update_events {
-                        ground_tile_update_events.send(GroundTileUpdateEvent {
+                    events.insert(
+                        *entity,
+                        GroundTileUpdateEvent {
                             entity: *entity,
                             index: ground_variant.get_sprite_sheet_index(),
-                        });
-                    }
+                        },
+                    );
                 }
             }
         }

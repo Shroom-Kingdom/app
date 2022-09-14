@@ -1,7 +1,7 @@
 mod game;
 
 use app_config::*;
-use app_core::{AppLabel, AppState, PlayerStages, SelectedTile, TileVariant};
+use app_core::{AppLabel, AppStage, AppState, SelectedTile, TileVariant};
 use bevy::prelude::*;
 use game::{change_after_tile_select, select_tile, toggle_game_mode, SelectTileEvent};
 
@@ -30,7 +30,7 @@ impl Plugin for MenuPlugin {
             )
             .add_system_set(SystemSet::on_update(AppState::Menu).with_system(start_game))
             .add_system_set_to_stage(
-                PlayerStages::PlayerInput,
+                AppStage::PlayerInput,
                 SystemSet::on_update(AppState::Game)
                     .with_system(select_tile.label(MenuLabel::SelectTile))
                     .with_system(change_after_tile_select.after(MenuLabel::SelectTile))
