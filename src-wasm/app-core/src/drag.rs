@@ -1,6 +1,6 @@
 use crate::{
     cursor_to_world, grid_to_world, world_to_grid, world_to_grid_pos, GoalPole,
-    GoalPoleDragDirection, GoalPoleDragEvent, MainCameraQuery,
+    GoalPoleDragDirection, GoalPoleDragEvent, GoalPoleDragTimer, MainCameraQuery,
 };
 use app_config::{MAX_GOAL_POS_X, MIN_GOAL_POS_X};
 use bevy::{input::mouse::MouseMotion, prelude::*};
@@ -109,15 +109,20 @@ pub fn drag_mouse_button(
 
 pub fn handle_drag_events(
     mut query: Query<&mut Transform>,
-    goal_pole_query: Query<With<GoalPole>>,
+    mut goal_pole_query: Query<&mut GoalPoleDragTimer, With<GoalPole>>,
     mut drag_events: EventReader<DragEvent>,
     mut goal_pole_drag_events: EventWriter<GoalPoleDragEvent>,
+    time: Res<Time>,
 ) {
     for DragEvent { entity, grid_pos } in drag_events.iter() {
         if let Ok(mut transform) = query.get_mut(*entity) {
             let world_pos = grid_to_world(grid_pos);
 
-            if goal_pole_query.get(*entity).is_ok() {
+            if let Ok(mut timer) = goal_pole_query.get_mut(*entity) {
+                timer.tick(time.delta());
+                if !timer.finished() {
+                    return;
+                }
                 let old_grid_pos = world_to_grid_pos(transform.translation.x);
                 if old_grid_pos == grid_pos[0] {
                     return;
@@ -132,6 +137,7 @@ pub fn handle_drag_events(
                     GoalPoleDragDirection::Right if old_grid_pos + 1 > MAX_GOAL_POS_X => return,
                     _ => {}
                 };
+                timer.reset();
                 goal_pole_drag_events.send(GoalPoleDragEvent { direction });
             } else {
                 transform.translation = world_pos.extend(0.);

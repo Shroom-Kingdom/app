@@ -9,7 +9,7 @@ mod utils;
 
 pub use course::{
     get_surrounding_matrix,
-    goal_pole::{GoalPole, GoalPoleDragDirection, GoalPoleDragEvent},
+    goal_pole::{GoalPole, GoalPoleDragDirection, GoalPoleDragEvent, GoalPoleDragTimer},
     object::ObjectVariant,
     sprites::{
         ObjectSpriteHandles, ThemeSpriteHandles, TileSpriteHandles, TileSpriteHandlesTransparent,

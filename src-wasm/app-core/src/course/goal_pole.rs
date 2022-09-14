@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::{
     grid_to_world, grid_to_world_f32, pos_to_world, Course, DespawnTileEvent, DragEventFlags,
     Draggable, GroundTileUpdateEvent, GroundVariant, ObjectSpriteHandles, ObjectVariant,
@@ -18,6 +20,9 @@ pub enum GoalPoleDragDirection {
     Left,
     Right,
 }
+
+#[derive(Component, Deref, DerefMut)]
+pub struct GoalPoleDragTimer(pub Timer);
 
 pub struct RespawnGoalPoleEvent;
 
@@ -150,7 +155,11 @@ impl Course {
             .insert(GoalPole(self.goal_pos_x + 1))
             .insert(Draggable {
                 flags: DragEventFlags::ONLY_HORIZONTAL | DragEventFlags::WITHOUT_MOUSE_MOTION,
-            });
+            })
+            .insert(GoalPoleDragTimer(Timer::new(
+                Duration::from_millis(100),
+                true,
+            )));
     }
 
     pub fn despawn_goal(
