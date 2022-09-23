@@ -1,6 +1,6 @@
 use app_config::*;
 use app_core::{
-    Course, GameMode, GameModeToggleEvent, GroundVariant, SelectedTile, TilePlacePreview,
+    GameMode, GameModeToggleEvent, GroundVariant, SelectedTile, TilePlacePreview,
     TileSpriteHandles, TileVariant, UiButtonSpriteHandles, UiButtonVariant,
 };
 use bevy::{prelude::*, ui::FocusPolicy};
@@ -228,7 +228,7 @@ pub fn toggle_game_mode(
     mut query: Query<(&Interaction, &mut GameModeToggleButton), Changed<Interaction>>,
     mut game_mode_edit_query: Query<&mut Style, With<GameModeEdit>>,
     mut game_mode_button_query: Query<&mut UiImage, With<GameModeToggleButtonImage>>,
-    mut course: ResMut<Course>,
+    mut game_mode: ResMut<GameMode>,
     mut game_mode_toggle_event: EventWriter<GameModeToggleEvent>,
     ui_button_sprite_handles: Res<UiButtonSpriteHandles>,
     mut tile_place_preview: ResMut<TilePlacePreview>,
@@ -238,7 +238,7 @@ pub fn toggle_game_mode(
         if *interaction == Interaction::Clicked {
             let is_editing = !button.is_editing;
             button.is_editing = is_editing;
-            course.game_mode = GameMode::Build { is_editing };
+            *game_mode = GameMode::Build { is_editing };
             let mut game_mode_button = game_mode_button_query.single_mut();
             *game_mode_button = UiImage(
                 ui_button_sprite_handles

@@ -2,9 +2,9 @@ mod grid;
 
 use app_config::*;
 use app_core::{
-    AppLabel, AppStage, AppState, Course, DespawnTileEvent, GroundTileUpdateEvent, GroundVariant,
-    ObjectSpriteHandles, SelectedTile, SpawnTileEvent, ThemeSpriteHandles, ThemeVariant, Tile,
-    TileNotEditable, TileVariant,
+    AppLabel, AppStage, AppState, Course, DespawnTileEvent, GameMode, GroundTileUpdateEvent,
+    GroundVariant, ObjectSpriteHandles, SelectedTile, SpawnTileEvent, ThemeSpriteHandles,
+    ThemeVariant, Tile, TileNotEditable, TileVariant,
 };
 use bevy::{prelude::*, utils::HashMap};
 use grid::{setup_grid, toggle_grid};
@@ -55,6 +55,7 @@ fn setup(
     );
 
     commands.insert_resource(course);
+    commands.insert_resource(GameMode::Build { is_editing: true });
     selected_tile.0 = Some(TileVariant::Ground(GroundVariant::default()));
 
     let texture = theme_sprite_handles

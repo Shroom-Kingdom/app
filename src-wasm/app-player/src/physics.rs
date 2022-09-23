@@ -1,6 +1,6 @@
 use crate::{Player, WalkAnimationTimer};
 use app_config::*;
-use app_core::{Course, GameMode, Ground};
+use app_core::{GameMode, Ground};
 use bevy::{math::Vec3Swizzles, prelude::*, utils::HashSet};
 use bevy_rapier::prelude::*;
 
@@ -34,9 +34,9 @@ pub fn physics(
     ground_query: Query<(&Ground, &Friction)>,
     ctx: Res<RapierContext>,
     ground_intersect_events: EventWriter<GroundIntersectEvent>,
-    course: Res<Course>,
+    game_mode: Res<GameMode>,
 ) {
-    if let GameMode::Build { is_editing: true } = course.game_mode {
+    if let GameMode::Build { is_editing: true } = *game_mode {
         return;
     }
     if let Ok((

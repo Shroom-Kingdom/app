@@ -6,22 +6,32 @@ pub(crate) mod tile;
 pub(crate) mod ui_button;
 
 use crate::{
-    grid_to_world, GameMode, Ground, GroundSurroundingMatrix, GroundTileUpdateEvent, GroundVariant,
+    grid_to_world, Ground, GroundSurroundingMatrix, GroundTileUpdateEvent, GroundVariant,
     ObjectSpriteHandles, ThemeVariant, Tile, TileNotEditable, TileVariant,
 };
 use app_config::*;
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{geometry::Friction, prelude::*};
+use serde::{Deserialize, Deserializer, Serialize};
 
-#[derive(Debug, TypeUuid)]
+#[derive(Debug, Deserialize, Serialize, TypeUuid)]
 #[uuid = "81a23571-1f35-4f20-b1ea-30e5c2612049"]
 pub struct Course {
+    #[serde(skip_serializing)]
+    #[serde(deserialize_with = "deserialize_tah")]
     pub texture_atlas_handle: Handle<TextureAtlas>,
+    #[serde(skip)]
     pub texture_atlas_handle_transparent: Handle<TextureAtlas>,
     pub tiles: HashMap<[i32; 2], Tile>,
     pub theme: ThemeVariant,
-    pub game_mode: GameMode,
     pub goal_pos_x: i32,
+}
+
+pub fn deserialize_tah<'de, D>(_: D) -> Result<Handle<TextureAtlas>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    unimplemented!()
 }
 
 impl Course {
@@ -46,7 +56,6 @@ impl Course {
             texture_atlas_handle_transparent,
             tiles: HashMap::default(),
             theme,
-            game_mode: GameMode::Build { is_editing: true },
             goal_pos_x: 32,
         };
 

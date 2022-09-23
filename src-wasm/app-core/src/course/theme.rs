@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use enum_iterator::Sequence;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Component, Debug, Eq, Hash, PartialEq, Sequence)]
+#[derive(Clone, Component, Debug, Deserialize, Eq, Hash, PartialEq, Sequence, Serialize)]
 pub enum ThemeVariant {
     Plain,
     Underground,

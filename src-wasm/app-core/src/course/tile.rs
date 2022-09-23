@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use enum_iterator::Sequence;
+use serde::{Deserialize, Serialize};
 
 #[derive(Component)]
 pub struct TilePreview;
@@ -9,14 +10,15 @@ pub struct TileNotEditable;
 
 pub struct TilePlacePreview(pub Option<(Entity, [i32; 2])>);
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Tile {
     pub entity: Entity,
     pub variant: TileVariant,
+    #[serde(skip)]
     pub mtrx: Option<GroundSurroundingMatrix>,
 }
 
-#[derive(Clone, Component, Debug, Eq, Hash, PartialEq, Sequence)]
+#[derive(Clone, Component, Debug, Deserialize, Eq, Hash, PartialEq, Sequence, Serialize)]
 pub enum TileVariant {
     Ground(GroundVariant),
     HardBlock,
@@ -25,7 +27,7 @@ pub enum TileVariant {
     CloudBlock,
 }
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq, Sequence)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Sequence, Serialize)]
 pub enum GroundVariant {
     TopLeft0,
     TopRight0,

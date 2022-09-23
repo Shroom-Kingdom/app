@@ -1,6 +1,6 @@
 use crate::{Player, PlayerState, PlayerStateEnum, PlayerVelocity};
 use app_config::*;
-use app_core::{Course, GameMode, Ground};
+use app_core::{GameMode, Ground};
 use bevy::{math::Vec3Swizzles, prelude::*};
 use bevy_rapier::prelude::*;
 
@@ -40,9 +40,9 @@ pub fn movement(
     mut facing_direction_events: EventWriter<FacingDirectionEvent>,
     mut dash_turn_events: EventWriter<DashTurnEvent>,
     ctx: Res<RapierContext>,
-    course: Res<Course>,
+    game_mode: Res<GameMode>,
 ) {
-    if let GameMode::Build { is_editing: true } = course.game_mode {
+    if let GameMode::Build { is_editing: true } = *game_mode {
         if let Ok((_, mut vel, _, _, _, _)) = query.get_single_mut() {
             let left = keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
             let right =

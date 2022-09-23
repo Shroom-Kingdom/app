@@ -31,10 +31,11 @@ fn spawn_tile(
     spawn_tile_events: EventWriter<SpawnTileEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
     course: Res<Course>,
+    game_mode: Res<GameMode>,
     selected_tile: Res<SelectedTile>,
     dragging: Res<Option<Dragging>>,
 ) {
-    if let GameMode::Build { is_editing: true } = course.game_mode {
+    if let GameMode::Build { is_editing: true } = *game_mode {
         for interaction in button_query.iter() {
             if interaction == &Interaction::Hovered || interaction == &Interaction::Clicked {
                 return;

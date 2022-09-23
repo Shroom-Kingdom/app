@@ -13,6 +13,7 @@ pub(crate) fn spawn_tile_preview(
     windows: Res<Windows>,
     camera_query: MainCameraQuery,
     course: Res<Course>,
+    game_mode: Res<GameMode>,
     mut commands: Commands,
     selected_tile: Res<SelectedTile>,
     mut tile_place_preview: ResMut<TilePlacePreview>,
@@ -22,7 +23,7 @@ pub(crate) fn spawn_tile_preview(
     >,
 ) {
     if let Some(tile_variant) = &selected_tile.0 {
-        if let GameMode::Build { is_editing: true } = course.game_mode {
+        if let GameMode::Build { is_editing: true } = *game_mode {
             let window = windows.get_primary().unwrap();
             for cursor_moved in cursor_events.iter() {
                 let world_pos = cursor_to_world(cursor_moved.position, &camera_query, window);

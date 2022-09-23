@@ -6,7 +6,10 @@ edition = "2021"
 [dependencies]
 app-config = { path = "../app-config" }
 bitflags = "1"
+brotli = "3"
 enum-iterator = "1"
+ron = "0.8"
+serde = { version = "1", features = ["derive"] }
 strum = "0.24"
 strum_macros = "0.24"
 web-sys = "0.3"
