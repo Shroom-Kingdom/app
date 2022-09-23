@@ -1,3 +1,6 @@
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+
 use crate::Player;
 // use app_config::RAPIER_SCALE;
 use bevy::prelude::*;
