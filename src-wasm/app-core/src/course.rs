@@ -9,8 +9,9 @@ pub(crate) mod ui_button;
 use crate::{GroundTileUpdateEvent, GroundVariant, ThemeVariant, Tile, TileVariant};
 use anyhow::Result;
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
-use brotli::enc::{
-    backward_references::BrotliEncoderMode, writer::CompressorWriter, BrotliEncoderParams,
+use brotli::{
+    enc::{backward_references::BrotliEncoderMode, writer::CompressorWriter, BrotliEncoderParams},
+    DecompressorWriter,
 };
 use serde::{Deserialize, Serialize};
 use std::io::Write;
@@ -46,6 +47,16 @@ impl Course {
         writer.flush()?;
         drop(writer);
         Ok(res)
+    }
+
+    pub fn deserialize(buf: Vec<u8>) -> Result<Self> {
+        let mut decompressed = vec![];
+        let mut writer = DecompressorWriter::new(&mut decompressed, 4096);
+        writer.write_all(&buf)?;
+        writer.flush()?;
+        drop(writer);
+        let course_as_str = String::from_utf8(decompressed)?;
+        Ok(ron::from_str(&course_as_str)?)
     }
 }
 
