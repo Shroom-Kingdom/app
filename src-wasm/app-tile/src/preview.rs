@@ -1,6 +1,6 @@
 use app_config::*;
 use app_core::{
-    cursor_to_world, grid_to_world, world_to_grid, Course, GameMode, GroundSurroundingMatrix,
+    cursor_to_world, grid_to_world, world_to_grid, CourseRes, GameMode, GroundSurroundingMatrix,
     GroundVariant, MainCameraQuery, SelectedTile, TilePlacePreview, TilePreview, TileVariant,
 };
 use bevy::{prelude::*, render::primitives::Frustum};
@@ -12,7 +12,7 @@ pub(crate) fn spawn_tile_preview(
     mut cursor_events: EventReader<CursorMoved>,
     windows: Res<Windows>,
     camera_query: MainCameraQuery,
-    course: Res<Course>,
+    course: Res<CourseRes>,
     game_mode: Res<GameMode>,
     mut commands: Commands,
     selected_tile: Res<SelectedTile>,

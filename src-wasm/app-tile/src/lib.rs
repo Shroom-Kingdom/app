@@ -1,7 +1,7 @@
 mod preview;
 
 use app_core::{
-    cursor_to_world, world_to_grid, AppState, Course, DespawnTileEvent, Dragging, GameMode,
+    cursor_to_world, world_to_grid, AppState, CourseRes, DespawnTileEvent, Dragging, GameMode,
     GroundTileUpdateEvent, MainCameraQuery, SelectedTile, SpawnTileEvent,
 };
 use bevy::prelude::*;
@@ -30,7 +30,7 @@ fn spawn_tile(
     button_query: Query<&Interaction, With<Button>>,
     spawn_tile_events: EventWriter<SpawnTileEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
-    course: Res<Course>,
+    course: Res<CourseRes>,
     game_mode: Res<GameMode>,
     selected_tile: Res<SelectedTile>,
     dragging: Res<Option<Dragging>>,
@@ -64,7 +64,7 @@ fn send_spawn_tile(
     window: &Window,
     camera_query: &MainCameraQuery,
     mut spawn_tile_events: EventWriter<SpawnTileEvent>,
-    course: &Course,
+    course: &CourseRes,
     selected_tile: &SelectedTile,
 ) {
     let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
@@ -89,7 +89,7 @@ fn send_despawn_tile(
     window: &Window,
     camera_query: &MainCameraQuery,
     mut despawn_tile_events: EventWriter<DespawnTileEvent>,
-    course: &Course,
+    course: &CourseRes,
 ) {
     let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
         cursor_pointer

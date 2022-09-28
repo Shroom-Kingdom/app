@@ -9,32 +9,34 @@ use crate::{
     grid_to_world, Ground, GroundSurroundingMatrix, GroundTileUpdateEvent, GroundVariant,
     ObjectSpriteHandles, ThemeVariant, Tile, TileNotEditable, TileVariant,
 };
+use anyhow::Result;
 use app_config::*;
 use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
 use bevy_rapier::{geometry::Friction, prelude::*};
-use serde::{Deserialize, Deserializer, Serialize};
+use brotli::enc::{
+    backward_references::BrotliEncoderMode, writer::CompressorWriter, BrotliEncoderParams,
+};
+use serde::{Deserialize, Serialize};
+use std::io::Write;
 
-#[derive(Debug, Deserialize, Serialize, TypeUuid)]
+#[derive(Clone, Debug, TypeUuid)]
 #[uuid = "81a23571-1f35-4f20-b1ea-30e5c2612049"]
-pub struct Course {
-    #[serde(skip_serializing)]
-    #[serde(deserialize_with = "deserialize_tah")]
+pub struct CourseRes {
     pub texture_atlas_handle: Handle<TextureAtlas>,
-    #[serde(skip)]
     pub texture_atlas_handle_transparent: Handle<TextureAtlas>,
     pub tiles: HashMap<[i32; 2], Tile>,
     pub theme: ThemeVariant,
     pub goal_pos_x: i32,
 }
 
-pub fn deserialize_tah<'de, D>(_: D) -> Result<Handle<TextureAtlas>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    unimplemented!()
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Course {
+    pub tiles: HashMap<[i32; 2], TileVariant>,
+    pub theme: ThemeVariant,
+    pub goal_pos_x: i32,
 }
 
-impl Course {
+impl CourseRes {
     pub fn empty(
         commands: &mut Commands,
         theme: ThemeVariant,
@@ -43,15 +45,9 @@ impl Course {
         object_sprite_handles: Res<ObjectSpriteHandles>,
         ground_tile_update_events: &mut EventWriter<GroundTileUpdateEvent>,
     ) -> Self {
-        let texture_handle = asset_server.load(&format!("MW_Field_{}_0.png", theme.get_name()));
-        let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
-        let texture_atlas_handle = texture_atlases.add(texture_atlas);
-        let texture_handle_transparent =
-            asset_server.load(&format!("0MW_Field_{}_0.png", theme.get_name()));
-        let texture_atlas_transparent =
-            TextureAtlas::from_grid(texture_handle_transparent, Vec2::new(16.0, 16.0), 16, 48);
-        let texture_atlas_handle_transparent = texture_atlases.add(texture_atlas_transparent);
-        let mut course = Course {
+        let (texture_atlas_handle, texture_atlas_handle_transparent) =
+            Self::load_handles(&theme, asset_server, texture_atlases);
+        let mut course = CourseRes {
             texture_atlas_handle,
             texture_atlas_handle_transparent,
             tiles: HashMap::default(),
@@ -100,6 +96,22 @@ impl Course {
         course
     }
 
+    fn load_handles(
+        theme: &ThemeVariant,
+        asset_server: &AssetServer,
+        texture_atlases: &mut Assets<TextureAtlas>,
+    ) -> (Handle<TextureAtlas>, Handle<TextureAtlas>) {
+        let texture_handle = asset_server.load(&format!("MW_Field_{}_0.png", theme.get_name()));
+        let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
+        let texture_atlas_handle = texture_atlases.add(texture_atlas);
+        let texture_handle_transparent =
+            asset_server.load(&format!("0MW_Field_{}_0.png", theme.get_name()));
+        let texture_atlas_transparent =
+            TextureAtlas::from_grid(texture_handle_transparent, Vec2::new(16.0, 16.0), 16, 48);
+        let texture_atlas_handle_transparent = texture_atlases.add(texture_atlas_transparent);
+        (texture_atlas_handle, texture_atlas_handle_transparent)
+    }
+
     pub fn spawn_tile(
         &mut self,
         commands: &mut Commands,
@@ -108,11 +120,11 @@ impl Course {
         events: &mut HashMap<Entity, GroundTileUpdateEvent>,
         is_editable: bool,
     ) {
-        let world_pos = grid_to_world(grid_pos);
         if self.tiles.contains_key(grid_pos) {
             return;
         }
 
+        let world_pos = grid_to_world(grid_pos);
         if grid_pos[0] < 0
             || grid_pos[1] < 0
             || grid_pos[0] > self.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X
@@ -199,6 +211,39 @@ impl Course {
             mtrx: surrounding_matrix,
         };
         self.tiles.insert(*grid_pos, tile);
+    }
+}
+
+impl Course {
+    pub fn serialize(&self) -> Result<Vec<u8>> {
+        let course_as_str = ron::to_string(self)?;
+        let mut res = vec![];
+        let params = BrotliEncoderParams {
+            mode: BrotliEncoderMode::BROTLI_MODE_TEXT,
+            quality: 11,
+            ..Default::default()
+        };
+        let mut writer = CompressorWriter::with_params(&mut res, 4096, &params);
+        writer.write_all(course_as_str.as_bytes())?;
+        writer.flush()?;
+        drop(writer);
+        Ok(res)
+    }
+}
+
+impl From<CourseRes> for Course {
+    fn from(course: CourseRes) -> Self {
+        Self {
+            tiles: {
+                let mut tiles = HashMap::new();
+                for (pos, tile) in course.tiles {
+                    tiles.insert(pos, tile.variant);
+                }
+                tiles
+            },
+            theme: course.theme,
+            goal_pos_x: course.goal_pos_x,
+        }
     }
 }
 

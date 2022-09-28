@@ -2,7 +2,7 @@ mod grid;
 
 use app_config::*;
 use app_core::{
-    AppLabel, AppStage, AppState, Course, DespawnTileEvent, GameMode, GroundTileUpdateEvent,
+    AppLabel, AppStage, AppState, CourseRes, DespawnTileEvent, GameMode, GroundTileUpdateEvent,
     GroundVariant, ObjectSpriteHandles, SelectedTile, SpawnTileEvent, ThemeSpriteHandles,
     ThemeVariant, Tile, TileNotEditable, TileVariant,
 };
@@ -45,7 +45,7 @@ fn setup(
     object_sprite_handles: Res<ObjectSpriteHandles>,
     mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
 ) {
-    let course = Course::empty(
+    let course = CourseRes::empty(
         &mut commands,
         ThemeVariant::Plain,
         &asset_server,
@@ -86,7 +86,7 @@ fn setup(
 
 fn spawn_tile(
     mut commands: Commands,
-    mut course: ResMut<Course>,
+    mut course: ResMut<CourseRes>,
     mut spawn_tile_events: EventReader<SpawnTileEvent>,
     mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
 ) {
@@ -105,7 +105,7 @@ fn spawn_tile(
 
 fn despawn_tile(
     mut commands: Commands,
-    mut course: ResMut<Course>,
+    mut course: ResMut<CourseRes>,
     mut despawn_tile_events: EventReader<DespawnTileEvent>,
     mut test_query: Query<Entity, Without<TileNotEditable>>,
     mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,

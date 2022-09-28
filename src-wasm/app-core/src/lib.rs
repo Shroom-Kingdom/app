@@ -21,7 +21,7 @@ pub use course::{
         TilePlacePreview, TilePreview, TileVariant,
     },
     ui_button::UiButtonVariant,
-    Course,
+    Course, CourseRes,
 };
 pub use drag::{DragEvent, DragEventFlags, Draggable, Dragging};
 pub use game_mode::{GameMode, GameModeToggleEvent};

@@ -1,6 +1,6 @@
 use crate::Player;
 use app_config::*;
-use app_core::{pos_to_world, Course, GoalPoleDragDirection, GoalPoleDragEvent};
+use app_core::{pos_to_world, CourseRes, GoalPoleDragDirection, GoalPoleDragEvent};
 use bevy::{
     prelude::*,
     render::{camera::Camera, primitives::Frustum},
@@ -9,7 +9,7 @@ use bevy::{
 pub fn position_camera(
     mut query: Query<&mut Transform, (With<Camera>, With<Frustum>)>,
     player_query: Query<&Transform, (With<Player>, Without<Camera>)>,
-    course: Res<Course>,
+    course: Res<CourseRes>,
 ) {
     if let Ok(mut transform) = query.get_single_mut() {
         if let Ok(rb_transform) = player_query.get_single() {
@@ -28,7 +28,7 @@ pub fn position_camera(
 pub fn move_player_on_goal_pole_drag(
     mut player_query: Query<&mut Transform, With<Player>>,
     mut drag_events: EventReader<GoalPoleDragEvent>,
-    course: Res<Course>,
+    course: Res<CourseRes>,
 ) {
     if let Some(GoalPoleDragEvent { direction }) = drag_events.iter().next() {
         let pos_diff = pos_to_world(match direction {

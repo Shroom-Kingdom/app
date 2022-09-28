@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1"
 app-config = { path = "../app-config" }
 bitflags = "1"
 brotli = "3"

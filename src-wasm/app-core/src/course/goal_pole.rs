@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::{
-    grid_to_world, grid_to_world_f32, pos_to_world, Course, DespawnTileEvent, DragEventFlags,
+    grid_to_world, grid_to_world_f32, pos_to_world, CourseRes, DespawnTileEvent, DragEventFlags,
     Draggable, GroundTileUpdateEvent, GroundVariant, ObjectSpriteHandles, ObjectVariant,
     TileVariant,
 };
@@ -26,7 +26,7 @@ pub struct GoalPoleDragTimer(pub Timer);
 
 pub struct RespawnGoalPoleEvent;
 
-impl Course {
+impl CourseRes {
     pub fn spawn_goal(
         &mut self,
         commands: &mut Commands,
@@ -199,7 +199,7 @@ pub fn move_goal_pole(
     mut drag_events: EventReader<GoalPoleDragEvent>,
     despawn_tile_events: EventWriter<DespawnTileEvent>,
     mut respawn_events: EventWriter<RespawnGoalPoleEvent>,
-    mut course: ResMut<Course>,
+    mut course: ResMut<CourseRes>,
 ) {
     if let Some(GoalPoleDragEvent { direction }) = drag_events.iter().next() {
         course.despawn_goal(query, direction, commands, despawn_tile_events);
@@ -218,7 +218,7 @@ pub fn move_goal_pole(
 
 pub fn respawn_goal_pole(
     mut commands: Commands,
-    mut course: ResMut<Course>,
+    mut course: ResMut<CourseRes>,
     object_sprite_handles: Res<ObjectSpriteHandles>,
     mut respawn_events: EventReader<RespawnGoalPoleEvent>,
     mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
