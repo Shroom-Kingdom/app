@@ -1,9 +1,15 @@
 mod game;
 
+pub(crate) use game::tiles::{GameModeEdit, SelectTileEvent};
+
 use app_config::*;
 use app_core::{AppLabel, AppStage, AppState, SelectedTile, TileVariant};
 use bevy::prelude::*;
-use game::{change_after_tile_select, select_tile, toggle_game_mode, SelectTileEvent};
+use game::{
+    export,
+    tiles::{change_after_tile_select, select_tile},
+    toggle_game_mode,
+};
 
 #[derive(Component)]
 struct MainMenu;
@@ -34,6 +40,7 @@ impl Plugin for MenuPlugin {
                 SystemSet::on_update(AppState::Game)
                     .with_system(select_tile.label(MenuLabel::SelectTile))
                     .with_system(change_after_tile_select.after(MenuLabel::SelectTile))
+                    .with_system(export)
                     .with_system(toggle_game_mode),
             )
             .add_system(on_hover);

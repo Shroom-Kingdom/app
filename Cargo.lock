@@ -188,6 +188,7 @@ dependencies = [
  "app-config",
  "app-core",
  "bevy",
+ "js-sys",
  "wasm-bindgen",
  "web-sys",
 ]

@@ -60,17 +60,17 @@ impl Course {
     }
 }
 
-impl From<CourseRes> for Course {
-    fn from(course: CourseRes) -> Self {
+impl From<&CourseRes> for Course {
+    fn from(course: &CourseRes) -> Self {
         Self {
             tiles: {
                 let mut tiles = HashMap::new();
-                for (pos, tile) in course.tiles {
+                for (pos, tile) in course.tiles.clone() {
                     tiles.insert(pos, tile.variant);
                 }
                 tiles
             },
-            theme: course.theme,
+            theme: course.theme.clone(),
             goal_pos_x: course.goal_pos_x,
         }
     }

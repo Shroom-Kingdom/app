@@ -1,56 +1,24 @@
+pub(crate) mod tiles;
+
+use crate::GameModeEdit;
 use app_config::*;
 use app_core::{
-    GameMode, GameModeToggleEvent, GroundVariant, SelectedTile, TilePlacePreview,
-    TileSpriteHandles, TileVariant, UiButtonSpriteHandles, UiButtonVariant,
+    Course, CourseRes, GameMode, GameModeToggleEvent, TilePlacePreview, TileSpriteHandles,
+    UiButtonSpriteHandles, UiButtonVariant,
 };
 use bevy::{prelude::*, ui::FocusPolicy};
-
-macro_rules! add_tile_button {
-    ( $parent:expr, $color:expr, $sprite_handles:expr, $tile:expr, $is_selected:expr ) => {
-        $parent
-            .spawn_bundle(ButtonBundle {
-                style: Style {
-                    size: Size::new(Val::Px(48.), Val::Px(48.)),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..Default::default()
-                },
-                color: $color.into(),
-                ..Default::default()
-            })
-            .with_children(|parent| {
-                parent
-                    .spawn_bundle(ImageBundle {
-                        image: UiImage($sprite_handles.0.get(&$tile).unwrap().clone()),
-                        transform: Transform {
-                            scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
-                            ..Default::default()
-                        },
-                        style: Style {
-                            margin: UiRect::all(Val::Auto),
-                            ..Default::default()
-                        },
-                        ..Default::default()
-                    })
-                    .insert(FocusPolicy::Pass);
-            })
-            .insert($tile)
-            .insert(SelectedTileButton($is_selected));
-    };
-}
-
-#[derive(Component)]
-pub struct SelectedTileButton(pub bool);
-
-pub struct SelectTileEvent(pub Entity);
-
-#[derive(Component)]
-pub struct GameModeEdit;
+use js_sys::{Array, Uint8Array};
+use wasm_bindgen::{prelude::*, JsCast};
+use web_sys::{Blob, HtmlElement, MouseEvent, Url};
 
 #[derive(Component)]
 pub struct GameModeToggleButton {
     pub is_editing: bool,
 }
+
+#[derive(Component)]
+
+pub struct ExportButton;
 
 #[derive(Component)]
 pub struct GameModeToggleButtonImage;
@@ -60,60 +28,8 @@ pub fn setup_game_ui(
     tile_sprite_handles: Res<TileSpriteHandles>,
     ui_button_sprite_handles: Res<UiButtonSpriteHandles>,
 ) {
-    commands
-        .spawn_bundle(NodeBundle {
-            style: Style {
-                margin: UiRect {
-                    top: Val::Px(6.),
-                    bottom: Val::Auto,
-                    left: Val::Auto,
-                    right: Val::Auto,
-                },
-                padding: UiRect::all(Val::Px(6.)),
-                justify_content: JustifyContent::SpaceBetween,
-                align_items: AlignItems::Center,
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(GameModeEdit)
-        .with_children(|parent| {
-            add_tile_button!(
-                parent,
-                SELECTED_BUTTON_COLOR,
-                tile_sprite_handles,
-                TileVariant::Ground(GroundVariant::default()),
-                true
-            );
-            add_tile_button!(
-                parent,
-                NORMAL_BUTTON_COLOR,
-                tile_sprite_handles,
-                TileVariant::HardBlock,
-                false
-            );
-            add_tile_button!(
-                parent,
-                NORMAL_BUTTON_COLOR,
-                tile_sprite_handles,
-                TileVariant::RotatingBlock,
-                false
-            );
-            add_tile_button!(
-                parent,
-                NORMAL_BUTTON_COLOR,
-                tile_sprite_handles,
-                TileVariant::DonutBlock,
-                false
-            );
-            add_tile_button!(
-                parent,
-                NORMAL_BUTTON_COLOR,
-                tile_sprite_handles,
-                TileVariant::CloudBlock,
-                false
-            );
-        });
+    tiles::spawn_tile_buttons(&mut commands, &tile_sprite_handles);
+
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -131,94 +47,134 @@ pub fn setup_game_ui(
             ..Default::default()
         })
         .with_children(|parent| {
-            parent
-                .spawn_bundle(ButtonBundle {
-                    style: Style {
-                        size: Size::new(Val::Px(48.), Val::Px(48.)),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        ..Default::default()
-                    },
-                    color: NORMAL_BUTTON_COLOR.into(),
-                    ..Default::default()
-                })
-                .with_children(|parent| {
-                    parent
-                        .spawn_bundle(ImageBundle {
-                            image: UiImage(
-                                ui_button_sprite_handles
-                                    .0
-                                    .get(&UiButtonVariant::GameModeSwitch { is_editing: true })
-                                    .unwrap()
-                                    .clone(),
-                            ),
-                            transform: Transform {
-                                scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
-                                ..Default::default()
-                            },
-                            style: Style {
-                                margin: UiRect::all(Val::Auto),
-                                ..Default::default()
-                            },
-                            ..Default::default()
-                        })
-                        .insert(FocusPolicy::Pass)
-                        .insert(GameModeToggleButtonImage);
-                })
-                .insert(GameModeToggleButton { is_editing: true });
+            spawn_export_button(parent, &ui_button_sprite_handles);
+            spawn_game_mode_toggle_button(parent, &ui_button_sprite_handles);
         });
 }
 
-#[allow(clippy::type_complexity)]
-pub fn select_tile(
-    mut query: Query<
-        (
-            Entity,
-            &Interaction,
-            &TileVariant,
-            &mut UiColor,
-            &mut SelectedTileButton,
-        ),
-        Changed<Interaction>,
-    >,
-    mut selected_tile: ResMut<SelectedTile>,
-    mut select_tile_event: EventWriter<SelectTileEvent>,
-    mut tile_place_preview: ResMut<TilePlacePreview>,
-    mut commands: Commands,
+fn spawn_export_button(
+    parent: &mut ChildBuilder,
+    ui_button_sprite_handles: &UiButtonSpriteHandles,
 ) {
-    for (entity, interaction, tile_variant, mut color, mut is_selected) in query.iter_mut() {
-        if *interaction == Interaction::Clicked {
-            selected_tile.0 = Some(tile_variant.clone());
-            *color = SELECTED_BUTTON_COLOR.into();
-            is_selected.0 = true;
-            select_tile_event.send(SelectTileEvent(entity));
-
-            if let Some((entity, _)) = tile_place_preview.0 {
-                commands.entity(entity).despawn_recursive();
-                tile_place_preview.0 = None;
-            }
-        }
-    }
+    parent
+        .spawn_bundle(ButtonBundle {
+            style: Style {
+                size: Size::new(Val::Px(48.), Val::Px(48.)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            color: NORMAL_BUTTON_COLOR.into(),
+            ..Default::default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn_bundle(ImageBundle {
+                    image: UiImage(
+                        ui_button_sprite_handles
+                            .0
+                            .get(&UiButtonVariant::Export)
+                            .unwrap()
+                            .clone(),
+                    ),
+                    transform: Transform {
+                        scale: Vec3::new(0.6, 0.6, 0.),
+                        ..Default::default()
+                    },
+                    style: Style {
+                        margin: UiRect::all(Val::Auto),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .insert(FocusPolicy::Pass);
+        })
+        .insert(ExportButton);
 }
 
-pub fn change_after_tile_select(
-    mut query: Query<(Entity, &Interaction, &mut SelectedTileButton, &mut UiColor)>,
-    mut select_tile_event: EventReader<SelectTileEvent>,
+fn spawn_game_mode_toggle_button(
+    parent: &mut ChildBuilder,
+    ui_button_sprite_handles: &UiButtonSpriteHandles,
 ) {
-    for SelectTileEvent(selected_entity) in select_tile_event.iter() {
-        for (entity, interaction, mut tile_button, mut color) in query.iter_mut() {
-            if tile_button.0 && selected_entity != &entity {
-                match interaction {
-                    Interaction::Hovered => {
-                        *color = HOVERED_BUTTON_COLOR.into();
-                    }
-                    Interaction::None => {
-                        *color = NORMAL_BUTTON_COLOR.into();
-                    }
-                    _ => {}
-                }
-                tile_button.0 = false;
-            }
+    parent
+        .spawn_bundle(ButtonBundle {
+            style: Style {
+                size: Size::new(Val::Px(48.), Val::Px(48.)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            color: NORMAL_BUTTON_COLOR.into(),
+            ..Default::default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn_bundle(ImageBundle {
+                    image: UiImage(
+                        ui_button_sprite_handles
+                            .0
+                            .get(&UiButtonVariant::GameModeSwitch { is_editing: true })
+                            .unwrap()
+                            .clone(),
+                    ),
+                    transform: Transform {
+                        scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+                        ..Default::default()
+                    },
+                    style: Style {
+                        margin: UiRect::all(Val::Auto),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .insert(FocusPolicy::Pass)
+                .insert(GameModeToggleButtonImage);
+        })
+        .insert(GameModeToggleButton { is_editing: true });
+}
+
+pub fn export(
+    mut query: Query<&Interaction, (With<ExportButton>, Changed<Interaction>)>,
+    course: Res<CourseRes>,
+) {
+    for interaction in query.iter_mut() {
+        if *interaction == Interaction::Clicked {
+            let course: Course = course.as_ref().into();
+            let data = course.serialize().unwrap();
+            let js_data = unsafe { Uint8Array::view(&data[..]) };
+
+            let window = web_sys::window().unwrap();
+            let document = window.document().unwrap();
+            let anchor = document.create_element("a").unwrap();
+            let blob = Blob::new_with_u8_array_sequence(&Array::of1(&js_data)).unwrap();
+            let obj_url = Url::create_object_url_with_blob(&blob).unwrap();
+            anchor.set_attribute("href", &obj_url).unwrap();
+            anchor.set_attribute("download", "course.ron.br").unwrap();
+            anchor
+                .set_attribute("style", "{\"display\": \"none\"}")
+                .unwrap();
+
+            // TODO enable weakrefs to prevent memory leak
+            // https://rustwasm.github.io/wasm-bindgen/api/wasm_bindgen/closure/struct.Closure.html#method.into_js_value
+            let click_closure = Closure::<dyn FnMut(MouseEvent)>::new(|event: MouseEvent| {
+                event.stop_propagation();
+            });
+            anchor
+                .add_event_listener_with_callback("click", click_closure.as_ref().unchecked_ref())
+                .unwrap();
+            click_closure.forget();
+            document.body().unwrap().append_child(&anchor).unwrap();
+
+            anchor.unchecked_ref::<HtmlElement>().click();
+            let closure = Closure::<dyn FnMut()>::new(move || {
+                let body = web_sys::window().unwrap().document().unwrap().body();
+                body.unwrap().remove_child(&anchor).unwrap();
+                Url::revoke_object_url(&anchor.get_attribute("href").unwrap()).unwrap();
+            });
+            window
+                .set_timeout_with_callback(closure.as_ref().unchecked_ref())
+                .unwrap();
+            closure.forget();
         }
     }
 }
