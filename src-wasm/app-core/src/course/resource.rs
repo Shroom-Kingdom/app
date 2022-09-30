@@ -13,7 +13,7 @@ impl CourseRes {
         theme: ThemeVariant,
         asset_server: &AssetServer,
         texture_atlases: &mut Assets<TextureAtlas>,
-        object_sprite_handles: Res<ObjectSpriteHandles>,
+        object_sprite_handles: &ObjectSpriteHandles,
         ground_tile_update_events: &mut EventWriter<GroundTileUpdateEvent>,
     ) -> Self {
         let (texture_atlas_handle, texture_atlas_handle_transparent) =
@@ -61,7 +61,7 @@ impl CourseRes {
             ground_tile_update_events.send(event);
         }
 
-        course.spawn_goal(commands, &object_sprite_handles, ground_tile_update_events);
+        course.spawn_goal(commands, object_sprite_handles, ground_tile_update_events);
         course.spawn_goal_drag(commands, asset_server);
 
         course
@@ -69,10 +69,10 @@ impl CourseRes {
 
     pub fn load(
         commands: &mut Commands,
-        course: Course,
+        course: &Course,
         asset_server: &AssetServer,
         texture_atlases: &mut Assets<TextureAtlas>,
-        object_sprite_handles: Res<ObjectSpriteHandles>,
+        object_sprite_handles: &ObjectSpriteHandles,
         ground_tile_update_events: &mut EventWriter<GroundTileUpdateEvent>,
     ) -> Self {
         let (texture_atlas_handle, texture_atlas_handle_transparent) =
@@ -81,16 +81,16 @@ impl CourseRes {
             texture_atlas_handle,
             texture_atlas_handle_transparent,
             tiles: HashMap::default(),
-            theme: course.theme,
+            theme: course.theme.clone(),
             goal_pos_x: course.goal_pos_x,
         };
 
         let mut events = HashMap::new();
-        for (grid_pos, tile) in course.tiles {
+        for (grid_pos, tile) in course.tiles.clone() {
             course_res.spawn_tile(commands, &grid_pos, &tile, &mut events, true);
         }
 
-        course_res.spawn_goal(commands, &object_sprite_handles, ground_tile_update_events);
+        course_res.spawn_goal(commands, object_sprite_handles, ground_tile_update_events);
         course_res.spawn_goal_drag(commands, asset_server);
 
         course_res

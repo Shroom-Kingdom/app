@@ -21,7 +21,7 @@ pub use course::{
         TilePlacePreview, TilePreview, TileVariant,
     },
     ui_button::UiButtonVariant,
-    Course, CourseRes,
+    Course, CourseLoading, CourseRes,
 };
 pub use drag::{DragEvent, DragEventFlags, Draggable, Dragging};
 pub use game_mode::{GameMode, GameModeToggleEvent};
@@ -37,6 +37,7 @@ use course::{
 };
 use drag::{drag_mouse_button, drag_mouse_motion, handle_drag_events};
 use player_sprites::load_player_sprites;
+use std::sync::{Arc, RwLock};
 
 #[derive(Component, Debug)]
 pub struct Ground;
@@ -54,6 +55,7 @@ impl Plugin for CorePlugin {
             .init_resource::<SelectedTile>()
             .init_resource::<Option<Dragging>>()
             .insert_resource(TilePlacePreview(None))
+            .insert_resource(Arc::new(RwLock::new(CourseLoading(None))))
             .add_event::<GameModeToggleEvent>()
             .add_event::<DragEvent>()
             .add_event::<GoalPoleDragEvent>()
@@ -112,6 +114,7 @@ impl Plugin for CorePlugin {
                 CoreStage::Last,
                 SystemSet::on_update(AppState::Game).with_system(update_ground_tile),
             )
+            .add_system_set(SystemSet::on_exit(AppState::Load).with_system(update_ground_tile))
             .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures));
     }
 }
@@ -120,6 +123,7 @@ impl Plugin for CorePlugin {
 pub enum AppState {
     Setup,
     Menu,
+    Load,
     Game,
 }
 

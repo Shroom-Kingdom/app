@@ -16,7 +16,7 @@ use brotli::{
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Course {
     pub tiles: HashMap<[i32; 2], TileVariant>,
     pub theme: ThemeVariant,
@@ -32,6 +32,8 @@ pub struct CourseRes {
     pub theme: ThemeVariant,
     pub goal_pos_x: i32,
 }
+
+pub struct CourseLoading(pub Option<Course>);
 
 impl Course {
     pub fn serialize(&self) -> Result<Vec<u8>> {

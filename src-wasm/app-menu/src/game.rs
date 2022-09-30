@@ -164,8 +164,8 @@ pub fn export(
                 .unwrap();
             click_closure.forget();
             document.body().unwrap().append_child(&anchor).unwrap();
-
             anchor.unchecked_ref::<HtmlElement>().click();
+            
             let closure = Closure::<dyn FnMut()>::new(move || {
                 let body = web_sys::window().unwrap().document().unwrap().body();
                 body.unwrap().remove_child(&anchor).unwrap();

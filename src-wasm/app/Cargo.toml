@@ -13,6 +13,7 @@ app-config = { path = "../app-config" }
 app-core = { path = "../app-core" }
 app-course = { path = "../app-course" }
 app-debug = { path = "../app-debug" }
+app-load = { path = "../app-load" }
 app-menu = { path = "../app-menu" }
 app-player = { path = "../app-player" }
 app-tile = { path = "../app-tile" }

@@ -3,6 +3,7 @@ use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
 use app_config::RAPIER_SCALE;
 use app_core::{AppState, CorePlugin};
 use app_course::CoursePlugin;
+use app_load::LoadPlugin;
 use app_menu::MenuPlugin;
 use app_player::PlayerPlugin;
 use app_tile::TilePlugin;
@@ -43,6 +44,7 @@ pub fn main(assets: Vec<u8>) {
     .add_plugin(TilePlugin)
     .add_plugin(CoursePlugin)
     .add_plugin(MenuPlugin)
+    .add_plugin(LoadPlugin)
     // .add_plugin(DebugPlugin)
     .add_system_set(SystemSet::on_enter(AppState::Menu).with_system(setup_camera))
     .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup_graphics))
