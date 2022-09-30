@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 env:
-  WASM_BINDGEN_VERSION: 0.2.82
+  WASM_BINDGEN_VERSION: 0.2.83
   BINARYEN_VERSION: 108
 
 jobs:
