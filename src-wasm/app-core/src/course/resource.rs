@@ -33,14 +33,12 @@ impl CourseRes {
                 &[x, 0],
                 &TileVariant::Ground(GroundVariant::Full0),
                 &mut events,
-                false,
             );
             course.spawn_tile(
                 commands,
                 &[x, 1],
                 &TileVariant::Ground(GroundVariant::Top0),
                 &mut events,
-                false,
             );
         }
         course.spawn_tile(
@@ -48,14 +46,12 @@ impl CourseRes {
             &[7, 0],
             &TileVariant::Ground(GroundVariant::Right0),
             &mut events,
-            false,
         );
         course.spawn_tile(
             commands,
             &[7, 1],
             &TileVariant::Ground(GroundVariant::TopRight0),
             &mut events,
-            false,
         );
         for event in events.into_values() {
             ground_tile_update_events.send(event);
@@ -87,7 +83,7 @@ impl CourseRes {
 
         let mut events = HashMap::new();
         for (grid_pos, tile) in course.tiles.clone() {
-            course_res.spawn_tile(commands, &grid_pos, &tile, &mut events, true);
+            course_res.spawn_tile(commands, &grid_pos, &tile, &mut events);
         }
 
         course_res.spawn_goal(commands, object_sprite_handles, ground_tile_update_events);
@@ -118,7 +114,6 @@ impl CourseRes {
         grid_pos: &[i32; 2],
         tile_variant: &TileVariant,
         events: &mut HashMap<Entity, GroundTileUpdateEvent>,
-        is_editable: bool,
     ) {
         if self.tiles.contains_key(grid_pos) {
             return;
@@ -199,7 +194,9 @@ impl CourseRes {
                     ))
                     .insert(Friction::new(0.));
             });
-        if !is_editable {
+        let is_goal = grid_pos[0] >= self.goal_pos_x && grid_pos[1] <= 1;
+        let is_start = grid_pos[0] < 8 && grid_pos[1] <= 1;
+        if is_goal || is_start {
             entity_commands.insert(TileNotEditable);
         }
 

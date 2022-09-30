@@ -40,14 +40,12 @@ impl CourseRes {
                 &[x, 0],
                 &TileVariant::Ground(GroundVariant::Full0),
                 &mut events,
-                false,
             );
             self.spawn_tile(
                 commands,
                 &[x, 1],
                 &TileVariant::Ground(GroundVariant::Top0),
                 &mut events,
-                false,
             );
         }
         self.spawn_tile(
@@ -55,14 +53,12 @@ impl CourseRes {
             &[self.goal_pos_x, 0],
             &TileVariant::Ground(GroundVariant::Left0),
             &mut events,
-            false,
         );
         self.spawn_tile(
             commands,
             &[self.goal_pos_x, 1],
             &TileVariant::Ground(GroundVariant::TopLeft0),
             &mut events,
-            false,
         );
         for event in events.into_values() {
             ground_tile_update_events.send(event);

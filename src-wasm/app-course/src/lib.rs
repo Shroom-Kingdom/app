@@ -81,7 +81,7 @@ fn spawn_tile(
         tile_variant,
     } in spawn_tile_events.iter()
     {
-        course.spawn_tile(&mut commands, grid_pos, tile_variant, &mut events, true);
+        course.spawn_tile(&mut commands, grid_pos, tile_variant, &mut events);
     }
     for event in events.into_values() {
         ground_tile_update_events.send(event);
