@@ -3,6 +3,7 @@ use app_assets::{AssetIoTarConfig, AssetIoTarPlugin};
 use app_config::RAPIER_SCALE;
 use app_core::{AppState, CorePlugin};
 use app_course::CoursePlugin;
+use app_game::GamePlugin;
 use app_load::LoadPlugin;
 use app_menu::MenuPlugin;
 use app_player::PlayerPlugin;
@@ -40,6 +41,7 @@ pub fn main(assets: Vec<u8>) {
     ))
     // .add_plugin(RapierPhysicsPlugin::<NoUserData>::with_physics_scale(1.))
     .add_plugin(CorePlugin)
+    .add_plugin(GamePlugin)
     .add_plugin(PlayerPlugin)
     .add_plugin(TilePlugin)
     .add_plugin(CoursePlugin)

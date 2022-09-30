@@ -139,7 +139,6 @@ fn start_game(
                     let buffer = buffer.to_vec();
 
                     let course = Course::deserialize(buffer).unwrap();
-                    web_sys::console::log_1(&format!("COURSE {:?}", course).into());
 
                     course_res.write().unwrap().0 = Some(course);
                 });

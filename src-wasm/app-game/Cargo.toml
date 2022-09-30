@@ -1,0 +1,15 @@
+[package]
+name = "app-game"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+app-config = { path = "../app-config" }
+app-core = { path = "../app-core" }
+
+[dependencies.bevy]
+version = "0.8"
+# git = "https://github.com/bevyengine/bevy.git"
+# rev = "a89a954a1706bcffa497309388b993ff82016829"
+# branch = "main"
+default-features = false

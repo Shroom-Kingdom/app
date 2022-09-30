@@ -110,6 +110,7 @@ dependencies = [
  "app-core",
  "app-course",
  "app-debug",
+ "app-game",
  "app-load",
  "app-menu",
  "app-player",
@@ -180,6 +181,15 @@ dependencies = [
  "js-sys",
  "rapier2d",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "app-game"
+version = "0.1.0"
+dependencies = [
+ "app-config",
+ "app-core",
+ "bevy",
 ]
 
 [[package]]
