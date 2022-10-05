@@ -190,6 +190,7 @@ dependencies = [
  "app-config",
  "app-core",
  "bevy",
+ "web-sys",
 ]
 
 [[package]]

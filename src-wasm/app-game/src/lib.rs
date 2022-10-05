@@ -9,11 +9,7 @@ impl Plugin for GamePlugin {
     }
 }
 
-// TODO not yet working
-fn clear_input(
-    mut keyboard_input: ResMut<Input<KeyCode>>,
-    mut mouse_input: ResMut<Input<MouseButton>>,
-) {
-    keyboard_input.clear();
-    mouse_input.clear();
+fn clear_input(mut mouse_input: ResMut<Input<MouseButton>>) {
+    mouse_input.reset(MouseButton::Left);
+    mouse_input.reset(MouseButton::Right);
 }
