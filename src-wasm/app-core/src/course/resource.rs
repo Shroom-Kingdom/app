@@ -128,18 +128,21 @@ impl CourseRes {
             return;
         }
 
-        let surrounding_matrix = if let TileVariant::Ground(_) = tile_variant {
-            let surrounding_matrix = get_surrounding_matrix(grid_pos, &mut self.tiles, events);
-            Some(GroundSurroundingMatrix(surrounding_matrix))
-        } else {
-            None
-        };
+        let mut tile_variant = tile_variant.clone();
+        let (surrounding_matrix, ground_variant) =
+            if let TileVariant::Ground(ground_variant) = &mut tile_variant {
+                let surrounding_matrix = get_surrounding_matrix(grid_pos, &mut self.tiles, events);
+                *ground_variant = GroundVariant::from_surrounding_matrix(&surrounding_matrix);
+                (
+                    Some(GroundSurroundingMatrix(surrounding_matrix)),
+                    Some(ground_variant.clone()),
+                )
+            } else {
+                (None, None)
+            };
 
-        let sprite = if let Some(surrounding_matrix) = &surrounding_matrix {
-            TextureAtlasSprite::new(
-                GroundVariant::from_surrounding_matrix(&surrounding_matrix.0)
-                    .get_sprite_sheet_index(),
-            )
+        let sprite = if let Some(ground_variant) = ground_variant {
+            TextureAtlasSprite::new(ground_variant.get_sprite_sheet_index())
         } else {
             TextureAtlasSprite::new(tile_variant.get_sprite_sheet_index())
         };
@@ -204,7 +207,7 @@ impl CourseRes {
 
         let tile = Tile {
             entity,
-            variant: tile_variant.clone(),
+            variant: tile_variant,
             mtrx: surrounding_matrix,
         };
         self.tiles.insert(*grid_pos, tile);
