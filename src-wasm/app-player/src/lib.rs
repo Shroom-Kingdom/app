@@ -1,6 +1,3 @@
-mod camera;
-mod debug;
-mod game_mode;
 mod jump;
 mod movement;
 mod physics;
@@ -12,9 +9,6 @@ mod walk;
 
 use app_core::{AppStage, AppState};
 use bevy::prelude::*;
-use camera::{move_player_on_goal_pole_drag, position_camera};
-use game_mode::toggle_game_mode;
-// use debug::setup_ui;
 use jump::{high_jump, jump, jump_to_fall};
 use movement::{movement, run};
 use physics::{apply_vel, physics};
@@ -43,8 +37,6 @@ impl Plugin for PlayerPlugin {
             .add_event::<GroundIntersectEvent>()
             .add_event::<StoopEvent>()
             .add_event::<TouchEvent>()
-            // .add_startup_system(setup_ui)
-            // .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup))
             .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup))
             .add_system_set_to_stage(
                 CoreStage::First,
@@ -68,10 +60,6 @@ impl Plugin for PlayerPlugin {
             )
             .add_system_set_to_stage(
                 CoreStage::PreUpdate,
-                SystemSet::on_update(AppState::Game).with_system(toggle_game_mode),
-            )
-            .add_system_set_to_stage(
-                CoreStage::PreUpdate,
                 SystemSet::on_update(AppState::Game).with_system(physics),
             )
             .add_system_set_to_stage(
@@ -86,7 +74,6 @@ impl Plugin for PlayerPlugin {
                 AppStage::PrePhysics,
                 SystemSet::on_update(AppState::Game).with_system(walk_start),
             )
-            // .add_system_to_stage(CoreStage::PostUpdate, debug::text_update_system)
             .add_system_set_to_stage(
                 CoreStage::PostUpdate,
                 SystemSet::on_update(AppState::Game).with_system(touch),
@@ -96,20 +83,12 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(AppState::Game).with_system(jump_to_fall),
             )
             .add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::on_update(AppState::Game).with_system(position_camera),
-            )
-            .add_system_set_to_stage(
                 AppStage::StateChange,
                 SystemSet::on_update(AppState::Game).with_system(state_change),
             )
             .add_system_set_to_stage(
                 CoreStage::Last,
                 SystemSet::on_update(AppState::Game).with_system(set_sprite),
-            )
-            .add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::on_update(AppState::Game).with_system(move_player_on_goal_pole_drag),
             );
     }
 }

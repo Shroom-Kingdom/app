@@ -1,6 +1,6 @@
-use crate::Player;
 use app_config::*;
 use app_core::{pos_to_world, CourseRes, GoalPoleDragDirection, GoalPoleDragEvent};
+use app_player::Player;
 use bevy::{
     prelude::*,
     render::{camera::Camera, primitives::Frustum},

@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 app-config = { path = "../app-config" }
 app-core = { path = "../app-core" }
+app-player = { path = "../app-player" }
 web-sys = "0.3"
 
 [dependencies.bevy]

@@ -1,5 +1,5 @@
-use crate::{Player, PlayerState, PlayerStateChangeEvent, PlayerVelocity};
 use app_core::GameModeToggleEvent;
+use app_player::{Player, PlayerState, PlayerStateChangeEvent, PlayerVelocity};
 use bevy::prelude::*;
 
 pub fn toggle_game_mode(
