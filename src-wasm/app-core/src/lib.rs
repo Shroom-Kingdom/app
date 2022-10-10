@@ -24,7 +24,9 @@ pub use course::{
     Course, CourseLoading, CourseRes,
 };
 pub use drag::{DragEvent, DragEventFlags, Draggable, Dragging};
-pub use game_mode::{GameMode, GameModeToggleEvent};
+pub use game_mode::{
+    GameMode, GameModeEdit, GameModeToggleButton, GameModeToggleButtonImage, GameModeToggleEvent,
+};
 pub use player_sprites::{PlayerFrame, PlayerSpriteHandles};
 use tile::update_ground_tile;
 pub use tile::{DespawnTileEvent, GroundTileUpdateEvent, SpawnTileEvent};

@@ -1,14 +1,13 @@
 use app_config::*;
-use app_core::{GroundVariant, SelectedTile, TilePlacePreview, TileSpriteHandles, TileVariant};
+use app_core::{
+    GameModeEdit, GroundVariant, SelectedTile, TilePlacePreview, TileSpriteHandles, TileVariant,
+};
 use bevy::{prelude::*, ui::FocusPolicy};
 
 #[derive(Component)]
 pub struct SelectedTileButton(pub bool);
 
 pub struct SelectTileEvent(pub Entity);
-
-#[derive(Component)]
-pub struct GameModeEdit;
 
 macro_rules! add_tile_button {
     ( $parent:expr, $color:expr, $sprite_handles:expr, $tile:expr, $is_selected:expr ) => {

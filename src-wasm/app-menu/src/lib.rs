@@ -1,6 +1,6 @@
 mod game;
 
-pub(crate) use game::tiles::{GameModeEdit, SelectTileEvent};
+pub(crate) use game::tiles::SelectTileEvent;
 
 use app_config::*;
 use app_core::{

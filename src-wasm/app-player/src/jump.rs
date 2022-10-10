@@ -10,7 +10,7 @@ pub struct JumpEvent {
 pub fn jump(
     mut query: Query<(&Player, &mut PlayerVelocity)>,
     keyboard_input: Res<Input<KeyCode>>,
-    mut psc_event: EventWriter<JumpEvent>,
+    mut jump_event: EventWriter<JumpEvent>,
 ) {
     if let Ok((player, mut vel)) = query.get_single_mut() {
         let jump = keyboard_input.just_pressed(KeyCode::Space)
@@ -26,7 +26,7 @@ pub fn jump(
             } else {
                 HIGH_JUMP_TICK
             };
-            psc_event.send(JumpEvent {
+            jump_event.send(JumpEvent {
                 high_jump_tick,
                 fall: false,
             })

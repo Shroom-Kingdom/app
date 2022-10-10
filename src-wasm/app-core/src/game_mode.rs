@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+
 #[derive(Debug)]
 pub enum GameMode {
     Build { is_editing: bool },
@@ -7,3 +9,14 @@ pub enum GameMode {
 pub struct GameModeToggleEvent {
     pub is_editing: bool,
 }
+
+#[derive(Component)]
+pub struct GameModeEdit;
+
+#[derive(Component)]
+pub struct GameModeToggleButton {
+    pub is_editing: bool,
+}
+
+#[derive(Component)]
+pub struct GameModeToggleButtonImage;

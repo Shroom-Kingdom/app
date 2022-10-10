@@ -1,10 +1,9 @@
 pub(crate) mod tiles;
 
-use crate::GameModeEdit;
 use app_config::*;
 use app_core::{
-    Course, CourseRes, GameMode, GameModeToggleEvent, TilePlacePreview, TileSpriteHandles,
-    UiButtonSpriteHandles, UiButtonVariant,
+    Course, CourseRes, GameModeToggleButton, GameModeToggleButtonImage, GameModeToggleEvent,
+    TileSpriteHandles, UiButtonSpriteHandles, UiButtonVariant,
 };
 use bevy::{prelude::*, ui::FocusPolicy};
 use js_sys::{Array, Uint8Array};
@@ -12,16 +11,8 @@ use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{Blob, HtmlElement, MouseEvent, Url};
 
 #[derive(Component)]
-pub struct GameModeToggleButton {
-    pub is_editing: bool,
-}
-
-#[derive(Component)]
 
 pub struct ExportButton;
-
-#[derive(Component)]
-pub struct GameModeToggleButtonImage;
 
 pub fn setup_game_ui(
     mut commands: Commands,
@@ -165,7 +156,7 @@ pub fn export(
             click_closure.forget();
             document.body().unwrap().append_child(&anchor).unwrap();
             anchor.unchecked_ref::<HtmlElement>().click();
-            
+
             let closure = Closure::<dyn FnMut()>::new(move || {
                 let body = web_sys::window().unwrap().document().unwrap().body();
                 body.unwrap().remove_child(&anchor).unwrap();
@@ -179,44 +170,14 @@ pub fn export(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn toggle_game_mode(
-    mut query: Query<(&Interaction, &mut GameModeToggleButton), Changed<Interaction>>,
-    mut game_mode_edit_query: Query<&mut Style, With<GameModeEdit>>,
-    mut game_mode_button_query: Query<&mut UiImage, With<GameModeToggleButtonImage>>,
-    mut game_mode: ResMut<GameMode>,
+    query: Query<(&Interaction, &GameModeToggleButton), Changed<Interaction>>,
     mut game_mode_toggle_event: EventWriter<GameModeToggleEvent>,
-    ui_button_sprite_handles: Res<UiButtonSpriteHandles>,
-    mut tile_place_preview: ResMut<TilePlacePreview>,
-    mut commands: Commands,
 ) {
-    for (interaction, mut button) in query.iter_mut() {
+    for (interaction, button) in query.iter() {
         if *interaction == Interaction::Clicked {
             let is_editing = !button.is_editing;
-            button.is_editing = is_editing;
-            *game_mode = GameMode::Build { is_editing };
-            let mut game_mode_button = game_mode_button_query.single_mut();
-            *game_mode_button = UiImage(
-                ui_button_sprite_handles
-                    .0
-                    .get(&UiButtonVariant::GameModeSwitch { is_editing })
-                    .unwrap()
-                    .clone(),
-            );
             game_mode_toggle_event.send(GameModeToggleEvent { is_editing });
-
-            for mut style in game_mode_edit_query.iter_mut() {
-                style.display = if is_editing {
-                    Display::Flex
-                } else {
-                    Display::None
-                };
-            }
-
-            if let Some((entity, _)) = tile_place_preview.0 {
-                commands.entity(entity).despawn_recursive();
-                tile_place_preview.0 = None;
-            }
         }
     }
 }

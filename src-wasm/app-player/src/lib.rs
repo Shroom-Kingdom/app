@@ -1,4 +1,5 @@
 mod jump;
+mod kill;
 mod movement;
 mod physics;
 mod setup;
@@ -10,6 +11,7 @@ mod walk;
 use app_core::{AppStage, AppState};
 use bevy::prelude::*;
 use jump::{high_jump, jump, jump_to_fall};
+use kill::below_surface;
 use movement::{movement, run};
 use physics::{apply_vel, physics};
 use setup::setup;
@@ -19,6 +21,7 @@ use touch::touch;
 use walk::{walk_animation, walk_start};
 
 pub use jump::JumpEvent;
+pub use kill::KillEvent;
 pub use movement::{DashTurnEvent, FacingDirectionEvent};
 pub use physics::{GroundIntersectEvent, GroundIntersections, PlayerVelocity};
 pub use stoop::StoopEvent;
@@ -37,7 +40,12 @@ impl Plugin for PlayerPlugin {
             .add_event::<GroundIntersectEvent>()
             .add_event::<StoopEvent>()
             .add_event::<TouchEvent>()
+            .add_event::<KillEvent>()
             .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup))
+            .add_system_set_to_stage(
+                CoreStage::First,
+                SystemSet::on_update(AppState::Game).with_system(below_surface),
+            )
             .add_system_set_to_stage(
                 CoreStage::First,
                 SystemSet::on_update(AppState::Game).with_system(run),
