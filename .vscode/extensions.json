@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "bungcip.better-toml",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "mgmcdermott.vscode-language-babel",
+    "rust-lang.rust-analyzer",
+    "serayuzgur.crates",
+    "svelte.svelte-vscode"
+  ]
+}
