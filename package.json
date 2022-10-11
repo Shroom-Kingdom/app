@@ -1,63 +1,27 @@
 {
-  "name": "app",
-  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "app"
+  ],
+  "engines": {
+    "node": ">= 16"
+  },
   "repository": "git@github.com:Shroom-Kingdom/app.git",
   "author": "Mario Reder <mario.reder@pm.me>",
   "license": "MIT",
   "scripts": {
-    "start": "yarn clean && yarn --cwd src-wasm/app build:dev && run-p serve watch",
-    "start:prod": "yarn clean && yarn --cwd src-wasm/app build:dev && run-p serve:prod watch:prod",
-    "serve": "webpack serve --host 0.0.0.0 --env=dev",
-    "serve:prod": "webpack serve --host 0.0.0.0 --env=prod --node-env production",
-    "build": "yarn clean && yarn --cwd src-wasm/app build && webpack --env=prod --node-env production",
-    "watch": "yarn --cwd src-wasm/app watch",
-    "watch:prod": "yarn --cwd src-wasm/app watch:prod",
-    "deploy": "gh-pages --dist dist",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "app": "yarn workspace app",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.svelte",
     "clean": "rm -rf ./dist && yarn --cwd src-wasm/app clean"
   },
-  "dependencies": {
-    "detect-browser": "^5",
-    "svelte": "^3",
-    "ts-pattern": "^3"
-  },
   "devDependencies": {
-    "@babel/core": "^7",
-    "@babel/plugin-syntax-dynamic-import": "^7",
-    "@babel/plugin-transform-typescript": "^7",
-    "@babel/polyfill": "^7",
-    "@babel/preset-env": "^7",
     "@typescript-eslint/eslint-plugin": "^4",
     "@typescript-eslint/parser": "^4",
-    "autoprefixer": "^10",
-    "babel-loader": "^8",
-    "copy-webpack-plugin": "^9",
-    "core-js": "3",
-    "css-loader": "^6",
-    "css-minimizer-webpack-plugin": "^3",
     "eslint": "^7",
     "eslint-config-prettier": "^6",
     "eslint-plugin-import": "^2",
     "eslint-plugin-prettier": "^3",
-    "eslint-plugin-svelte3": "^3",
-    "file-loader": "^6",
-    "html-webpack-plugin": "^4",
-    "mini-css-extract-plugin": "^2",
-    "node-sass": "^6",
-    "npm-run-all": "^4",
-    "postcss": "^8",
-    "postcss-loader": "^6",
     "prettier": "^2",
-    "prettier-plugin-svelte": "^2",
-    "sass": "^1",
-    "sass-loader": "^12",
-    "svelte-check": "^2",
-    "svelte-loader": "^3",
-    "svelte-preprocess": "^4",
-    "typescript": "4.1",
-    "webpack": "^5",
-    "webpack-bundle-analyzer": "^4",
-    "webpack-cli": "^4",
-    "webpack-dev-server": "^4"
+    "typescript": "4.1"
   }
 }

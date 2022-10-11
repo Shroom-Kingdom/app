@@ -5,8 +5,8 @@
     "build:dev": "yarn build:cargo:dev && yarn build:wasm:dev",
     "build:cargo": "cargo build --release",
     "build:cargo:dev": "cargo build",
-    "build:wasm": "wasm-bindgen ../../target/wasm32-unknown-unknown/release/app.wasm --out-dir ../../pkg --target web",
-    "build:wasm:dev": "wasm-bindgen ../../target/wasm32-unknown-unknown/debug/app.wasm --out-dir ../../pkg --target web",
+    "build:wasm": "wasm-bindgen ../../../target/wasm32-unknown-unknown/release/app.wasm --out-dir ../../pkg --target web",
+    "build:wasm:dev": "wasm-bindgen ../../../target/wasm32-unknown-unknown/debug/app.wasm --out-dir ../../pkg --target web",
     "watch": "cargo watch -w .. -x build -s 'yarn build:dev'",
     "watch:prod": "cargo watch -w .. -x 'build --release' -s 'yarn build'",
     "clean": "rm -rf ./pkg"

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "src-wasm/*",
+    "app/src-wasm/*",
 ]
 resolver = "2"
 
