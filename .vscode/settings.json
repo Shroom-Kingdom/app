@@ -1,7 +1,23 @@
 {
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "eslint.packageManager": "yarn",
+  "eslint.validate": ["javascript", "typescript", "svelte"],
+  "rust-analyzer.checkOnSave.command": "clippy",
   "rust-analyzer.diagnostics.disabled": [
     "missing-unsafe",
     "mismatched-arg-count",
     "unresolved-proc-macro"
-  ]
+  ],
+  "svelte.enable-ts-plugin": true,
+  "[rust]": {
+    "editor.tabSize": 4,
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

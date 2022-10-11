@@ -5,7 +5,7 @@
   
   import Warning from './Warning.svelte';
 
-  export let type: 'warning' = 'warning';
+  export let type: 'warning' = 'warning' as const;
 
   const color = match(type)
     .with('warning', () => `color: ${colorWarning};`)

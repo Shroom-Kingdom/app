@@ -5,8 +5,8 @@
   export let size: 'small' | 'medium' | 'large' = 'medium'
   export let loading = false;
 
-  let clientWidth: number = 0;
-  let clientHeight: number = 0;
+  let clientWidth = 0;
+  let clientHeight = 0;
   let style = "";
 
   $: if (loading) {

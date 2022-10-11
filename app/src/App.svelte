@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import AssetLoader from './modules/asset/AssetLoader.svelte';
+	
 	import { assets } from './modules/asset'
+	import AssetLoader from './modules/asset/AssetLoader.svelte';
 	
 	let canvas: HTMLCanvasElement | null = null;
 	document.body.oncontextmenu = (e) => {
@@ -44,13 +45,13 @@
 		shrm.main(data);
 	});
 
-	let shrm: any;
+	let shrm: { main: (data: Uint8Array) => void };
 	onMount(async () => {
 		let loadedWasmModule = false;
 		while (!loadedWasmModule) {
-			if ((window as any).shrm) {
+			if (window.shrm) {
 				loadedWasmModule = true;
-				shrm = (window as any).shrm;
+				shrm = window.shrm;
 			} else {
 				await new Promise(resolve => setTimeout(resolve, 100));
 			}

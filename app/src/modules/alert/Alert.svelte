@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Icon from '../icon/Icon.svelte';
   import { colorWarning } from '../color';
+  import Icon from '../icon/Icon.svelte';
 
   const style = `border: 2px solid ${colorWarning};`;
 </script>

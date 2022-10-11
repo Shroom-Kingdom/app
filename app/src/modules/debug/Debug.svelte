@@ -1,6 +1,6 @@
 <script lang="ts">
-  import DebugRow from './DebugRow.svelte';
   import Button from '../button/Button.svelte';
+  
   import {
     stepTime,
     collisionDetectionTime,
@@ -20,6 +20,7 @@
     ccdNarrowPhaseTime,
     ccdSolverTime
   } from '.';
+  import DebugRow from './DebugRow.svelte';
 
   let showDebug = false;
 </script>
