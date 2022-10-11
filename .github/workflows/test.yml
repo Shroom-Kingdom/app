@@ -64,3 +64,6 @@ jobs:
       #   name: Test
       #   with:
       #     command: test
+
+      - name: Lint JS/TS
+        run: yarn lint --max-warnings 0

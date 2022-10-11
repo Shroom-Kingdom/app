@@ -57,11 +57,11 @@ jobs:
 
       - name: Build site
         run: |
-          yarn build
-          wasm-opt -O4 dist/app_bg.wasm -o dist/app_bg.wasm
+          yarn app build
+          wasm-opt -O4 app/dist/app_bg.wasm -o app/dist/app_bg.wasm
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./app/dist
