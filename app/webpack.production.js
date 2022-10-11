@@ -51,7 +51,7 @@ module.exports = {
   resolve: {
 		alias: {
 			// Note: Later in this config file, we'll automatically add paths from `tsconfig.compilerOptions.paths`
-			svelte: path.resolve('node_modules', 'svelte')
+			svelte: path.resolve('..', 'node_modules', 'svelte')
 		},
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.svelte', '.json', '.wasm'],
 		mainFields: ['svelte', 'browser', 'module', 'main']
