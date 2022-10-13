@@ -3,11 +3,11 @@ mod grid;
 use app_config::*;
 use app_core::{
     AppLabel, AppStage, AppState, CourseRes, DespawnTileEvent, GameMode, GroundTileUpdateEvent,
-    GroundVariant, SelectedTile, SpawnTileEvent, ThemeSpriteHandles, ThemeVariant, Tile,
-    TileNotEditable, TileVariant,
+    SelectedTile, SpawnTileEvent, ThemeSpriteHandles, Tile, TileNotEditable,
 };
 use bevy::{prelude::*, utils::HashMap};
 use grid::{setup_grid, toggle_grid};
+use shrm_core::{GroundVariant, ThemeVariant, TileVariant};
 
 pub struct CoursePlugin;
 

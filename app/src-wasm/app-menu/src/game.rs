@@ -2,11 +2,12 @@ pub(crate) mod tiles;
 
 use app_config::*;
 use app_core::{
-    Course, CourseRes, GameModeToggleButton, GameModeToggleButtonImage, GameModeToggleEvent,
+    CourseRes, GameModeToggleButton, GameModeToggleButtonImage, GameModeToggleEvent,
     TileSpriteHandles, UiButtonSpriteHandles, UiButtonVariant,
 };
 use bevy::{prelude::*, ui::FocusPolicy};
 use js_sys::{Array, Uint8Array};
+use shrm_core::Course;
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{Blob, HtmlElement, MouseEvent, Url};
 
@@ -158,8 +159,8 @@ pub fn export(
             anchor.unchecked_ref::<HtmlElement>().click();
 
             let closure = Closure::<dyn FnMut()>::new(move || {
-                let body = web_sys::window().unwrap().document().unwrap().body();
-                body.unwrap().remove_child(&anchor).unwrap();
+                let body = document.body().unwrap();
+                body.remove_child(&anchor).unwrap();
                 Url::revoke_object_url(&anchor.get_attribute("href").unwrap()).unwrap();
             });
             window

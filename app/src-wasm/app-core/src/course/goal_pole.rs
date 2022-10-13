@@ -2,12 +2,12 @@ use std::time::Duration;
 
 use crate::{
     grid_to_world, grid_to_world_f32, pos_to_world, CourseRes, DespawnTileEvent, DragEventFlags,
-    Draggable, GroundTileUpdateEvent, GroundVariant, ObjectSpriteHandles, ObjectVariant,
-    TileVariant,
+    Draggable, GroundTileUpdateEvent, ObjectSpriteHandles, ObjectVariant,
 };
 use app_config::*;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_rapier::prelude::*;
+use shrm_core::{GroundVariant, TileVariant};
 
 #[derive(Component)]
 pub struct GoalPole(i32);

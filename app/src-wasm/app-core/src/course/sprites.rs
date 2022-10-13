@@ -1,6 +1,7 @@
-use crate::{ThemeVariant, TileVariant, UiButtonVariant};
+use crate::UiButtonVariant;
 use bevy::{prelude::*, utils::HashMap};
 use enum_iterator::all;
+use shrm_core::{ThemeVariant, TileVariant};
 
 use super::object::ObjectVariant;
 

@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "app/src-wasm/*",
+    "lib"
 ]
 resolver = "2"
 

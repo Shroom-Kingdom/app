@@ -1,8 +1,8 @@
 use app_core::{
     AppState, CourseLoading, CourseRes, GroundTileUpdateEvent, ObjectSpriteHandles, Tile,
-    TileVariant,
 };
 use bevy::prelude::*;
+use shrm_core::TileVariant;
 use std::sync::{Arc, RwLock};
 
 pub struct LoadPlugin;

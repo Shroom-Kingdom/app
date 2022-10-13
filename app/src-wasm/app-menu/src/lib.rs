@@ -4,9 +4,8 @@ pub(crate) use game::tiles::SelectTileEvent;
 
 use app_config::*;
 use app_core::{
-    AppLabel, AppStage, AppState, Course, CourseLoading, CourseRes, GroundTileUpdateEvent,
-    ObjectSpriteHandles, SelectedTile, ThemeVariant, TileVariant, UiButtonSpriteHandles,
-    UiButtonVariant,
+    AppLabel, AppStage, AppState, CourseLoading, CourseRes, GroundTileUpdateEvent,
+    ObjectSpriteHandles, SelectedTile, TileComponent, UiButtonSpriteHandles, UiButtonVariant,
 };
 use bevy::{prelude::*, ui::FocusPolicy};
 use game::{
@@ -15,6 +14,7 @@ use game::{
     toggle_game_mode,
 };
 use js_sys::{ArrayBuffer, Uint8Array};
+use shrm_core::{Course, ThemeVariant};
 use std::sync::{Arc, RwLock};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{HtmlElement, HtmlInputElement};
@@ -61,7 +61,7 @@ impl Plugin for MenuPlugin {
 #[allow(clippy::type_complexity)]
 fn on_hover(
     mut query: Query<
-        (&Interaction, &mut UiColor, Option<&TileVariant>),
+        (&Interaction, &mut UiColor, Option<&TileComponent>),
         (Changed<Interaction>, With<Button>),
     >,
     selected_tile: Res<SelectedTile>,
@@ -69,7 +69,7 @@ fn on_hover(
     for (interaction, mut color, tile_variant) in query.iter_mut() {
         if let Some(selected_tile) = &selected_tile.0 {
             if let Some(tile_variant) = tile_variant {
-                if tile_variant == selected_tile {
+                if &tile_variant.0 == selected_tile {
                     *color = SELECTED_BUTTON_COLOR.into();
                     continue;
                 }

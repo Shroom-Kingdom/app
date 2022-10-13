@@ -146,15 +146,12 @@ dependencies = [
 name = "app-core"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "app-config",
  "bevy",
  "bevy_rapier2d",
  "bitflags",
- "brotli",
  "enum-iterator",
- "ron 0.8.0",
- "serde",
+ "shrm-core",
  "strum",
  "strum_macros",
  "web-sys",
@@ -168,6 +165,7 @@ dependencies = [
  "app-core",
  "bevy",
  "bevy_rapier2d",
+ "shrm-core",
  "wasm-bindgen",
  "web-sys",
  "winit",
@@ -202,6 +200,7 @@ dependencies = [
  "app-core",
  "bevy",
  "js-sys",
+ "shrm-core",
  "wasm-bindgen",
 ]
 
@@ -213,6 +212,7 @@ dependencies = [
  "app-core",
  "bevy",
  "js-sys",
+ "shrm-core",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -237,6 +237,7 @@ dependencies = [
  "app-core",
  "bevy",
  "bevy_rapier2d",
+ "shrm-core",
  "wasm-bindgen",
  "web-sys",
  "winit",
@@ -2570,6 +2571,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "900fba806f70c630b0a382d0d825e17a0f19fcd059a2ade1ff237bcddf446b31"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "shrm-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "brotli",
+ "enum-iterator",
+ "hashbrown",
+ "ron 0.8.0",
+ "serde",
+ "wasm-bindgen",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
-use crate::TileVariant;
 use bevy::prelude::*;
+use shrm_core::TileVariant;
 
 pub struct SpawnTileEvent {
     pub tile_variant: TileVariant,

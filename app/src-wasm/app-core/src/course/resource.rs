@@ -1,11 +1,11 @@
 use crate::{
-    get_surrounding_matrix, grid_to_world, Course, CourseRes, Ground, GroundSurroundingMatrix,
-    GroundTileUpdateEvent, GroundVariant, ObjectSpriteHandles, ThemeVariant, Tile, TileNotEditable,
-    TileVariant,
+    get_surrounding_matrix, grid_to_world, CourseRes, Ground, GroundSurroundingMatrix,
+    GroundTileUpdateEvent, ObjectSpriteHandles, Tile, TileNotEditable,
 };
 use app_config::*;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_rapier::prelude::*;
+use shrm_core::{Course, GroundVariant, ThemeVariant, TileVariant};
 
 impl CourseRes {
     pub fn empty(

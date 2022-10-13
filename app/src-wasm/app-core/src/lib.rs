@@ -15,13 +15,12 @@ pub use course::{
         ObjectSpriteHandles, ThemeSpriteHandles, TileSpriteHandles, TileSpriteHandlesTransparent,
         UiButtonSpriteHandles,
     },
-    theme::ThemeVariant,
     tile::{
-        GroundSurroundingMatrix, GroundVariant, SelectedTile, Tile, TileNotEditable,
-        TilePlacePreview, TilePreview, TileVariant,
+        GroundSurroundingMatrix, SelectedTile, Tile, TileComponent, TileNotEditable,
+        TilePlacePreview, TilePreview,
     },
     ui_button::UiButtonVariant,
-    Course, CourseLoading, CourseRes,
+    CourseLoading, CourseRes,
 };
 pub use drag::{DragEvent, DragEventFlags, Draggable, Dragging};
 pub use game_mode::{

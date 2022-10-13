@@ -1,10 +1,11 @@
 use app_config::*;
 use app_core::{
     cursor_to_world, grid_to_world, world_to_grid, CourseRes, GameMode, GroundSurroundingMatrix,
-    GroundVariant, MainCameraQuery, SelectedTile, TilePlacePreview, TilePreview, TileVariant,
+    MainCameraQuery, SelectedTile, TilePlacePreview, TilePreview,
 };
 use bevy::{prelude::*, render::primitives::Frustum};
 use bevy_rapier::prelude::*;
+use shrm_core::{GroundVariant, TileVariant};
 
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::type_complexity)]

@@ -139,7 +139,6 @@ fn apply_pos_vel_limit(transform: &mut Transform, vel: &mut PlayerVelocity, cour
         transform.translation.x = 0.;
     }
     let max_x = pos_to_world(course.goal_pos_x + MAX_COURSE_GOAL_OFFSET_X - 2);
-    web_sys::console::log_1(&format!("{} {}", max_x, transform.translation.x).into());
     if transform.translation.x >= max_x && vel.0.x > 0. {
         vel.0.x = 0.;
         transform.translation.x = max_x;

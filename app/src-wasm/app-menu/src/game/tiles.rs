@@ -1,8 +1,7 @@
 use app_config::*;
-use app_core::{
-    GameModeEdit, GroundVariant, SelectedTile, TilePlacePreview, TileSpriteHandles, TileVariant,
-};
+use app_core::{GameModeEdit, SelectedTile, TileComponent, TilePlacePreview, TileSpriteHandles};
 use bevy::{prelude::*, ui::FocusPolicy};
+use shrm_core::{GroundVariant, TileVariant};
 
 #[derive(Component)]
 pub struct SelectedTileButton(pub bool);
@@ -25,7 +24,7 @@ macro_rules! add_tile_button {
             .with_children(|parent| {
                 parent
                     .spawn_bundle(ImageBundle {
-                        image: UiImage($sprite_handles.0.get(&$tile).unwrap().clone()),
+                        image: UiImage($sprite_handles.0.get(&$tile.0).unwrap().clone()),
                         transform: Transform {
                             scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
                             ..Default::default()
@@ -66,35 +65,35 @@ pub(crate) fn spawn_tile_buttons(commands: &mut Commands, tile_sprite_handles: &
                 parent,
                 SELECTED_BUTTON_COLOR,
                 tile_sprite_handles,
-                TileVariant::Ground(GroundVariant::default()),
+                TileComponent(TileVariant::Ground(GroundVariant::default())),
                 true
             );
             add_tile_button!(
                 parent,
                 NORMAL_BUTTON_COLOR,
                 tile_sprite_handles,
-                TileVariant::HardBlock,
+                TileComponent(TileVariant::HardBlock),
                 false
             );
             add_tile_button!(
                 parent,
                 NORMAL_BUTTON_COLOR,
                 tile_sprite_handles,
-                TileVariant::RotatingBlock,
+                TileComponent(TileVariant::RotatingBlock),
                 false
             );
             add_tile_button!(
                 parent,
                 NORMAL_BUTTON_COLOR,
                 tile_sprite_handles,
-                TileVariant::DonutBlock,
+                TileComponent(TileVariant::DonutBlock),
                 false
             );
             add_tile_button!(
                 parent,
                 NORMAL_BUTTON_COLOR,
                 tile_sprite_handles,
-                TileVariant::CloudBlock,
+                TileComponent(TileVariant::CloudBlock),
                 false
             );
         });
@@ -105,7 +104,7 @@ pub fn select_tile(
         (
             Entity,
             &Interaction,
-            &TileVariant,
+            &TileComponent,
             &mut UiColor,
             &mut SelectedTileButton,
         ),
@@ -118,7 +117,7 @@ pub fn select_tile(
 ) {
     for (entity, interaction, tile_variant, mut color, mut is_selected) in query.iter_mut() {
         if *interaction == Interaction::Clicked {
-            selected_tile.0 = Some(tile_variant.clone());
+            selected_tile.0 = Some(tile_variant.0.clone());
             *color = SELECTED_BUTTON_COLOR.into();
             is_selected.0 = true;
             select_tile_event.send(SelectTileEvent(entity));
