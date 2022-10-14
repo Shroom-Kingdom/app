@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "api/wasm",
     "app/src-wasm/*",
     "lib"
 ]
@@ -19,3 +20,7 @@ opt-level = 1
 [profile.dev.package.'*']
 codegen-units = 1
 opt-level = 3
+
+[profile.release-workers]
+inherits = "release"
+opt-level = "z"

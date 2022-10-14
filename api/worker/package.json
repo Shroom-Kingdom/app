@@ -4,7 +4,11 @@
   "version": "0.1.0",
   "description": "Shroom Kingdom API",
   "scripts": {
-    "build": "node build",
+    "build": "yarn build:cargo && yarn build:wasm && yarn build:wasm-opt && yarn build:node",
+    "build:cargo": "cargo build -p shrm-api-wasm --target wasm32-unknown-unknown --profile release-workers",
+    "build:wasm": "wasm-bindgen ../../target/wasm32-unknown-unknown/release-workers/shrm_api_wasm.wasm --out-dir ./src/wasm --target web",
+    "build:wasm-opt": "wasm-opt -O4 src/wasm/shrm_api_wasm_bg.wasm -o src/wasm/shrm_api_wasm_bg.wasm",
+    "build:node": "node build.mjs",
     "format": "prettier --write  '*.{json,js}' 'src/**/*.{js,ts}'",
     "lint": "eslint --max-warnings=0 src && prettier --check '*.{json,js}' 'src/**/*.{js,ts}'"
   },

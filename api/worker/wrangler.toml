@@ -16,5 +16,3 @@ bindings = [
 
 [build]
 command = "yarn install && yarn build"
-
-[build.upload]

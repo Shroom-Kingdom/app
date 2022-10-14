@@ -2574,16 +2574,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "shrm-api-wasm"
+version = "0.1.0"
+dependencies = [
+ "shrm-core",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "shrm-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "brotli",
  "enum-iterator",
- "hashbrown",
  "ron 0.8.0",
  "serde",
- "wasm-bindgen",
 ]
 
 [[package]]

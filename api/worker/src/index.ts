@@ -1,7 +1,12 @@
 import { router } from './main';
+import init from './wasm/shrm_api_wasm';
+import module from './wasm/shrm_api_wasm_bg.wasm';
+
+const instance = init(module);
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    await instance;
     if (request.method === 'OPTIONS') {
       const headers = new Headers();
       setupCORS(request, headers);

@@ -5,9 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
-brotli = "3"
+brotli = { version = "3", no-default-features = true, features = ["std"] }
 enum-iterator = "1"
-hashbrown = "0.12"
 ron = "0.8"
 serde = "1"
-wasm-bindgen = "0.2"

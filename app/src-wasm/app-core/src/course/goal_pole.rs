@@ -1,11 +1,11 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 use crate::{
     grid_to_world, grid_to_world_f32, pos_to_world, CourseRes, DespawnTileEvent, DragEventFlags,
     Draggable, GroundTileUpdateEvent, ObjectSpriteHandles, ObjectVariant,
 };
 use app_config::*;
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 use shrm_core::{GroundVariant, TileVariant};
 

@@ -3,9 +3,10 @@ use crate::{
     GroundTileUpdateEvent, ObjectSpriteHandles, Tile, TileNotEditable,
 };
 use app_config::*;
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 use bevy_rapier::prelude::*;
 use shrm_core::{Course, GroundVariant, ThemeVariant, TileVariant};
+use std::collections::HashMap;
 
 impl CourseRes {
     pub fn empty(

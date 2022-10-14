@@ -1,6 +1,15 @@
 name: Test
 
-on: [push]
+on:
+  push:
+    paths:
+      - ".cargo/**"
+      - ".github/workflows/publish.yml"
+      - "app/**"
+      - "lib/**"
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "rust-toolchain"
 
 env:
   WASM_BINDGEN_VERSION: 0.2.83

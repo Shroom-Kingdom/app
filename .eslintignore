@@ -3,3 +3,4 @@ src-wasm
 target
 dist
 pkg
+**/wasm

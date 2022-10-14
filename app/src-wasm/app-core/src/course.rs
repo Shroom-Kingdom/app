@@ -6,8 +6,9 @@ pub(crate) mod tile;
 pub(crate) mod ui_button;
 
 use crate::{GroundTileUpdateEvent, Tile};
-use bevy::{prelude::*, reflect::TypeUuid, utils::HashMap};
+use bevy::{prelude::*, reflect::TypeUuid};
 use shrm_core::{Course, GroundVariant, ThemeVariant, TileVariant};
+use std::collections::HashMap;
 
 #[derive(Clone, Debug, TypeUuid)]
 #[uuid = "81a23571-1f35-4f20-b1ea-30e5c2612049"]

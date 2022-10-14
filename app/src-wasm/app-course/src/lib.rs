@@ -5,9 +5,10 @@ use app_core::{
     AppLabel, AppStage, AppState, CourseRes, DespawnTileEvent, GameMode, GroundTileUpdateEvent,
     SelectedTile, SpawnTileEvent, ThemeSpriteHandles, Tile, TileNotEditable,
 };
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 use grid::{setup_grid, toggle_grid};
 use shrm_core::{GroundVariant, ThemeVariant, TileVariant};
+use std::collections::HashMap;
 
 pub struct CoursePlugin;
 
