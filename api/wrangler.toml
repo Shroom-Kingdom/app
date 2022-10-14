@@ -1,0 +1,20 @@
+name = "shrm-api"
+main = "dist/index.mjs"
+usage_model = 'bundled'
+compatibility_flags = []
+workers_dev = true
+compatibility_date = "2022-10-13"
+
+kv_namespaces = [
+]
+
+[vars]
+
+[durable_objects]
+bindings = [
+]
+
+[build]
+command = "yarn install && yarn build"
+
+[build.upload]

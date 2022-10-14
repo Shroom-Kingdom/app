@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "name": "api",
+  "version": "0.1.0",
+  "description": "Shroom Kingdom API",
+  "scripts": {
+    "build": "node build",
+    "format": "prettier --write  '*.{json,js}' 'src/**/*.{js,ts}'",
+    "lint": "eslint --max-warnings=0 src && prettier --check '*.{json,js}' 'src/**/*.{js,ts}'"
+  },
+  "author": "Mario Reder <mario.reder@pm.me>",
+  "license": "MIT",
+  "dependencies": {
+    "itty-router": "^2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^3",
+    "esbuild": "^0.15"
+  }
+}
