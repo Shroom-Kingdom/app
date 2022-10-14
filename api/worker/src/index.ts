@@ -36,3 +36,6 @@ function setupCORS(request: Request, headers: Headers) {
     headers.set('Access-Control-Allow-Origin', origin);
   }
 }
+
+export { Courses } from './course';
+export { User } from './user';

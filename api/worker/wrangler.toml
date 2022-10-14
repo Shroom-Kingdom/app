@@ -12,7 +12,13 @@ kv_namespaces = [
 
 [durable_objects]
 bindings = [
+  { name = "USER", class_name = "User" },
+  { name = "COURSES", class_name = "Courses" },
 ]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["User", "Courses"]
 
 [build]
 command = "yarn install && yarn build"

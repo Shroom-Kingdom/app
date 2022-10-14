@@ -1,6 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 declare interface Env {
   // Durable Objects
+  USER: DurableObjectNamespace;
+  COURSES: DurableObjectNamespace;
+
   // KV namespaces
   // Secret variables
   // Environment variables

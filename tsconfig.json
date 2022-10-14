@@ -7,7 +7,8 @@
     "strict": true,
     "lib": ["esnext", "dom", "webworker"],
     "allowSyntheticDefaultImports": true,
-    "typeRoots": ["node_modules/@types", "src/types"]
+    "typeRoots": ["node_modules/@types"],
+    "types": ["@cloudflare/workers-types"]
   },
   "include": ["api/**/*", "app/**/*"],
   "exclude": ["node_modules", "dist"]
