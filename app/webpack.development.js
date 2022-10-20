@@ -5,6 +5,7 @@ const SveltePreprocess = require('svelte-preprocess');
 const Autoprefixer = require('autoprefixer');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const path = require('path');
 const webpack = require('webpack');
 
@@ -35,11 +36,11 @@ module.exports = {
     }),
 		new MiniCssExtractPlugin({
 			filename: '[name].css'
-		})
+		}),
+		new NodePolyfillPlugin(),
   ],
   resolve: {
 		alias: {
-			// Note: Later in this config file, we'll automatically add paths from `tsconfig.compilerOptions.paths`
 			svelte: path.resolve('..', 'node_modules', 'svelte')
 		},
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.svelte', '.json', '.wasm'],

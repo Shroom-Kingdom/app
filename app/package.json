@@ -17,6 +17,8 @@
     "clean": "rm -rf ./dist && yarn --cwd src-wasm/app clean"
   },
   "dependencies": {
+    "@tarnadas/near-api-js": "1.1.1",
+    "borsh": "^0.7",
     "detect-browser": "^5",
     "svelte": "^3",
     "ts-pattern": "^4"
@@ -37,6 +39,7 @@
     "file-loader": "^6",
     "html-webpack-plugin": "^5",
     "mini-css-extract-plugin": "^2",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "node-sass": "^7",
     "npm-run-all": "^4",
     "postcss": "^8",

@@ -15,10 +15,15 @@
   "author": "Mario Reder <mario.reder@pm.me>",
   "license": "MIT",
   "dependencies": {
-    "itty-router": "^2"
+    "@aws-crypto/sha256-browser": "^2",
+    "@tarnadas/near-api-js": "1.1.1",
+    "itty-router": "^2",
+    "tweetnacl": "^1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^3",
-    "esbuild": "^0.15"
+    "@esbuild-plugins/node-globals-polyfill": "^0.1",
+    "esbuild": "^0.15",
+    "node-stdlib-browser": "^1"
   }
 }
