@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::HashMap};
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct PlayerSpriteHandles(pub HashMap<PlayerFrame, Handle<Image>>);
 
 #[derive(Eq, Hash, PartialEq)]

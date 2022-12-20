@@ -98,13 +98,20 @@ impl CourseRes {
         asset_server: &AssetServer,
         texture_atlases: &mut Assets<TextureAtlas>,
     ) -> (Handle<TextureAtlas>, Handle<TextureAtlas>) {
-        let texture_handle = asset_server.load(&format!("MW_Field_{}_0.png", theme.get_name()));
-        let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48);
+        let texture_handle = asset_server.load(format!("MW_Field_{}_0.png", theme.get_name()));
+        let texture_atlas =
+            TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 16, 48, None, None);
         let texture_atlas_handle = texture_atlases.add(texture_atlas);
         let texture_handle_transparent =
-            asset_server.load(&format!("0MW_Field_{}_0.png", theme.get_name()));
-        let texture_atlas_transparent =
-            TextureAtlas::from_grid(texture_handle_transparent, Vec2::new(16.0, 16.0), 16, 48);
+            asset_server.load(format!("0MW_Field_{}_0.png", theme.get_name()));
+        let texture_atlas_transparent = TextureAtlas::from_grid(
+            texture_handle_transparent,
+            Vec2::new(16.0, 16.0),
+            16,
+            48,
+            None,
+            None,
+        );
         let texture_atlas_handle_transparent = texture_atlases.add(texture_atlas_transparent);
         (texture_atlas_handle, texture_atlas_handle_transparent)
     }
@@ -147,18 +154,19 @@ impl CourseRes {
         } else {
             TextureAtlasSprite::new(tile_variant.get_sprite_sheet_index())
         };
-        let mut entity_commands = commands.spawn();
+        let mut entity_commands = commands.spawn_empty();
         entity_commands
-            .insert(RigidBody::Fixed)
-            .insert_bundle(SpatialBundle {
-                transform: Transform::from_xyz(world_pos.x, world_pos.y, Z_INDEX_TILE),
-                visibility: Visibility { is_visible: true },
-                ..default()
-            })
+            .insert((
+                RigidBody::Fixed,
+                SpatialBundle {
+                    transform: Transform::from_xyz(world_pos.x, world_pos.y, Z_INDEX_TILE),
+                    visibility: Visibility { is_visible: true },
+                    ..default()
+                },
+            ))
             .with_children(|parent| {
-                parent
-                    .spawn()
-                    .insert(Collider::polyline(
+                parent.spawn((
+                    Collider::polyline(
                         vec![
                             Vec2::new(
                                 (-TILE_SIZE + TILE_COLLIDER_SUB - GRID_MARGIN) * RAPIER_SCALE
@@ -178,10 +186,11 @@ impl CourseRes {
                             ),
                         ],
                         None,
-                    ))
-                    .insert(Friction::new(GROUND_FRICTION))
-                    .insert(Ground);
-                parent.spawn().insert_bundle(SpriteSheetBundle {
+                    ),
+                    Friction::new(GROUND_FRICTION),
+                    Ground,
+                ));
+                parent.spawn(SpriteSheetBundle {
                     transform: Transform {
                         scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
                         ..Default::default()
@@ -190,13 +199,10 @@ impl CourseRes {
                     sprite,
                     ..Default::default()
                 });
-                parent
-                    .spawn()
-                    .insert(Collider::cuboid(
-                        TILE_GRID_SIZE * TILE_SIZE,
-                        TILE_GRID_SIZE * TILE_SIZE,
-                    ))
-                    .insert(Friction::new(0.));
+                parent.spawn((
+                    Collider::cuboid(TILE_GRID_SIZE * TILE_SIZE, TILE_GRID_SIZE * TILE_SIZE),
+                    Friction::new(0.),
+                ));
             });
         let is_goal = grid_pos[0] >= self.goal_pos_x && grid_pos[1] <= 1;
         let is_start = grid_pos[0] < 8 && grid_pos[1] <= 1;

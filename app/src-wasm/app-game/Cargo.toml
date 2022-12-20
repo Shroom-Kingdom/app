@@ -10,7 +10,7 @@ app-player = { path = "../app-player" }
 web-sys = "0.3"
 
 [dependencies.bevy]
-version = "0.8"
+version = "0.9"
 # git = "https://github.com/bevyengine/bevy.git"
 # rev = "a89a954a1706bcffa497309388b993ff82016829"
 # branch = "main"

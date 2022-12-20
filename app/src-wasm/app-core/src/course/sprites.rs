@@ -5,19 +5,19 @@ use shrm_core::{ThemeVariant, TileVariant};
 
 use super::object::ObjectVariant;
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct TileSpriteHandles(pub HashMap<TileVariant, Handle<Image>>);
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct TileSpriteHandlesTransparent(pub HashMap<TileVariant, Handle<Image>>);
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct ThemeSpriteHandles(pub HashMap<ThemeVariant, Handle<Image>>);
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct UiButtonSpriteHandles(pub HashMap<UiButtonVariant, Handle<Image>>);
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct ObjectSpriteHandles(pub HashMap<ObjectVariant, Handle<Image>>);
 
 pub(crate) fn load_course_sprites(
@@ -33,7 +33,7 @@ pub(crate) fn load_course_sprites(
         let index = tile_variant.get_sprite_sheet_index();
         tile_sprite_handles.0.insert(
             tile_variant,
-            asset_server.load(&format!("MW_Field_plain_0_{}.png", index)),
+            asset_server.load(format!("MW_Field_plain_0_{}.png", index)),
         );
     }
 
@@ -42,7 +42,7 @@ pub(crate) fn load_course_sprites(
         let index = tile_variant.get_sprite_sheet_index();
         tile_sprite_handles_transparent.0.insert(
             tile_variant,
-            asset_server.load(&format!("0MW_Field_plain_0_{}.png", index)),
+            asset_server.load(format!("0MW_Field_plain_0_{}.png", index)),
         );
     }
 
@@ -51,7 +51,7 @@ pub(crate) fn load_course_sprites(
         let name = theme_variant.get_name().to_string();
         theme_sprite_handles.0.insert(
             theme_variant,
-            asset_server.load(&format!("MW_DV_{}_V.00_0.png", name)),
+            asset_server.load(format!("MW_DV_{}_V.00_0.png", name)),
         );
     }
 
@@ -60,7 +60,7 @@ pub(crate) fn load_course_sprites(
         let name = ui_button_variant.get_path().to_string();
         ui_button_sprite_handles
             .0
-            .insert(ui_button_variant, asset_server.load(&name));
+            .insert(ui_button_variant, asset_server.load(name));
     }
 
     object_sprite_handles.0 = HashMap::default();
@@ -68,7 +68,7 @@ pub(crate) fn load_course_sprites(
         let name = object_variant.get_name().to_string();
         object_sprite_handles.0.insert(
             object_variant,
-            asset_server.load(&format!("MW_Object_{}_0.png", name)),
+            asset_server.load(format!("MW_Object_{}_0.png", name)),
         );
     }
 }

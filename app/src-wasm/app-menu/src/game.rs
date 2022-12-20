@@ -23,7 +23,7 @@ pub fn setup_game_ui(
     tiles::spawn_tile_buttons(&mut commands, &tile_sprite_handles);
 
     commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 margin: UiRect {
                     top: Val::Px(6.),
@@ -49,39 +49,40 @@ fn spawn_export_button(
     ui_button_sprite_handles: &UiButtonSpriteHandles,
 ) {
     parent
-        .spawn_bundle(ButtonBundle {
-            style: Style {
-                size: Size::new(Val::Px(48.), Val::Px(48.)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
+        .spawn((
+            ButtonBundle {
+                style: Style {
+                    size: Size::new(Val::Px(48.), Val::Px(48.)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..Default::default()
+                },
+                background_color: NORMAL_BUTTON_COLOR.into(),
                 ..Default::default()
             },
-            color: NORMAL_BUTTON_COLOR.into(),
-            ..Default::default()
-        })
+            ExportButton,
+        ))
         .with_children(|parent| {
-            parent
-                .spawn_bundle(ImageBundle {
-                    image: UiImage(
-                        ui_button_sprite_handles
-                            .0
-                            .get(&UiButtonVariant::Export)
-                            .unwrap()
-                            .clone(),
-                    ),
-                    transform: Transform {
-                        scale: Vec3::new(0.6, 0.6, 0.),
-                        ..Default::default()
-                    },
-                    style: Style {
-                        margin: UiRect::all(Val::Auto),
-                        ..Default::default()
-                    },
+            parent.spawn(ImageBundle {
+                image: UiImage(
+                    ui_button_sprite_handles
+                        .0
+                        .get(&UiButtonVariant::Export)
+                        .unwrap()
+                        .clone(),
+                ),
+                transform: Transform {
+                    scale: Vec3::new(0.6, 0.6, 0.),
                     ..Default::default()
-                })
-                .insert(FocusPolicy::Pass);
-        })
-        .insert(ExportButton);
+                },
+                style: Style {
+                    margin: UiRect::all(Val::Auto),
+                    ..Default::default()
+                },
+                focus_policy: FocusPolicy::Pass,
+                ..Default::default()
+            });
+        });
 }
 
 fn spawn_game_mode_toggle_button(
@@ -89,19 +90,22 @@ fn spawn_game_mode_toggle_button(
     ui_button_sprite_handles: &UiButtonSpriteHandles,
 ) {
     parent
-        .spawn_bundle(ButtonBundle {
-            style: Style {
-                size: Size::new(Val::Px(48.), Val::Px(48.)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
+        .spawn((
+            ButtonBundle {
+                style: Style {
+                    size: Size::new(Val::Px(48.), Val::Px(48.)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..Default::default()
+                },
+                background_color: NORMAL_BUTTON_COLOR.into(),
                 ..Default::default()
             },
-            color: NORMAL_BUTTON_COLOR.into(),
-            ..Default::default()
-        })
+            GameModeToggleButton { is_editing: true },
+        ))
         .with_children(|parent| {
-            parent
-                .spawn_bundle(ImageBundle {
+            parent.spawn((
+                ImageBundle {
                     image: UiImage(
                         ui_button_sprite_handles
                             .0
@@ -117,12 +121,12 @@ fn spawn_game_mode_toggle_button(
                         margin: UiRect::all(Val::Auto),
                         ..Default::default()
                     },
+                    focus_policy: FocusPolicy::Pass,
                     ..Default::default()
-                })
-                .insert(FocusPolicy::Pass)
-                .insert(GameModeToggleButtonImage);
-        })
-        .insert(GameModeToggleButton { is_editing: true });
+                },
+                GameModeToggleButtonImage,
+            ));
+        });
 }
 
 pub fn export(

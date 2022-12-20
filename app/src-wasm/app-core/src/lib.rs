@@ -54,9 +54,9 @@ impl Plugin for CorePlugin {
             .init_resource::<UiButtonSpriteHandles>()
             .init_resource::<ObjectSpriteHandles>()
             .init_resource::<SelectedTile>()
-            .init_resource::<Option<Dragging>>()
+            .init_resource::<Dragging>()
             .insert_resource(TilePlacePreview(None))
-            .insert_resource(Arc::new(RwLock::new(CourseLoading(None))))
+            .insert_resource(CourseLoading(Arc::new(RwLock::new(None))))
             .add_event::<GameModeToggleEvent>()
             .add_event::<DragEvent>()
             .add_event::<GoalPoleDragEvent>()
@@ -158,23 +158,27 @@ fn check_textures(
         LoadState::Loaded,
         LoadState::Loaded,
     ) = (
+        asset_server.get_group_load_state(
+            player_sprite_handles
+                .0
+                .iter()
+                .map(|(_, handle)| handle.id()),
+        ),
         asset_server
-            .get_group_load_state(player_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
-        asset_server
-            .get_group_load_state(tile_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
+            .get_group_load_state(tile_sprite_handles.0.iter().map(|(_, handle)| handle.id())),
         asset_server.get_group_load_state(
             tile_sprite_handles_transparent
                 .0
                 .iter()
-                .map(|(_, handle)| handle.id),
+                .map(|(_, handle)| handle.id()),
         ),
         asset_server
-            .get_group_load_state(theme_sprite_handles.0.iter().map(|(_, handle)| handle.id)),
+            .get_group_load_state(theme_sprite_handles.0.iter().map(|(_, handle)| handle.id())),
         asset_server.get_group_load_state(
             ui_button_sprite_handles
                 .0
                 .iter()
-                .map(|(_, handle)| handle.id),
+                .map(|(_, handle)| handle.id()),
         ),
     ) {
         state.overwrite_set(AppState::Menu).unwrap();

@@ -35,27 +35,33 @@ pub fn setup(
     let world_pos = grid_to_world(&[5, 6]);
 
     commands
-        .spawn()
-        .insert(RigidBody::KinematicVelocityBased)
-        .insert_bundle(SpatialBundle {
-            transform: Transform::from_xyz(world_pos.x, world_pos.y, Z_INDEX_PLAYER),
-            visibility: Visibility { is_visible: true },
-            ..default()
-        })
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(Velocity::default())
-        .insert(PlayerVelocity::default())
-        .insert(ReadMassProperties(MassProperties::from_rapier(
-            bevy_rapier::rapier::prelude::MassProperties::from_ball(100., 100.),
-            RAPIER_SCALE,
-        )))
-        .insert(Friction {
-            combine_rule: CoefficientCombineRule::Multiply,
-            ..Default::default()
-        })
-        .insert(ActiveEvents::COLLISION_EVENTS)
+        .spawn((
+            RigidBody::KinematicVelocityBased,
+            SpatialBundle {
+                transform: Transform::from_xyz(world_pos.x, world_pos.y, Z_INDEX_PLAYER),
+                visibility: Visibility { is_visible: true },
+                ..default()
+            },
+            LockedAxes::ROTATION_LOCKED,
+            Velocity::default(),
+            PlayerVelocity::default(),
+            ReadMassProperties(MassProperties::from_rapier(
+                bevy_rapier::rapier::prelude::MassProperties::from_ball(100., 100.),
+                RAPIER_SCALE,
+            )),
+            Friction {
+                combine_rule: CoefficientCombineRule::Multiply,
+                ..Default::default()
+            },
+            ActiveEvents::COLLISION_EVENTS,
+            Player {
+                state: PlayerState::default(),
+            },
+            GroundIntersections::default(),
+            WalkAnimationTimer(Timer::from_seconds(13., TimerMode::Repeating)),
+        ))
         .with_children(|parent| {
-            parent.spawn_bundle(SpriteSheetBundle {
+            parent.spawn(SpriteSheetBundle {
                 transform: Transform {
                     translation: Vec3::new(0., 6. * scale_size, 0.),
                     scale: Vec3::new(scale_size, scale_size, 1.),
@@ -67,18 +73,13 @@ pub fn setup(
             });
         })
         .with_children(|parent| {
-            parent
-                .spawn()
-                .insert(Collider::round_cuboid(
+            parent.spawn((
+                Collider::round_cuboid(
                     collider_size_x - PLAYER_COLLIDER_BORDER_RADIUS,
                     collider_size_y - PLAYER_COLLIDER_BORDER_RADIUS,
                     PLAYER_COLLIDER_BORDER_RADIUS,
-                ))
-                .insert(Transform::default());
-        })
-        .insert(Player {
-            state: PlayerState::default(),
-        })
-        .insert(GroundIntersections::default())
-        .insert(WalkAnimationTimer(Timer::from_seconds(13., true)));
+                ),
+                Transform::default(),
+            ));
+        });
 }

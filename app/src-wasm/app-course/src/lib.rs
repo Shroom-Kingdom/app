@@ -54,7 +54,7 @@ fn setup(
     let image_size = 512.;
     let offset = -50.;
     for i in (1..=15).step_by(2) {
-        commands.spawn_bundle(SpriteBundle {
+        commands.spawn(SpriteBundle {
             texture: texture.clone(),
             transform: Transform {
                 translation: Vec3::new(

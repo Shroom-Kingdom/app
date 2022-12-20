@@ -8,8 +8,8 @@ pub(crate) struct Grid;
 pub fn setup_grid(mut commands: Commands) {
     for x in 0..MAX_COURSE_X {
         for y in 0..MAX_COURSE_Y {
-            commands
-                .spawn_bundle(SpriteBundle {
+            commands.spawn((
+                SpriteBundle {
                     sprite: Sprite {
                         color: Color::rgba(0.25, 0.25, 0.25, 0.7),
                         custom_size: Some(Vec2::new(TILE_SIZE, TILE_SIZE)),
@@ -24,8 +24,9 @@ pub fn setup_grid(mut commands: Commands) {
                         ..default()
                     },
                     ..default()
-                })
-                .insert(Grid);
+                },
+                Grid,
+            ));
         }
     }
 }

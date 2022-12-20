@@ -3,7 +3,7 @@
 
   import { assets } from './modules/asset';
   import AssetLoader from './modules/asset/AssetLoader.svelte';
-  import Login from './modules/login/Login.svelte';
+  // import Login from './modules/login/Login.svelte';
 
   let canvas: HTMLCanvasElement | null = null;
   document.body.oncontextmenu = e => {
@@ -67,7 +67,7 @@
 
 {#if assetData == null}
   <div class="app">
-    <Login />
+    <!-- <Login /> -->
     <AssetLoader />
   </div>
 {/if}

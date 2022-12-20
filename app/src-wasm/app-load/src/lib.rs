@@ -3,7 +3,6 @@ use app_core::{
 };
 use bevy::prelude::*;
 use shrm_core::TileVariant;
-use std::sync::{Arc, RwLock};
 
 pub struct LoadPlugin;
 
@@ -24,11 +23,11 @@ fn check_load(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     object_sprite_handles: Res<ObjectSpriteHandles>,
     mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
-    course_loading: ResMut<Arc<RwLock<CourseLoading>>>,
+    course_loading: ResMut<CourseLoading>,
     mut loading_finished: EventWriter<LoadingFinished>,
     mut state: ResMut<State<AppState>>,
 ) {
-    if let Some(course) = &course_loading.read().unwrap().0 {
+    if let Some(course) = &*course_loading.0.read().unwrap() {
         let course = CourseRes::load(
             &mut commands,
             course,

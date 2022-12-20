@@ -15,7 +15,6 @@ use game::{
 };
 use js_sys::{ArrayBuffer, Uint8Array};
 use shrm_core::{Course, ThemeVariant};
-use std::sync::{Arc, RwLock};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{HtmlElement, HtmlInputElement};
 
@@ -61,7 +60,7 @@ impl Plugin for MenuPlugin {
 #[allow(clippy::type_complexity)]
 fn on_hover(
     mut query: Query<
-        (&Interaction, &mut UiColor, Option<&TileComponent>),
+        (&Interaction, &mut BackgroundColor, Option<&TileComponent>),
         (Changed<Interaction>, With<Button>),
     >,
     selected_tile: Res<SelectedTile>,
@@ -98,7 +97,7 @@ fn start_game(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     object_sprite_handles: Res<ObjectSpriteHandles>,
     mut ground_tile_update_events: EventWriter<GroundTileUpdateEvent>,
-    course_loading: ResMut<Arc<RwLock<CourseLoading>>>,
+    course_loading: ResMut<CourseLoading>,
 ) {
     if let Some(&Interaction::Clicked) = build_query.into_iter().next() {
         state.set(AppState::Game).unwrap();
@@ -124,7 +123,7 @@ fn start_game(
             .unwrap();
         let this = file_input.clone();
 
-        let course_res = course_loading.clone();
+        let course_res = course_loading.0.clone();
         // TODO enable weakrefs to prevent memory leak
         // https://rustwasm.github.io/wasm-bindgen/api/wasm_bindgen/closure/struct.Closure.html#method.into_js_value
         let input_closure = Closure::once(move || {
@@ -140,7 +139,7 @@ fn start_game(
 
                     let course = Course::deserialize(buffer).unwrap();
 
-                    course_res.write().unwrap().0 = Some(course);
+                    *course_res.write().unwrap() = Some(course);
                 });
 
                 // This is ok, because JS Promises don't need to be awaited
@@ -172,43 +171,44 @@ fn start_game(
 macro_rules! add_menu_button {
     ( $text:expr, $component: expr, $button_variant:expr, $commands:expr, $button_handles:expr, $asset_server:expr ) => {
         $commands
-            .spawn_bundle(ButtonBundle {
-                style: Style {
-                    size: Size::new(Val::Px(220.0), Val::Px(65.0)),
-                    margin: UiRect::all(Val::Auto),
-                    align_items: AlignItems::Center,
+            .spawn((
+                ButtonBundle {
+                    style: Style {
+                        size: Size::new(Val::Px(220.0), Val::Px(65.0)),
+                        margin: UiRect::all(Val::Auto),
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    background_color: NORMAL_BUTTON_COLOR.into(),
                     ..Default::default()
                 },
-                color: NORMAL_BUTTON_COLOR.into(),
-                ..Default::default()
-            })
-            .insert(MainMenu)
-            .insert($component)
+                MainMenu,
+                $component,
+            ))
             .with_children(|parent| {
-                parent
-                    .spawn_bundle(ImageBundle {
-                        image: UiImage($button_handles.0.get(&$button_variant).unwrap().clone()),
-                        transform: Transform {
-                            scale: Vec3::new(0.6, 0.6, 0.),
-                            ..Default::default()
+                parent.spawn(ImageBundle {
+                    image: UiImage($button_handles.0.get(&$button_variant).unwrap().clone()),
+                    transform: Transform {
+                        scale: Vec3::new(0.6, 0.6, 0.),
+                        ..Default::default()
+                    },
+                    style: Style {
+                        margin: UiRect {
+                            left: Val::Px(8.),
+                            right: Val::Px(16.),
+                            top: Val::Auto,
+                            bottom: Val::Auto,
                         },
-                        style: Style {
-                            margin: UiRect {
-                                left: Val::Px(8.),
-                                right: Val::Px(16.),
-                                top: Val::Auto,
-                                bottom: Val::Auto,
-                            },
-                            max_size: Size {
-                                width: Val::Px(65.0),
-                                height: Val::Px(65.0),
-                            },
-                            ..Default::default()
+                        max_size: Size {
+                            width: Val::Px(65.0),
+                            height: Val::Px(65.0),
                         },
                         ..Default::default()
-                    })
-                    .insert(FocusPolicy::Pass);
-                parent.spawn_bundle(TextBundle {
+                    },
+                    focus_policy: FocusPolicy::Pass,
+                    ..Default::default()
+                });
+                parent.spawn(TextBundle {
                     text: Text::from_section(
                         $text,
                         TextStyle {

@@ -14,7 +14,7 @@ struct AssetIoTar {
     archive: HashMap<PathBuf, Vec<u8>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Resource)]
 pub struct AssetIoTarConfig(pub Vec<u8>);
 
 impl AssetIo for AssetIoTar {
@@ -54,7 +54,7 @@ pub struct AssetIoTarPlugin;
 impl Plugin for AssetIoTarPlugin {
     fn build(&self, app: &mut App) {
         let asset_io = {
-            let default_io = bevy::asset::create_platform_default_asset_io(app);
+            let default_io = AssetPlugin::default().create_platform_default_asset_io();
 
             let config = app
                 .world

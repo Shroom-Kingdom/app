@@ -11,55 +11,58 @@ pub struct SelectTileEvent(pub Entity);
 macro_rules! add_tile_button {
     ( $parent:expr, $color:expr, $sprite_handles:expr, $tile:expr, $is_selected:expr ) => {
         $parent
-            .spawn_bundle(ButtonBundle {
-                style: Style {
-                    size: Size::new(Val::Px(48.), Val::Px(48.)),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
+            .spawn((
+                ButtonBundle {
+                    style: Style {
+                        size: Size::new(Val::Px(48.), Val::Px(48.)),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    background_color: $color.into(),
                     ..Default::default()
                 },
-                color: $color.into(),
-                ..Default::default()
-            })
+                $tile,
+                SelectedTileButton($is_selected),
+            ))
             .with_children(|parent| {
-                parent
-                    .spawn_bundle(ImageBundle {
-                        image: UiImage($sprite_handles.0.get(&$tile.0).unwrap().clone()),
-                        transform: Transform {
-                            scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
-                            ..Default::default()
-                        },
-                        style: Style {
-                            margin: UiRect::all(Val::Auto),
-                            ..Default::default()
-                        },
+                parent.spawn(ImageBundle {
+                    image: UiImage($sprite_handles.0.get(&$tile.0).unwrap().clone()),
+                    transform: Transform {
+                        scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
                         ..Default::default()
-                    })
-                    .insert(FocusPolicy::Pass);
-            })
-            .insert($tile)
-            .insert(SelectedTileButton($is_selected));
+                    },
+                    style: Style {
+                        margin: UiRect::all(Val::Auto),
+                        ..Default::default()
+                    },
+                    focus_policy: FocusPolicy::Pass,
+                    ..Default::default()
+                });
+            });
     };
 }
 
 pub(crate) fn spawn_tile_buttons(commands: &mut Commands, tile_sprite_handles: &TileSpriteHandles) {
     commands
-        .spawn_bundle(NodeBundle {
-            style: Style {
-                margin: UiRect {
-                    top: Val::Px(6.),
-                    bottom: Val::Auto,
-                    left: Val::Auto,
-                    right: Val::Auto,
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    margin: UiRect {
+                        top: Val::Px(6.),
+                        bottom: Val::Auto,
+                        left: Val::Auto,
+                        right: Val::Auto,
+                    },
+                    padding: UiRect::all(Val::Px(6.)),
+                    justify_content: JustifyContent::SpaceBetween,
+                    align_items: AlignItems::Center,
+                    ..Default::default()
                 },
-                padding: UiRect::all(Val::Px(6.)),
-                justify_content: JustifyContent::SpaceBetween,
-                align_items: AlignItems::Center,
                 ..Default::default()
             },
-            ..Default::default()
-        })
-        .insert(GameModeEdit)
+            GameModeEdit,
+        ))
         .with_children(|parent| {
             add_tile_button!(
                 parent,
@@ -105,7 +108,7 @@ pub fn select_tile(
             Entity,
             &Interaction,
             &TileComponent,
-            &mut UiColor,
+            &mut BackgroundColor,
             &mut SelectedTileButton,
         ),
         Changed<Interaction>,
@@ -131,7 +134,12 @@ pub fn select_tile(
 }
 
 pub fn change_after_tile_select(
-    mut query: Query<(Entity, &Interaction, &mut SelectedTileButton, &mut UiColor)>,
+    mut query: Query<(
+        Entity,
+        &Interaction,
+        &mut SelectedTileButton,
+        &mut BackgroundColor,
+    )>,
     mut select_tile_event: EventReader<SelectTileEvent>,
 ) {
     for SelectTileEvent(selected_entity) in select_tile_event.iter() {

@@ -70,9 +70,8 @@ impl CourseRes {
             .get(&ObjectVariant::GoalPoleL)
             .unwrap()
             .clone();
-        commands
-            .spawn()
-            .insert_bundle(SpriteBundle {
+        commands.spawn((
+            SpriteBundle {
                 texture,
                 transform: Transform {
                     translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_GOAL_L),
@@ -80,8 +79,9 @@ impl CourseRes {
                     ..Default::default()
                 },
                 ..Default::default()
-            })
-            .insert(GoalPole(self.goal_pos_x));
+            },
+            GoalPole(self.goal_pos_x),
+        ));
 
         let world_pos = grid_to_world_f32(&[self.goal_pos_x as f32 + 2., 5.5]);
         let texture = object_sprite_handles
@@ -89,9 +89,8 @@ impl CourseRes {
             .get(&ObjectVariant::GoalPoleR)
             .unwrap()
             .clone();
-        commands
-            .spawn()
-            .insert_bundle(SpriteBundle {
+        commands.spawn((
+            SpriteBundle {
                 texture,
                 transform: Transform {
                     translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_GOAL_R),
@@ -99,8 +98,9 @@ impl CourseRes {
                     ..Default::default()
                 },
                 ..Default::default()
-            })
-            .insert(GoalPole(self.goal_pos_x + 2));
+            },
+            GoalPole(self.goal_pos_x + 2),
+        ));
 
         let world_pos = grid_to_world_f32(&[self.goal_pos_x as f32 + 1., 5.5]);
         let texture = object_sprite_handles
@@ -108,9 +108,8 @@ impl CourseRes {
             .get(&ObjectVariant::GoalPole)
             .unwrap()
             .clone();
-        commands
-            .spawn()
-            .insert_bundle(SpriteBundle {
+        commands.spawn((
+            SpriteBundle {
                 texture,
                 transform: Transform {
                     translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_GOAL),
@@ -118,23 +117,25 @@ impl CourseRes {
                     ..Default::default()
                 },
                 ..Default::default()
-            })
-            .insert(GoalPole(self.goal_pos_x + 1));
+            },
+            GoalPole(self.goal_pos_x + 1),
+        ));
     }
 
     pub(crate) fn spawn_goal_drag(&mut self, commands: &mut Commands, asset_server: &AssetServer) {
         let world_pos = grid_to_world(&[self.goal_pos_x + 1, 1]);
         let texture = asset_server.load("icons/leftright.png");
         commands
-            .spawn()
-            .insert(RigidBody::Fixed)
-            .insert_bundle(SpatialBundle {
-                transform: Transform::from_xyz(world_pos.x, world_pos.y, Z_INDEX_GOAL_DRAG),
-                visibility: Visibility { is_visible: true },
-                ..default()
-            })
+            .spawn((
+                RigidBody::Fixed,
+                SpatialBundle {
+                    transform: Transform::from_xyz(world_pos.x, world_pos.y, Z_INDEX_GOAL_DRAG),
+                    visibility: Visibility { is_visible: true },
+                    ..default()
+                },
+            ))
             .with_children(|parent| {
-                parent.spawn_bundle(SpriteBundle {
+                parent.spawn(SpriteBundle {
                     texture,
                     transform: Transform {
                         scale: Vec3::new(0.07, 0.07, 1.),
@@ -154,7 +155,7 @@ impl CourseRes {
             })
             .insert(GoalPoleDragTimer(Timer::new(
                 Duration::from_millis(100),
-                true,
+                TimerMode::Repeating,
             )));
     }
 

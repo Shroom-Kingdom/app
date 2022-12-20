@@ -82,19 +82,24 @@ pub(crate) fn spawn_tile_preview(
                             TextureAtlasSprite::new(tile_variant.get_sprite_sheet_index())
                         };
                         let entity = commands
-                            .spawn()
-                            .insert(RigidBody::Fixed)
-                            .insert_bundle(SpriteSheetBundle {
-                                transform: Transform {
-                                    translation: Vec3::new(world_pos.x, world_pos.y, Z_INDEX_TILE),
-                                    scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+                            .spawn((
+                                RigidBody::Fixed,
+                                SpriteSheetBundle {
+                                    transform: Transform {
+                                        translation: Vec3::new(
+                                            world_pos.x,
+                                            world_pos.y,
+                                            Z_INDEX_TILE,
+                                        ),
+                                        scale: Vec3::new(TILE_SIZE, TILE_SIZE, 0.),
+                                        ..Default::default()
+                                    },
+                                    texture_atlas: course.texture_atlas_handle_transparent.clone(),
+                                    sprite,
                                     ..Default::default()
                                 },
-                                texture_atlas: course.texture_atlas_handle_transparent.clone(),
-                                sprite,
-                                ..Default::default()
-                            })
-                            .insert(TilePreview)
+                                TilePreview,
+                            ))
                             .id();
                         tile_place_preview.0 = Some((entity, grid_pos));
                     }

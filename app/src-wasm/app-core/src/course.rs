@@ -8,9 +8,12 @@ pub(crate) mod ui_button;
 use crate::{GroundTileUpdateEvent, Tile};
 use bevy::{prelude::*, reflect::TypeUuid};
 use shrm_core::{Course, GroundVariant, ThemeVariant, TileVariant};
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
 
-#[derive(Clone, Debug, TypeUuid)]
+#[derive(Clone, Debug, Resource, TypeUuid)]
 #[uuid = "81a23571-1f35-4f20-b1ea-30e5c2612049"]
 pub struct CourseRes {
     pub texture_atlas_handle: Handle<TextureAtlas>,
@@ -20,7 +23,8 @@ pub struct CourseRes {
     pub goal_pos_x: i32,
 }
 
-pub struct CourseLoading(pub Option<Course>);
+#[derive(Resource)]
+pub struct CourseLoading(pub Arc<RwLock<Option<Course>>>);
 
 impl From<&CourseRes> for Course {
     fn from(course: &CourseRes) -> Self {

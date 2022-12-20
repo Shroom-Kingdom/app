@@ -11,7 +11,10 @@ pub struct Draggable {
     pub flags: DragEventFlags,
 }
 
-pub struct Dragging {
+#[derive(Default, Resource)]
+pub struct Dragging(pub Option<InnerDragging>);
+
+pub struct InnerDragging {
     entity: Entity,
     flags: DragEventFlags,
 }
@@ -33,12 +36,12 @@ pub struct DragEvent {
 pub fn drag_mouse_motion(
     query: Query<&Transform, Without<Camera>>,
     camera_query: MainCameraQuery,
-    dragging: Res<Option<Dragging>>,
+    dragging: Res<Dragging>,
     windows: Res<Windows>,
     mut motion_event: EventReader<MouseMotion>,
     mut drag_events: EventWriter<DragEvent>,
 ) {
-    if let Some(Dragging { entity, flags }) = *dragging {
+    if let Some(InnerDragging { entity, flags }) = dragging.0 {
         if let Ok(transform) = query.get(entity) {
             let window = windows.get_primary().unwrap();
             let cursor_position = if let Some(cursor_pointer) = window.cursor_position() {
@@ -73,7 +76,7 @@ pub fn drag_mouse_button(
     draggable_query: Query<&Draggable>,
     camera_query: MainCameraQuery,
     ctx: Res<RapierContext>,
-    mut dragging: ResMut<Option<Dragging>>,
+    mut dragging: ResMut<Dragging>,
     mouse: Res<Input<MouseButton>>,
     windows: Res<Windows>,
 ) {
@@ -95,7 +98,7 @@ pub fn drag_mouse_button(
             },
             |entity| {
                 let Draggable { flags } = draggable_query.get(entity).unwrap();
-                *dragging = Some(Dragging {
+                dragging.0 = Some(InnerDragging {
                     entity,
                     flags: *flags,
                 });
@@ -103,7 +106,7 @@ pub fn drag_mouse_button(
             },
         );
     } else if mouse.just_released(MouseButton::Left) {
-        *dragging = None;
+        dragging.0 = None;
     }
 }
 

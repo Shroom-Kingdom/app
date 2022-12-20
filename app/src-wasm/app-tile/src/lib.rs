@@ -33,7 +33,7 @@ fn spawn_tile(
     course: Res<CourseRes>,
     game_mode: Res<GameMode>,
     selected_tile: Res<SelectedTile>,
-    dragging: Res<Option<Dragging>>,
+    dragging: Res<Dragging>,
 ) {
     if let GameMode::Build { is_editing: true } = *game_mode {
         for interaction in button_query.iter() {
@@ -41,7 +41,7 @@ fn spawn_tile(
                 return;
             }
         }
-        if dragging.is_some() {
+        if dragging.0.is_some() {
             return;
         }
         let window = windows.get_primary().unwrap();

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Resource)]
 pub enum GameMode {
     Build { is_editing: bool },
     Play,
