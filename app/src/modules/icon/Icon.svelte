@@ -2,7 +2,7 @@
   import { match } from 'ts-pattern';
 
   import { colorWarning } from '../color';
-  
+
   import Warning from './Warning.svelte';
 
   export let type: 'warning' = 'warning' as const;
@@ -12,7 +12,7 @@
     .exhaustive();
 </script>
 
-<div class="icon {$$restProps.class || ''}" style={color}>
+<div class="icon {$$restProps.class || ''}" style="{color}">
   {#if type === 'warning'}
     <Warning />
   {/if}

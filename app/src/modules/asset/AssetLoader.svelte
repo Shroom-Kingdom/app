@@ -8,7 +8,8 @@
   let assetInput: HTMLInputElement | undefined;
 
   const handleSelect = async (event: Event) => {
-    if (!(event.target instanceof HTMLInputElement) || !event.target?.files) return;
+    if (!(event.target instanceof HTMLInputElement) || !event.target?.files)
+      return;
     const file = event.target.files[0];
     if (!file) return;
     loading = true;
@@ -51,23 +52,23 @@
     and follow its instructions.
   </Alert>
   <Button
-    on:click={() => {
+    on:click="{() => {
       if (assetInput) {
         assetInput.click();
       }
-    }}
+    }}"
     primary
     size="large"
-    loading={loading}
+    loading="{loading}"
   >
     Select your asset file
   </Button>
   <input
-    bind:this={assetInput}
+    bind:this="{assetInput}"
     type="file"
     accept=".tar"
     style="display: none;"
-    on:change={handleSelect}
+    on:change="{handleSelect}"
   />
 </div>
 

@@ -5,13 +5,14 @@
 </script>
 
 <div class="row">
-  <div>{isInt
-    ? value
-    : new Intl.NumberFormat('en-EN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value)
-  }</div>
+  <div>
+    {isInt
+      ? value
+      : new Intl.NumberFormat('en-EN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(value)}
+  </div>
   <div>{title}:</div>
 </div>
 

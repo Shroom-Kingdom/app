@@ -1,6 +1,6 @@
 <script lang="ts">
   import Button from '../button/Button.svelte';
-  
+
   import {
     stepTime,
     collisionDetectionTime,
@@ -25,71 +25,39 @@
   let showDebug = false;
 </script>
 
-
 <div class="debug">
   <Button
-    on:click={() => {
-      showDebug= !showDebug;
-    }}
+    on:click="{() => {
+      showDebug = !showDebug;
+    }}"
   >
     Toggle Debug Info
   </Button>
   {#if showDebug}
     <div class="table">
-      <DebugRow title="Total" value={$stepTime} />
-      <DebugRow
-        title="Collision detection"
-        value={$collisionDetectionTime}
-      />
-      <DebugRow title="|_ Broad-phase" value={$broadPhaseTime} />
-      <DebugRow
-        title="|_ Narrow-phase"
-        value={$narrowPhaseTime}
-      />
-      <DebugRow
-        title="Island computation"
-        value={$islandConstructionTime}
-      />
-      <DebugRow title="Solver" value={$solverTime} />
-      <DebugRow
-        title="|_ Velocity assembly"
-        value={$velocityAssemblyTime}
-      />
+      <DebugRow title="Total" value="{$stepTime}" />
+      <DebugRow title="Collision detection" value="{$collisionDetectionTime}" />
+      <DebugRow title="|_ Broad-phase" value="{$broadPhaseTime}" />
+      <DebugRow title="|_ Narrow-phase" value="{$narrowPhaseTime}" />
+      <DebugRow title="Island computation" value="{$islandConstructionTime}" />
+      <DebugRow title="Solver" value="{$solverTime}" />
+      <DebugRow title="|_ Velocity assembly" value="{$velocityAssemblyTime}" />
       <DebugRow
         title="|_ Velocity resolution"
-        value={$velocityResolutionTime}
+        value="{$velocityResolutionTime}"
       />
-      <DebugRow
-        title="|_ Velocity integration"
-        value={$velocityUpdateTime}
-      />
-      <DebugRow
-        title="|_ Position assembly"
-        value={$positionAssemblyTime}
-      />
+      <DebugRow title="|_ Velocity integration" value="{$velocityUpdateTime}" />
+      <DebugRow title="|_ Position assembly" value="{$positionAssemblyTime}" />
       <DebugRow
         title="|_ Position resolution"
-        value={$positionResolutionTime}
+        value="{$positionResolutionTime}"
       />
-      <DebugRow title="CCD" value={$ccdTime} />
-      <DebugRow
-        title="|_ # of substeps"
-        value={$numSubsteps}
-        isInt
-      />
-      <DebugRow
-        title="|_ TOI computation"
-        value={$toiComputationTime}
-      />
-      <DebugRow
-        title="|_ Broad-phase"
-        value={$ccdBroadPhaseTime}
-      />
-      <DebugRow
-        title="|_ Narrow-phase"
-        value={$ccdNarrowPhaseTime}
-      />
-      <DebugRow title="|_ Solver" value={$ccdSolverTime} />
+      <DebugRow title="CCD" value="{$ccdTime}" />
+      <DebugRow title="|_ # of substeps" value="{$numSubsteps}" isInt />
+      <DebugRow title="|_ TOI computation" value="{$toiComputationTime}" />
+      <DebugRow title="|_ Broad-phase" value="{$ccdBroadPhaseTime}" />
+      <DebugRow title="|_ Narrow-phase" value="{$ccdNarrowPhaseTime}" />
+      <DebugRow title="|_ Solver" value="{$ccdSolverTime}" />
     </div>
   {/if}
 </div>

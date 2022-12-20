@@ -2,30 +2,36 @@
   import ProgressSpinner from '../progress/ProgressSpinner.svelte';
 
   export let primary = true;
-  export let size: 'small' | 'medium' | 'large' = 'medium'
+  export let size: 'small' | 'medium' | 'large' = 'medium';
   export let loading = false;
 
   let clientWidth = 0;
   let clientHeight = 0;
-  let style = "";
+  let style = '';
 
   $: if (loading) {
     style = `min-width: ${clientWidth}px; max-width: ${clientWidth}px; min-height: ${clientHeight}px; max-height: ${clientHeight}px`;
   } else {
-    style = "";
+    style = '';
   }
-  
-  const classes = ["button", size];
+
+  const classes = ['button', size];
   if (primary) {
     classes.push('primary');
   }
 </script>
 
-<button on:click class={classes.join(' ')} style={style} bind:clientWidth bind:clientHeight>
+<button
+  on:click
+  class="{classes.join(' ')}"
+  style="{style}"
+  bind:clientWidth
+  bind:clientHeight
+>
   {#if loading}
-    <ProgressSpinner inline width={clientWidth} height={clientHeight} />
+    <ProgressSpinner inline width="{clientWidth}" height="{clientHeight}" />
   {:else}
-    <slot></slot>
+    <slot />
   {/if}
 </button>
 
@@ -79,8 +85,7 @@
     text-align: center;
     text-decoration: none;
     border-radius: 0.3rem;
-    transition: opacity 0.1s ease, background-color 0.1s ease,
-      color 0.1s ease, box-shadow 0.1s ease, background 0.1s ease,
-      -webkit-box-shadow 0.1s ease;
+    transition: opacity 0.1s ease, background-color 0.1s ease, color 0.1s ease,
+      box-shadow 0.1s ease, background 0.1s ease, -webkit-box-shadow 0.1s ease;
   }
 </style>

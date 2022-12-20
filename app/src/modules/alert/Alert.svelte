@@ -5,10 +5,10 @@
   const style = `border: 2px solid ${colorWarning};`;
 </script>
 
-<div class="alert {$$restProps.class || ''}" style={style}>
+<div class="alert {$$restProps.class || ''}" style="{style}">
   <Icon type="warning" class="flex-content-36" />
   <div class="content">
-    <slot></slot>
+    <slot />
   </div>
 </div>
 
