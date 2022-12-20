@@ -2,10 +2,12 @@
   import { colorWarning } from '../color';
   import Icon from '../icon/Icon.svelte';
 
+  export let className = '';
+
   const style = `border: 2px solid ${colorWarning};`;
 </script>
 
-<div class="alert {$$restProps.class || ''}" style="{style}">
+<div class="alert {className || ''}" style="{style}">
   <Icon type="warning" class="flex-content-36" />
   <div class="content">
     <slot />

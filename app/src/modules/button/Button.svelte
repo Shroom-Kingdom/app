@@ -25,8 +25,8 @@
   on:click
   class="{classes.join(' ')}"
   style="{style}"
-  bind:clientWidth
-  bind:clientHeight
+  bind:clientWidth="{clientWidth}"
+  bind:clientHeight="{clientHeight}"
 >
   {#if loading}
     <ProgressSpinner inline width="{clientWidth}" height="{clientHeight}" />
@@ -35,7 +35,7 @@
   {/if}
 </button>
 
-<style lang="scss">
+<style lang="scss" module="scoped">
   .button {
     &.primary {
       background-color: #1678c2;

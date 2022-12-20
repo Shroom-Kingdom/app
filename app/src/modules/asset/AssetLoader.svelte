@@ -39,13 +39,13 @@
 </script>
 
 <div class="asset-loader">
-  <Alert class="margin-0-1-2-1">
+  <Alert className="margin-0-1-2-1">
     If you don&apos;t yet have an asset file, please go to our Github and
     download the{' '}
     <a
       href="https://github.com/Shroom-Kingdom/asset-extractor/releases"
       target="_blank"
-      rel="noopener"
+      rel="noreferrer noopener"
     >
       latest release from the asset extractor
     </a>{' '}

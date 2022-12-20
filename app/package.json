@@ -40,7 +40,6 @@
     "html-webpack-plugin": "^5",
     "mini-css-extract-plugin": "^2",
     "node-polyfill-webpack-plugin": "^2",
-    "node-sass": "^8",
     "npm-run-all": "^4",
     "postcss": "^8",
     "postcss-loader": "^7",

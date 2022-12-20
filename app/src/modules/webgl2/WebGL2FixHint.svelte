@@ -7,7 +7,11 @@
 {#if !browser}
   <div>
     Please visit{' '}
-    <a href="https://get.webgl.org/webgl2/" target="_blank" rel="noopener">
+    <a
+      href="https://get.webgl.org/webgl2/"
+      target="_blank"
+      rel="noreferrer noopener"
+    >
       this website
     </a>{' '}
     to get instructions how to enable WebGL2.
@@ -20,7 +24,11 @@
 {:else}
   <div>
     Please visit{' '}
-    <a href="https://get.webgl.org/webgl2/" target="_blank" rel="noopener">
+    <a
+      href="https://get.webgl.org/webgl2/"
+      target="_blank"
+      rel="noreferrer noopener"
+    >
       this website
     </a>{' '}
     to get instructions how to enable WebGL2.
