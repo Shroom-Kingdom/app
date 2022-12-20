@@ -1,3 +1,5 @@
+import { type IRequest } from 'itty-router';
+
 import { router } from './main';
 import init from './wasm/shrm_api_wasm';
 import module from './wasm/shrm_api_wasm_bg.wasm';
@@ -5,7 +7,7 @@ import module from './wasm/shrm_api_wasm_bg.wasm';
 const instance = init(module);
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: IRequest, env: Env): Promise<Response> {
     await instance;
     if (request.method === 'OPTIONS') {
       const headers = new Headers();
@@ -30,7 +32,7 @@ export default {
   }
 };
 
-function setupCORS(request: Request, headers: Headers) {
+function setupCORS(request: IRequest, headers: Headers) {
   const origin = request.headers.get('Origin');
   if (origin != null) {
     headers.set('Access-Control-Allow-Origin', origin);

@@ -13,6 +13,7 @@
     "unresolved-proc-macro"
   ],
   "svelte.enable-ts-plugin": true,
+  "thunder-client.saveToWorkspace": true,
   "[rust]": {
     "editor.tabSize": 4,
     "editor.defaultFormatter": "rust-lang.rust-analyzer"

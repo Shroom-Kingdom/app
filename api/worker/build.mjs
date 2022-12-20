@@ -27,7 +27,7 @@ build({
   entryPoints: ['src/index.ts'],
   bundle: true,
   outfile: 'dist/index.mjs',
-  external: ['*.wasm'],
+  external: ['*.wasm', 'fs', 'path', 'http', 'https'],
   format: 'esm',
   minify: true,
   logLevel: 'info',

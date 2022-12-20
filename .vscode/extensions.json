@@ -4,6 +4,7 @@
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "mgmcdermott.vscode-language-babel",
+    "rangav.vscode-thunder-client",
     "rust-lang.rust-analyzer",
     "serayuzgur.crates",
     "svelte.svelte-vscode"

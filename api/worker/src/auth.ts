@@ -5,7 +5,7 @@ import {
   ConnectConfig,
   utils
 } from '@tarnadas/near-api-js';
-import { Router } from 'itty-router';
+import { type IRequest, Router } from 'itty-router';
 import { sign } from 'tweetnacl';
 
 const router = Router({ base: '/auth' });
@@ -20,7 +20,8 @@ const nearConfig: ConnectConfig = {
   helperUrl: 'https://helper.testnet.near.org'
 };
 
-router.post('/login', async (req: Request) => {
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+router.post!('/login', async (req: IRequest) => {
   const accessToken = await req.text();
   if (!accessToken) {
     return new Response('', { status: 400 });
