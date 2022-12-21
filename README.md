@@ -1,6 +1,8 @@
-# Shroom Kingdom App
+# Shroom Kingdom
 
-This is the web app for Shroom Kingdom, that you can visit here:
+This is the monorepo for Shroom Kingdom, that contains various projects.
+
+The web app is live here:
 
 https://app.shroomkingdom.net
 
@@ -11,4 +13,5 @@ https://app.shroomkingdom.net
 - Install [Nodejs](https://nodejs.org/)
 - Install Yarn: `npm i -g yarn`
 - Install Nodejs dependencies: `yarn`
-- Run app: `yarn start`
+- Please use VSCode for the best experience and install recommended extensions
+- Run app: `yarn app start`

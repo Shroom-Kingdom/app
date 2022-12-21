@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Button from '../button/Button.svelte';
+  import Button from '../../components/button/Button.svelte';
 
   import {
     stepTime,

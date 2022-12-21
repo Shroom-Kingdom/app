@@ -40,4 +40,5 @@ function setupCORS(request: IRequest, headers: Headers) {
 }
 
 export { Courses } from './course';
+export { Session } from './session';
 export { User } from './user';

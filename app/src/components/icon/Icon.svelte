@@ -1,7 +1,7 @@
 <script lang="ts">
   import { match } from 'ts-pattern';
 
-  import { colorWarning } from '../color';
+  import { colorWarning } from '../../modules/color';
 
   import Warning from './Warning.svelte';
 

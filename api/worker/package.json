@@ -18,11 +18,13 @@
     "@aws-crypto/sha256-browser": "^2",
     "@tarnadas/near-api-js": "1.1.3",
     "itty-router": "^3",
-    "tweetnacl": "^1"
+    "tweetnacl": "^1",
+    "uuid": "^9"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4",
     "@esbuild-plugins/node-globals-polyfill": "^0.1",
+    "@types/uuid": "^9.0.0",
     "@typescript-eslint/eslint-plugin": "^5",
     "@typescript-eslint/parser": "^5",
     "esbuild": "^0.16",

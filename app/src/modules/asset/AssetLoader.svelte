@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Alert from '../alert/Alert.svelte';
-  import Button from '../button/Button.svelte';
+  import Alert from '../../components/alert/Alert.svelte';
+  import Button from '../../components/button/Button.svelte';
 
   import { assets } from '.';
 
@@ -85,6 +85,7 @@
     justify-content: center;
     padding: 2rem;
   }
+
   :global(.margin-0-1-2-1) {
     margin: 0 1rem 2rem 1rem;
   }

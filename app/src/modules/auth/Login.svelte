@@ -7,10 +7,14 @@
     Near
   } from '@tarnadas/near-api-js';
 
-  import Button from '../button/Button.svelte';
+  import type { Account } from '../../../../common-types';
+  import Button from '../../components/button/Button.svelte';
+
+  import { isRegistered, account } from '.';
 
   let near: Near | null = null;
   let wallet: WalletConnection | null = null;
+  let accountId = '';
 
   const nearConfig: ConnectConfig = {
     networkId: 'testnet',
@@ -20,16 +24,23 @@
     helperUrl: 'https://helper.testnet.near.org'
   };
 
+  login();
+
+  async function login() {
+    await setupWallet();
+    await signTransaction();
+  }
+
   async function setupWallet() {
     near = await connect(nearConfig);
     wallet = new WalletConnection(near, null);
+    accountId = wallet.getAccountId();
+    await wallet.isSignedInAsync();
   }
-  setupWallet();
 
   async function signTransaction() {
-    if (!wallet) return;
-    const accessToken = await createAccessToken(wallet);
-    console.log('accessToken', accessToken);
+    if (!wallet || !accountId) return;
+    const accessToken = await createAccessToken(wallet, accountId);
 
     const res = await fetch('https://shrm-api.shrm.workers.dev/auth/login', {
       method: 'POST',
@@ -39,19 +50,20 @@
       console.error(await res.text());
       return;
     }
-    const asd = await res.json();
-    console.log('asd', asd);
+
+    if (res.status === 204) {
+      isRegistered.set(false);
+      return;
+    }
+    isRegistered.set(true);
+    const user = await res.json<Account>();
+    account.set(user);
   }
 
-  async function createAccessToken(wallet: WalletConnection): Promise<string> {
-    const accountId = wallet.getAccountId();
-    console.log('accountId', accountId);
-    if (!accountId) {
-      await wallet.requestSignIn({
-        contractId: 'near-chan-v14.shrm.testnet'
-      });
-      return '';
-    }
+  async function createAccessToken(
+    wallet: WalletConnection,
+    accountId: string
+  ): Promise<string> {
     const tokenMessage = btoa(
       JSON.stringify({ accountId: accountId, iat: new Date().getTime() })
     );
@@ -71,13 +83,33 @@
       return '';
     }
   }
+
+  async function handleLogin() {
+    if (!wallet) return;
+    await wallet.requestSignIn({
+      contractId: 'near-chan-v14.shrm.testnet'
+    });
+  }
+
+  async function handleLogout() {
+    if (!wallet) return;
+    wallet.signOut();
+    accountId = '';
+  }
 </script>
 
 <div class="login">
   {#if wallet && near}
-    <Button on:click="{() => signTransaction()}" primary size="large">
-      Login with Near
-    </Button>
+    {#if accountId}
+      {accountId}
+      <Button on:click="{() => handleLogout()}" primary size="small">
+        Logout
+      </Button>
+    {:else}
+      <Button on:click="{() => handleLogin()}" primary size="medium">
+        Login with Near
+      </Button>
+    {/if}
   {/if}
 </div>
 

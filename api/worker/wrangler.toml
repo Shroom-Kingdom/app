@@ -14,11 +14,16 @@ kv_namespaces = [
 bindings = [
   { name = "USER", class_name = "User" },
   { name = "COURSES", class_name = "Courses" },
+  { name = "SESSIONS", class_name = "Session" },
 ]
 
 [[migrations]]
 tag = "v1"
 new_classes = ["User", "Courses"]
+
+[[migrations]]
+tag = "v2"
+new_classes = ["Session"]
 
 [build]
 command = "yarn install && yarn build"

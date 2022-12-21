@@ -8,6 +8,9 @@ import {
 import { type IRequest, Router } from 'itty-router';
 import { sign } from 'tweetnacl';
 
+import { setSession } from './session';
+import { getAccount } from './user';
+
 const router = Router({ base: '/auth' });
 export { router as authRouter };
 
@@ -21,7 +24,7 @@ const nearConfig: ConnectConfig = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-router.post!('/login', async (req: IRequest) => {
+router.post!('/login', async (req: IRequest, env: Env) => {
   const accessToken = await req.text();
   if (!accessToken) {
     return new Response('', { status: 400 });
@@ -45,14 +48,12 @@ router.post!('/login', async (req: IRequest) => {
   }
 
   const near = await connect(nearConfig);
-  const account = await near.account(accountId);
-  const accessKeys = await account.getAccessKeys();
-  console.log('accessKeys', accessKeys);
+  const nearAccount = await near.account(accountId);
+  const accessKeys = await nearAccount.getAccessKeys();
 
   const publicKeys = accessKeys.map(key =>
     utils.PublicKey.fromString(key.public_key)
   );
-  console.log('publicKeys', publicKeys);
   const encoder = new TextEncoder();
   const hasPubKey = !!publicKeys.find(async pk => {
     const hash = new Sha256();
@@ -64,6 +65,15 @@ router.post!('/login', async (req: IRequest) => {
       new Uint8Array(pk.data)
     );
   });
-  console.log('hasPubKey', hasPubKey);
-  return new Response('', { status: 501 });
+  if (!hasPubKey) {
+    return new Response('', { status: 401 });
+  }
+
+  await setSession(accountId, accessToken, env);
+  const account = await getAccount(accountId, env);
+
+  if (account == null) {
+    return new Response('', { status: 204 });
+  }
+  return new Response(JSON.stringify(account));
 });

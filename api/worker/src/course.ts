@@ -6,7 +6,7 @@ import { isCourse } from './wasm/shrm_api_wasm';
 const router = Router({ base: '/course' });
 export { router as courseRouter };
 
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 router.post!('/check', async (req: IRequest) => {
   if (!req.arrayBuffer) {
     return new Response('', { status: 500 });
@@ -45,7 +45,6 @@ router.post!('/check', async (req: IRequest) => {
 }).post!('/publish', async () => {
   return new Response('', { status: 501 });
 });
-/* eslint-enable @typescript-eslint/no-non-null-assertion */
 
 export class Courses {
   private state: DurableObjectState;

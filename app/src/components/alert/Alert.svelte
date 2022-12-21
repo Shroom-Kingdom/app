@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { colorWarning } from '../color';
+  import { colorWarning } from '../../modules/color';
   import Icon from '../icon/Icon.svelte';
 
   export let className = '';
