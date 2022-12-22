@@ -11,16 +11,15 @@
   function submit(
     event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }
   ) {
-    event.preventDefault();
-
     const form = event.target as HTMLFormElement;
+    if (!form.checkValidity()) return;
     const formData = new FormData(form);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitForm(event, Object.fromEntries(formData as any));
   }
 </script>
 
-<form on:submit="{submit}">
+<form on:submit|preventDefault="{submit}">
   <slot />
 
   <Button type="submit">{submitLabel}</Button>
