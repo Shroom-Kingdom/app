@@ -4,6 +4,7 @@
   export let primary = true;
   export let size: 'small' | 'medium' | 'large' = 'medium';
   export let loading = false;
+  export let type = 'button';
 
   let clientWidth = 0;
   let clientHeight = 0;
@@ -25,6 +26,7 @@
   on:click
   class="{classes.join(' ')}"
   style="{style}"
+  type="{type}"
   bind:clientWidth="{clientWidth}"
   bind:clientHeight="{clientHeight}"
 >

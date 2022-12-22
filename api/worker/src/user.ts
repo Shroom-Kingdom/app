@@ -1,9 +1,6 @@
 import { type IRequest, Router, type RouterType } from 'itty-router';
-import { v4 as uuidv4 } from 'uuid';
 
 import type { Account } from '../../../common-types';
-
-import { NearRegister } from './requests';
 
 export async function getAccount(
   accountId: string,
@@ -16,6 +13,20 @@ export async function getAccount(
     return res.json<Account>();
   }
 }
+
+export async function registerAccountViaNear(
+  account: Account,
+  env: Env
+): Promise<boolean> {
+  const addr = env.SESSIONS.idFromName(account.uuid);
+  const obj = env.SESSIONS.get(addr);
+  const res = await obj.fetch('http://session.com/register/near', {
+    method: 'POST',
+    body: JSON.stringify(account)
+  });
+  return res.ok;
+}
+
 export class User {
   private state: DurableObjectState;
   private initializePromise: Promise<void> | undefined;
@@ -35,17 +46,7 @@ export class User {
       }
       return new Response(JSON.stringify(this.account));
     }).post!('/register/near', async (req: IRequest) => {
-      // TODO zod validation
-      const { username, walletId } = await (
-        req as unknown as Request
-      ).json<NearRegister>();
-      const uuid = uuidv4();
-      // TODO check unique uuid
-      const account: Account = {
-        uuid,
-        username,
-        walletId
-      };
+      const account = await (req as unknown as Request).json<Account>();
       const accountJson = JSON.stringify(account);
       await this.state.storage.put('account', accountJson);
       return new Response(accountJson);

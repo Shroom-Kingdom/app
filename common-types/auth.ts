@@ -1,3 +1,8 @@
+export interface NearRegister {
+  username: string;
+  walletId: string;
+}
+
 export interface Account {
   uuid: string;
   username: string;

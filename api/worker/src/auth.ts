@@ -7,9 +7,12 @@ import {
 } from '@tarnadas/near-api-js';
 import { type IRequest, Router } from 'itty-router';
 import { sign } from 'tweetnacl';
+import { v4 as uuidv4 } from 'uuid';
+
+import { Account, NearRegister } from '../../../common-types';
 
 import { setSession } from './session';
-import { getAccount } from './user';
+import { getAccount, registerAccountViaNear } from './user';
 
 const router = Router({ base: '/auth' });
 export { router as authRouter };
@@ -76,4 +79,23 @@ router.post!('/login', async (req: IRequest, env: Env) => {
     return new Response('', { status: 204 });
   }
   return new Response(JSON.stringify(account));
+}).post!('/register/near', async (req: IRequest, env: Env) => {
+  // TODO zod validation
+  const { username, walletId } = await (
+    req as unknown as Request
+  ).json<NearRegister>();
+  const uuid = uuidv4();
+  // TODO check unique uuid
+  const account: Account = {
+    uuid,
+    username,
+    walletId
+  };
+  const isOk = await registerAccountViaNear(account, env);
+  if (!isOk) {
+    return new Response('', { status: 500 });
+  }
+  return new Response(JSON.stringify(account));
+}).post!('/register/discord', async () => {
+  return new Response('', { status: 501 });
 });

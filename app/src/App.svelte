@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
 
   import { assets } from './modules/asset';
-  import AssetLoader from './modules/asset/AssetLoader.svelte';
-  import Header from './modules/header/Header.svelte';
+  import Body from './modules/layout/Body.svelte';
+  import Header from './modules/layout/Header.svelte';
 
   let canvas: HTMLCanvasElement | null = null;
   document.body.oncontextmenu = e => {
@@ -68,7 +68,7 @@
 {#if assetData == null}
   <div class="app">
     <Header />
-    <AssetLoader />
+    <Body />
   </div>
 {/if}
 <canvas

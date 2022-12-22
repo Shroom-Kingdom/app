@@ -10,11 +10,10 @@
   import type { Account } from '../../../../common-types';
   import Button from '../../components/button/Button.svelte';
 
-  import { isRegistered, account } from '.';
+  import { isRegistered$, account$, walletId$ } from '.';
 
   let near: Near | null = null;
   let wallet: WalletConnection | null = null;
-  let accountId = '';
 
   const nearConfig: ConnectConfig = {
     networkId: 'testnet',
@@ -27,20 +26,23 @@
   login();
 
   async function login() {
-    await setupWallet();
-    await signTransaction();
+    const walletId = await setupWallet();
+    console.log('walletId', walletId);
+    await signTransaction(walletId);
   }
 
-  async function setupWallet() {
+  async function setupWallet(): Promise<string> {
     near = await connect(nearConfig);
     wallet = new WalletConnection(near, null);
-    accountId = wallet.getAccountId();
     await wallet.isSignedInAsync();
+    const accountId = wallet.getAccountId();
+    walletId$.set(wallet.getAccountId());
+    return accountId;
   }
 
-  async function signTransaction() {
-    if (!wallet || !accountId) return;
-    const accessToken = await createAccessToken(wallet, accountId);
+  async function signTransaction(walletId: string | null) {
+    if (!wallet || !walletId) return;
+    const accessToken = await createAccessToken(wallet, walletId);
 
     const res = await fetch('https://shrm-api.shrm.workers.dev/auth/login', {
       method: 'POST',
@@ -52,27 +54,27 @@
     }
 
     if (res.status === 204) {
-      isRegistered.set(false);
+      isRegistered$.set(false);
       return;
     }
-    isRegistered.set(true);
+    isRegistered$.set(true);
     const user = await res.json<Account>();
-    account.set(user);
+    account$.set(user);
   }
 
   async function createAccessToken(
     wallet: WalletConnection,
-    accountId: string
+    walletId: string
   ): Promise<string> {
     const tokenMessage = btoa(
-      JSON.stringify({ accountId: accountId, iat: new Date().getTime() })
+      JSON.stringify({ accountId: walletId, iat: new Date().getTime() })
     );
     try {
       const signature = await wallet
         .account()
         .connection.signer.signMessage(
           new TextEncoder().encode(tokenMessage),
-          accountId,
+          walletId,
           nearConfig.networkId
         );
       return (
@@ -94,14 +96,14 @@
   async function handleLogout() {
     if (!wallet) return;
     wallet.signOut();
-    accountId = '';
+    walletId$.set(null);
   }
 </script>
 
 <div class="login">
   {#if wallet && near}
-    {#if accountId}
-      {accountId}
+    {#if $walletId$}
+      {$walletId$}
       <Button on:click="{() => handleLogout()}" primary size="small">
         Logout
       </Button>
