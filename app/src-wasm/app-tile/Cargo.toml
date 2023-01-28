@@ -20,6 +20,6 @@ default-features = false
 
 [dependencies.bevy_rapier]
 package = "bevy_rapier2d"
-version = "0.19"
+version = "0.20"
 # path = "../../../bevy_rapier/bevy_rapier2d"
 # git = "https://github.com/Shroom-Kingdom/bevy_rapier.git"
