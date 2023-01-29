@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { get } from 'svelte/store';
+
   import type { NearRegister } from '../../../../common-types';
   import Form from '../../components/form/Form.svelte';
   import Input from '../../components/form/Input.svelte';
@@ -13,15 +15,13 @@
     event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement },
     value: RegisterForm
   ) {
-    walletId$.subscribe(walletId => {
-      if (!walletId) return;
-      const registerNear: NearRegister = {
-        username: value.username,
-        walletId
-      };
-      console.log('registerNear', registerNear);
-      // register(registerNear);
-    });
+    const walletId = get(walletId$);
+    if (!walletId) return;
+    const registerNear: NearRegister = {
+      username: value.username,
+      walletId
+    };
+    register(registerNear);
   }
 
   async function register(registerNear: NearRegister) {

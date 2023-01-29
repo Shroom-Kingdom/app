@@ -4,10 +4,8 @@ export interface NearRegister {
 }
 
 export interface Account {
-  uuid: string;
   username: string;
-  walletId?: string;
-  discord?: DiscordUser;
+  walletId: string;
 }
 
 export interface DiscordUser {

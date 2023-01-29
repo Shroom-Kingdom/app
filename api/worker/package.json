@@ -18,8 +18,7 @@
     "@aws-crypto/sha256-browser": "^2",
     "@tarnadas/near-api-js": "1.1.3",
     "itty-router": "^3",
-    "tweetnacl": "^1",
-    "uuid": "^9"
+    "tweetnacl": "^1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4",

@@ -10,7 +10,7 @@
   import type { Account } from '../../../../common-types';
   import Button from '../../components/button/Button.svelte';
 
-  import { isRegistered$, account$, walletId$ } from '.';
+  import { isRegistered$, account$, walletId$, accessToken$ } from '.';
 
   let near: Near | null = null;
   let wallet: WalletConnection | null = null;
@@ -27,7 +27,6 @@
 
   async function login() {
     const walletId = await setupWallet();
-    console.log('walletId', walletId);
     await signTransaction(walletId);
   }
 
@@ -60,6 +59,7 @@
     isRegistered$.set(true);
     const user = await res.json<Account>();
     account$.set(user);
+    accessToken$.set(accessToken);
   }
 
   async function createAccessToken(
@@ -67,7 +67,7 @@
     walletId: string
   ): Promise<string> {
     const tokenMessage = btoa(
-      JSON.stringify({ accountId: walletId, iat: new Date().getTime() })
+      JSON.stringify({ walletId, iat: new Date().getTime() })
     );
     try {
       const signature = await wallet

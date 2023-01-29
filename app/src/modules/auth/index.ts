@@ -5,3 +5,4 @@ import type { Account } from '../../../../common-types';
 export const account$ = writable<Account | null>(null);
 export const walletId$ = writable<string | null>(null);
 export const isRegistered$ = writable<boolean>(false);
+export const accessToken$ = writable<string | null>(null);

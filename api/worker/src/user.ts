@@ -3,11 +3,11 @@ import { type IRequest, Router, type RouterType } from 'itty-router';
 import type { Account } from '../../../common-types';
 
 export async function getAccount(
-  accountId: string,
+  walletId: string,
   env: Env
 ): Promise<Account | undefined> {
-  const addr = env.SESSIONS.idFromName(accountId);
-  const obj = env.SESSIONS.get(addr);
+  const addr = env.USER.idFromName(walletId);
+  const obj = env.USER.get(addr);
   const res = await obj.fetch('http://session.com/account');
   if (res.ok) {
     return res.json<Account>();
@@ -17,14 +17,14 @@ export async function getAccount(
 export async function registerAccountViaNear(
   account: Account,
   env: Env
-): Promise<boolean> {
-  const addr = env.SESSIONS.idFromName(account.uuid);
-  const obj = env.SESSIONS.get(addr);
+): Promise<number> {
+  const addr = env.USER.idFromName(account.walletId);
+  const obj = env.USER.get(addr);
   const res = await obj.fetch('http://session.com/register/near', {
     method: 'POST',
     body: JSON.stringify(account)
   });
-  return res.ok;
+  return res.status;
 }
 
 export class User {
@@ -44,12 +44,17 @@ export class User {
       if (!this.account) {
         return new Response('', { status: 500 });
       }
-      return new Response(JSON.stringify(this.account));
+      return new Response(JSON.stringify(this.account), {
+        headers: { 'content-type': 'application/json' }
+      });
     }).post!('/register/near', async (req: IRequest) => {
       const account = await (req as unknown as Request).json<Account>();
-      const accountJson = JSON.stringify(account);
-      await this.state.storage.put('account', accountJson);
-      return new Response(accountJson);
+      const alreadyRegistered = await this.state.storage.get('account');
+      if (alreadyRegistered) {
+        return new Response('', { status: 401 });
+      }
+      await this.state.storage.put('account', account);
+      return new Response(JSON.stringify(account));
     }).post!('/register/discord', async () => {
       return new Response('', { status: 501 });
     });
