@@ -33,7 +33,12 @@ router.post!('/login', async (req: IRequest, env: Env) => {
   }
   const tokenparts = accessToken.split('.');
   const msgBytes = tokenparts[0];
-  const signature = atob(tokenparts[1]);
+  const signature = new Uint8Array(
+    atob(tokenparts[1])
+      .split(',')
+      .map(c => Number(c))
+  );
+  const publicKey = utils.PublicKey.fromString(tokenparts[2]);
   const { walletId, iat } = JSON.parse(atob(msgBytes)) as {
     walletId?: string;
     iat?: number;
@@ -49,6 +54,18 @@ router.post!('/login', async (req: IRequest, env: Env) => {
     return new Response('', { status: 400 });
   }
 
+  const hash = new Sha256();
+  hash.update(msgBytes);
+  const sha256 = await hash.digest();
+  const verified = sign.detached.verify(
+    sha256,
+    new Uint8Array(signature),
+    publicKey.data
+  );
+  if (!verified) {
+    return new Response('', { status: 401 });
+  }
+
   const near = await connect(nearConfig);
   const nearAccount = await near.account(walletId);
   const accessKeys = await nearAccount.getAccessKeys();
@@ -56,17 +73,9 @@ router.post!('/login', async (req: IRequest, env: Env) => {
   const publicKeys = accessKeys.map(key =>
     utils.PublicKey.fromString(key.public_key)
   );
-  const encoder = new TextEncoder();
-  const hasPubKey = !!publicKeys.find(async pk => {
-    const hash = new Sha256();
-    hash.update(msgBytes);
-    const sha256 = await hash.digest();
-    return sign.detached.verify(
-      new Uint8Array(sha256),
-      new Uint8Array(encoder.encode(signature)),
-      new Uint8Array(pk.data)
-    );
-  });
+  const hasPubKey = !!publicKeys.find(
+    pk => pk.toString() === publicKey.toString()
+  );
   if (!hasPubKey) {
     return new Response('', { status: 401 });
   }

@@ -13,7 +13,7 @@
   }
 </script>
 
-<div class="{`wrapper${inline ? ' inline' : ''}`}">
+<div class="wrapper" class:inline="{inline}">
   <div class="progress-spinner" style="{style}"></div>
 </div>
 

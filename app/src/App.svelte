@@ -1,9 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
+  import { Modal } from 'svelte-simple-modal';
 
   import { assets } from './modules/asset';
   import Body from './modules/layout/Body.svelte';
   import Header from './modules/layout/Header.svelte';
+  import { modal$ } from './modules/layout/modal';
+  import { ScreenSize, screenSize$ } from './modules/layout/screen-size';
 
   let canvas: HTMLCanvasElement | null = null;
   document.body.oncontextmenu = e => {
@@ -63,7 +66,59 @@
       loadingIndicator.remove();
     }
   });
+
+  let resizeObserver: ResizeObserver;
+  onMount(() => {
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { inlineSize } = entry.contentBoxSize[0];
+        if (inlineSize <= ScreenSize.Phone) {
+          screenSize$.set(ScreenSize.Phone);
+        } else if (inlineSize <= ScreenSize.Mobile) {
+          screenSize$.set(ScreenSize.Mobile);
+        } else if (inlineSize <= ScreenSize.Laptop) {
+          screenSize$.set(ScreenSize.Laptop);
+        } else if (inlineSize <= ScreenSize.DesktopLg) {
+          screenSize$.set(ScreenSize.DesktopLg);
+        } else {
+          screenSize$.set(ScreenSize.DesktopXl);
+        }
+      }
+    });
+
+    resizeObserver.observe(window.document.body);
+  });
+  onDestroy(() => {
+    if (!resizeObserver) return;
+    resizeObserver.unobserve(window.document.body);
+  });
 </script>
+
+<Modal
+  show="{$modal$}"
+  styleWindow="{{
+    width: 'var(--modal-width)',
+    maxWidth: '100vw',
+    maxHeight: 'var(--modal-max-height)',
+    margin: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    backgroundColor: '#281c4a',
+    border: '2px solid var(--bright-border)',
+    boxShadow: '0px 0px 15px #d295ba'
+  }}"
+  styleWindowWrap="{{
+    margin: '0'
+  }}"
+  styleCloseButton="{{
+    cursor: 'pointer',
+    borderRadius: '25%'
+  }}"
+  styleContent="{{
+    maxHeight: '100%'
+  }}"
+/>
 
 {#if assetData == null}
   <div class="app">

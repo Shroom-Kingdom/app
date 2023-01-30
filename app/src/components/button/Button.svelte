@@ -4,7 +4,14 @@
   export let primary = true;
   export let size: 'small' | 'medium' | 'large' = 'medium';
   export let loading = false;
-  export let type = 'button';
+  export let disabled = false;
+  export let href: string | null = null;
+  export let type = 'button' as
+    | 'button'
+    | 'submit'
+    | 'reset'
+    | null
+    | undefined;
 
   let clientWidth = 0;
   let clientHeight = 0;
@@ -22,26 +29,70 @@
   }
 </script>
 
-<button
-  on:click
-  class="{classes.join(' ')}"
-  style="{style}"
-  type="{type}"
-  bind:clientWidth="{clientWidth}"
-  bind:clientHeight="{clientHeight}"
->
-  {#if loading}
-    <ProgressSpinner inline width="{clientWidth}" height="{clientHeight}" />
-  {:else}
-    <slot />
-  {/if}
-</button>
+{#if href}
+  <a href="{href}">
+    <button
+      on:click
+      class="{classes.join(' ')}"
+      class:loading="{loading}"
+      class:href="{href}"
+      style="{style}"
+      type="{type}"
+      disabled="{disabled}"
+      bind:clientWidth="{clientWidth}"
+      bind:clientHeight="{clientHeight}"
+    >
+      {#if loading}
+        <ProgressSpinner
+          inline
+          width="{clientWidth - 4}"
+          height="{clientHeight - 4}"
+        />
+      {:else}
+        <slot />
+      {/if}
+    </button>
+  </a>
+{:else}
+  <button
+    on:click
+    class="{classes.join(' ')}"
+    class:loading="{loading}"
+    style="{style}"
+    type="{type}"
+    disabled="{disabled}"
+    bind:clientWidth="{clientWidth}"
+    bind:clientHeight="{clientHeight}"
+  >
+    {#if loading}
+      <ProgressSpinner
+        inline
+        width="{clientWidth - 4}"
+        height="{clientHeight - 4}"
+      />
+    {:else}
+      <slot />
+    {/if}
+  </button>
+{/if}
 
 <style lang="scss" module="scoped">
+  a {
+    margin: var(--margin, 0);
+  }
+
+  .button.href {
+    margin: 0;
+  }
+
+  .button:not(.href) {
+    margin: var(--margin, 0);
+  }
+
   .button {
     &.primary {
       background-color: #1678c2;
-      &:hover {
+      &:hover:not(:disabled) {
         background-color: #2185d0;
       }
     }
@@ -54,26 +105,41 @@
     }
 
     &.small {
-      margin: 0.2rem 0.25rem;
-      padding: 0.3rem 0.6rem;
-      font-size: 0.8rem;
+      &:not(.loading) {
+        padding: var(--padding, 0.3rem 0.6rem);
+      }
+      font-size: var(--font-size, 0.8rem);
     }
     &.medium {
-      margin: 0.3rem 0.4rem;
-      padding: 0.5rem 0.9rem;
-      font-size: 1rem;
+      &:not(.loading) {
+        padding: var(--padding, 0.5rem 0.9rem);
+      }
+      font-size: var(--font-size, 1rem);
     }
     &.large {
-      margin: 0.4rem 0.55rem;
-      padding: 0.7rem 1.2rem;
-      font-size: 1.2rem;
+      &:not(.loading) {
+        padding: var(--padding, 0.7rem 1.2rem);
+      }
+      font-size: var(--font-size, 1.2rem);
     }
 
+    &:disabled {
+      background-color: rgb(46, 44, 44);
+      cursor: default;
+    }
+
+    display: var(--display, inline-block);
+    flex-direction: var(--flex-direction, unset);
+    width: var(--width, auto);
+    min-width: var(--min-width, auto);
+    max-width: var(--max-width, auto);
+    flex: var(--flex, unset);
+    align-items: center;
+    justify-content: center;
     color: #fff;
     text-shadow: none;
     box-shadow: 0 0 0 0 rgba(34, 36, 38, 0.15) inset;
     cursor: pointer;
-    display: inline-block;
     min-height: 1em;
     outline: 0;
     border: none;

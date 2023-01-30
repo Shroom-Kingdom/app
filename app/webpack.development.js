@@ -64,13 +64,16 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.(jpe?g|png|gif|svg|webp)$/i,
+        type: "asset",
+      },
+      {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: ['babel-loader']
       },
 			{
 				test: /\.svelte$/,
-				exclude: /node_modules/,
 				use: {
 					loader: 'svelte-loader',
 					options: {

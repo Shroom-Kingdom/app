@@ -17,9 +17,14 @@
     "clean": "rm -rf ./dist && yarn --cwd src-wasm/app clean"
   },
   "dependencies": {
-    "@tarnadas/near-api-js": "1.1.3",
+    "@aws-crypto/sha256-browser": "^3",
+    "@near-wallet-selector/core": "^7",
+    "@near-wallet-selector/meteor-wallet": "^7",
+    "@near-wallet-selector/near-wallet": "^7",
+    "@near-wallet-selector/sender": "^7",
     "borsh": "^0.7",
     "detect-browser": "^5",
+    "near-api-js": "^1",
     "svelte": "^3",
     "ts-pattern": "^4"
   },
@@ -49,6 +54,7 @@
     "svelte-check": "^2",
     "svelte-loader": "^3",
     "svelte-preprocess": "^5",
+    "svelte-simple-modal": "^1",
     "webpack": "^5",
     "webpack-bundle-analyzer": "^4",
     "webpack-cli": "^5",

@@ -1,21 +1,23 @@
 <script lang="ts">
   import { get } from 'svelte/store';
 
-  import type { NearRegister } from '../../../../common-types';
+  import type { NearRegister, Account } from '../../../../common-types';
   import Form from '../../components/form/Form.svelte';
   import Input from '../../components/form/Input.svelte';
 
-  import { walletId$ } from '.';
+  import { account$, walletId$, afterRegister$, isRegistered$ } from '.';
+
+  let loading = false;
 
   interface RegisterForm {
     username: string;
   }
 
   function handleSubmit(
-    event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement },
+    _event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement },
     value: RegisterForm
   ) {
-    const walletId = get(walletId$);
+    const walletId = $walletId$;
     if (!walletId) return;
     const registerNear: NearRegister = {
       username: value.username,
@@ -25,6 +27,7 @@
   }
 
   async function register(registerNear: NearRegister) {
+    loading = true;
     const res = await fetch(
       'https://shrm-api.shrm.workers.dev/auth/register/near',
       {
@@ -36,6 +39,19 @@
       console.error(await res.text());
       return;
     }
+    const account = await res.json<Account>();
+    account$.set(account);
+
+    const tryLogin = async () => {
+      const isRegistered = await get(isRegistered$);
+      if (isRegistered || get(afterRegister$) >= 100) {
+        loading = false;
+        return;
+      }
+      afterRegister$.update(prev => prev + 1);
+      setTimeout(tryLogin, 2_000);
+    };
+    tryLogin();
   }
 
   function validateUsername(target: HTMLInputElement) {
@@ -52,7 +68,7 @@
 </script>
 
 <div class="register">
-  <Form submitLabel="Register" submitForm="{handleSubmit}">
+  <Form submitLabel="Register" submitForm="{handleSubmit}" loading="{loading}">
     <Input
       name="username"
       label="Please register your account by choosing a username:"

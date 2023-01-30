@@ -1,47 +1,78 @@
 <script lang="ts">
+  import { Sha256 } from '@aws-crypto/sha256-browser';
   import {
-    keyStores,
-    WalletConnection,
-    connect,
-    ConnectConfig,
-    Near
-  } from '@tarnadas/near-api-js';
+    type WalletSelector as NearWalletSelector,
+    setupWalletSelector
+  } from '@near-wallet-selector/core';
+  import { setupMeteorWallet } from '@near-wallet-selector/meteor-wallet';
+  import { setupNearWallet } from '@near-wallet-selector/near-wallet';
+  import { setupSender } from '@near-wallet-selector/sender';
+  import { KeyPairEd25519 } from 'near-api-js/lib/utils';
+  import { type SvelteComponentTyped, onMount } from 'svelte';
+  import { bind } from 'svelte-simple-modal';
 
   import type { Account } from '../../../../common-types';
   import Button from '../../components/button/Button.svelte';
+  import { ModalSize, modal$, modalSize$ } from '../layout/modal';
 
-  import { isRegistered$, account$, walletId$, accessToken$ } from '.';
+  import {
+    afterRegister$,
+    isRegistered$,
+    account$,
+    accessToken$,
+    selector$,
+    walletId$
+  } from '.';
+  import WalletSelector from './WalletSelector.svelte';
 
-  let near: Near | null = null;
-  let wallet: WalletConnection | null = null;
+  let isSignedIn: boolean | null = null;
 
-  const nearConfig: ConnectConfig = {
-    networkId: 'testnet',
-    keyStore: new keyStores.BrowserLocalStorageKeyStore(),
-    nodeUrl: 'https://rpc.testnet.near.org',
-    walletUrl: 'https://wallet.testnet.near.org',
-    helperUrl: 'https://helper.testnet.near.org'
-  };
+  $: setupWallet($selector$);
+  $: signTransaction($walletId$, $afterRegister$);
 
-  login();
+  onMount(async () => {
+    const selector = await setupWalletSelector({
+      network: 'testnet',
+      modules: [setupNearWallet(), setupSender(), setupMeteorWallet()]
+    });
+    selector$.set(selector);
+  });
 
-  async function login() {
-    const walletId = await setupWallet();
-    await signTransaction(walletId);
+  async function showWalletSelector() {
+    if (!$selector$) return;
+
+    modalSize$.set(ModalSize.Medium);
+    // FIXME types
+    modal$.set(bind(WalletSelector as unknown as SvelteComponentTyped, {}));
   }
 
-  async function setupWallet(): Promise<string> {
-    near = await connect(nearConfig);
-    wallet = new WalletConnection(near, null);
-    await wallet.isSignedInAsync();
-    const accountId = wallet.getAccountId();
-    walletId$.set(wallet.getAccountId());
-    return accountId;
+  async function signOut() {
+    if (!$selector$) return;
+    const wallet = await $selector$.wallet();
+    wallet.signOut();
+    isSignedIn = false;
   }
 
-  async function signTransaction(walletId: string | null) {
-    if (!wallet || !walletId) return;
-    const accessToken = await createAccessToken(wallet, walletId);
+  async function setupWallet(selector: NearWalletSelector | null) {
+    if (!selector) return;
+    isSignedIn = selector.isSignedIn();
+    if (!isSignedIn) {
+      showWalletSelector();
+    } else {
+      walletId$.set(
+        selector.store.getState().accounts.find(({ active }) => active)
+          ?.accountId ?? null
+      );
+    }
+  }
+
+  async function signTransaction(
+    walletId: string | null,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _afterRegister: number
+  ) {
+    if (!walletId) return;
+    const accessToken = await createAccessToken(walletId);
 
     const res = await fetch('https://shrm-api.shrm.workers.dev/auth/login', {
       method: 'POST',
@@ -53,62 +84,55 @@
     }
 
     if (res.status === 204) {
-      isRegistered$.set(false);
+      isRegistered$.set(Promise.resolve(false));
       return;
     }
-    isRegistered$.set(true);
+    isRegistered$.set(Promise.resolve(true));
     const user = await res.json<Account>();
     account$.set(user);
     accessToken$.set(accessToken);
   }
 
-  async function createAccessToken(
-    wallet: WalletConnection,
-    walletId: string
-  ): Promise<string> {
-    const tokenMessage = btoa(
-      JSON.stringify({ walletId, iat: new Date().getTime() })
+  async function createAccessToken(walletId: string): Promise<string> {
+    // TODO this uses `near-api-js` as long as wallet selector cannot sign messages.
+    // Until then only Near Wallet is supported
+    const keyStore = window.localStorage.getItem(
+      `near-api-js:keystore:${walletId}:testnet`
     );
-    try {
-      const signature = await wallet
-        .account()
-        .connection.signer.signMessage(
-          new TextEncoder().encode(tokenMessage),
-          walletId,
-          nearConfig.networkId
-        );
-      return (
-        tokenMessage + '.' + btoa(String.fromCharCode(...signature.signature))
-      );
-    } catch (err) {
-      wallet.signOut();
-      return '';
+    if (!keyStore) {
+      throw new Error(`No keystore found for walletId ${walletId}`);
     }
-  }
+    const keyPair = new KeyPairEd25519(keyStore.replace('ed25519:', ''));
 
-  async function handleLogin() {
-    if (!wallet) return;
-    await wallet.requestSignIn({
-      contractId: 'near-chan-v14.shrm.testnet'
-    });
-  }
+    const tokenMessage = btoa(
+      JSON.stringify({
+        walletId,
+        iat: new Date().getTime()
+      })
+    );
+    const message = new TextEncoder().encode(tokenMessage);
 
-  async function handleLogout() {
-    if (!wallet) return;
-    wallet.signOut();
-    walletId$.set(null);
+    const hash = new Sha256();
+    hash.update(message);
+    const result = await hash.digest();
+    const signature = keyPair.sign(result);
+    return (
+      tokenMessage +
+      '.' +
+      btoa(signature.signature.toString()) +
+      '.' +
+      keyPair.publicKey.toString()
+    );
   }
 </script>
 
 <div class="login">
-  {#if wallet && near}
-    {#if $walletId$}
+  {#if selector$}
+    {#if isSignedIn === true}
       {$walletId$}
-      <Button on:click="{() => handleLogout()}" primary size="small">
-        Logout
-      </Button>
+      <Button on:click="{() => signOut()}" primary size="small">Logout</Button>
     {:else}
-      <Button on:click="{() => handleLogin()}" primary size="medium">
+      <Button on:click="{() => showWalletSelector()}" primary size="medium">
         Login with Near
       </Button>
     {/if}

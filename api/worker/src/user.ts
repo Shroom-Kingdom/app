@@ -54,7 +54,10 @@ export class User {
         return new Response('', { status: 401 });
       }
       await this.state.storage.put('account', account);
-      return new Response(JSON.stringify(account));
+      this.account = account;
+      return new Response(JSON.stringify(account), {
+        headers: { 'content-type': 'application/json' }
+      });
     }).post!('/register/discord', async () => {
       return new Response('', { status: 501 });
     });
