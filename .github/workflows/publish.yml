@@ -36,7 +36,7 @@ jobs:
         name: Install Toolchain
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: 1.67.0
           override: true
 
       - name: Install Rust WebAssembly

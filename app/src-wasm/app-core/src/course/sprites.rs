@@ -33,7 +33,7 @@ pub(crate) fn load_course_sprites(
         let index = tile_variant.get_sprite_sheet_index();
         tile_sprite_handles.0.insert(
             tile_variant,
-            asset_server.load(format!("MW_Field_plain_0_{}.png", index)),
+            asset_server.load(format!("MW_Field_plain_0_{index}.png")),
         );
     }
 
@@ -42,7 +42,7 @@ pub(crate) fn load_course_sprites(
         let index = tile_variant.get_sprite_sheet_index();
         tile_sprite_handles_transparent.0.insert(
             tile_variant,
-            asset_server.load(format!("0MW_Field_plain_0_{}.png", index)),
+            asset_server.load(format!("0MW_Field_plain_0_{index}.png")),
         );
     }
 
@@ -51,7 +51,7 @@ pub(crate) fn load_course_sprites(
         let name = theme_variant.get_name().to_string();
         theme_sprite_handles.0.insert(
             theme_variant,
-            asset_server.load(format!("MW_DV_{}_V.00_0.png", name)),
+            asset_server.load(format!("MW_DV_{name}_V.00_0.png")),
         );
     }
 
@@ -68,7 +68,7 @@ pub(crate) fn load_course_sprites(
         let name = object_variant.get_name().to_string();
         object_sprite_handles.0.insert(
             object_variant,
-            asset_server.load(format!("MW_Object_{}_0.png", name)),
+            asset_server.load(format!("MW_Object_{name}_0.png")),
         );
     }
 }
