@@ -72,25 +72,31 @@
     _afterRegister: number
   ) {
     if (!walletId) return;
-    const accessToken = await createAccessToken(walletId);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      isRegistered$.set(new Promise(() => {}));
+      const accessToken = await createAccessToken(walletId);
 
-    const res = await fetch('https://shrm-api.shrm.workers.dev/auth/login', {
-      method: 'POST',
-      body: accessToken
-    });
-    if (!res.ok) {
-      console.error(await res.text());
-      return;
-    }
+      const res = await fetch('https://shrm-api.shrm.workers.dev/auth/login', {
+        method: 'POST',
+        body: accessToken
+      });
+      if (!res.ok) {
+        console.error(await res.text());
+        return;
+      }
 
-    if (res.status === 204) {
+      if (res.status === 204) {
+        isRegistered$.set(Promise.resolve(false));
+        return;
+      }
+      isRegistered$.set(Promise.resolve(true));
+      const user = await res.json<Account>();
+      account$.set(user);
+      accessToken$.set(accessToken);
+    } catch (err) {
       isRegistered$.set(Promise.resolve(false));
-      return;
     }
-    isRegistered$.set(Promise.resolve(true));
-    const user = await res.json<Account>();
-    account$.set(user);
-    accessToken$.set(accessToken);
   }
 
   async function createAccessToken(walletId: string): Promise<string> {

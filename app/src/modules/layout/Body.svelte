@@ -1,7 +1,7 @@
 <script lang="ts">
   import ProgressSpinner from '../../components/progress/ProgressSpinner.svelte';
   import AssetLoader from '../asset/AssetLoader.svelte';
-  import { isRegistered$ } from '../auth';
+  import { isRegistered$, walletId$ } from '../auth';
   import Register from '../auth/Register.svelte';
 </script>
 
@@ -10,7 +10,7 @@
 {:then isRegistered}
   {#if isRegistered}
     <AssetLoader />
-  {:else}
+  {:else if $walletId$ != null}
     <Register />
   {/if}
 {/await}

@@ -6,7 +6,7 @@ import type { Account } from '../../../../common-types';
 export const account$ = writable<Account | null>(null);
 export const walletId$ = writable<string | null>(null);
 // eslint-disable-next-line @typescript-eslint/no-empty-function
-export const isRegistered$ = writable<Promise<boolean>>(new Promise(() => {}));
+export const isRegistered$ = writable<Promise<boolean>>(Promise.resolve(false));
 export const afterRegister$ = writable<number>(0);
 export const accessToken$ = writable<string | null>(null);
 
