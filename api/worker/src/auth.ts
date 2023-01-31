@@ -48,9 +48,11 @@ router.post!('/login', async (req: IRequest, env: Env) => {
   }
   if (
     iat + TOKEN_EXPIRY_TIME < new Date().getTime() ||
-    iat - 1000 > new Date().getTime()
+    iat - TOKEN_EXPIRY_TIME > new Date().getTime()
   ) {
-    console.error(`token issued at ${iat} has expired for ${walletId}`);
+    console.error(
+      `token issued at ${new Date(iat)} has expired for ${walletId}`
+    );
     return new Response('', { status: 400 });
   }
 

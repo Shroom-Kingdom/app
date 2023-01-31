@@ -83,6 +83,7 @@
       });
       if (!res.ok) {
         console.error(await res.text());
+        isRegistered$.set(Promise.resolve(false));
         return;
       }
 
