@@ -10,7 +10,7 @@ import { sign } from 'tweetnacl';
 
 import { Account, NearRegister } from '../../../common-types';
 
-import { setSession } from './session';
+import { setSession, validateSession } from './session';
 import { getAccount, registerAccountViaNear } from './user';
 
 const router = Router({ base: '/auth' });
@@ -59,11 +59,7 @@ router.post!('/login', async (req: IRequest, env: Env) => {
   const hash = new Sha256();
   hash.update(msgBytes);
   const sha256 = await hash.digest();
-  const verified = sign.detached.verify(
-    sha256,
-    new Uint8Array(signature),
-    publicKey.data
-  );
+  const verified = sign.detached.verify(sha256, signature, publicKey.data);
   if (!verified) {
     return new Response('', { status: 401 });
   }
@@ -91,11 +87,14 @@ router.post!('/login', async (req: IRequest, env: Env) => {
   return new Response(JSON.stringify(account), {
     headers: { 'content-type': 'application/json' }
   });
-}).post!('/register/near', async (req: IRequest, env: Env) => {
+}).post!('/register/near', async (r: IRequest, env: Env) => {
+  const req = r as unknown as Request;
+  const sessionInvalid = await validateSession(req, env);
+  if (sessionInvalid) {
+    return sessionInvalid;
+  }
   // TODO zod validation
-  const { username, walletId } = await (
-    req as unknown as Request
-  ).json<NearRegister>();
+  const { username, walletId } = await req.json<NearRegister>();
   const account: Account = {
     username,
     walletId

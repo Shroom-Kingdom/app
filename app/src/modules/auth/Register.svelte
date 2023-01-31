@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { get } from 'svelte/store';
-
   import type { NearRegister, Account } from '../../../../common-types';
   import Form from '../../components/form/Form.svelte';
   import Input from '../../components/form/Input.svelte';
 
-  import { account$, walletId$, afterRegister$, isRegistered$ } from '.';
+  import { account$, walletId$, isRegistered$, fetchWithAuth } from '.';
 
   let loading = false;
 
@@ -27,31 +25,30 @@
   }
 
   async function register(registerNear: NearRegister) {
-    loading = true;
-    const res = await fetch(
-      'https://shrm-api.shrm.workers.dev/auth/register/near',
-      {
-        method: 'POST',
-        body: JSON.stringify(registerNear)
-      }
-    );
-    if (!res.ok) {
-      console.error(await res.text());
-      return;
-    }
-    const account = await res.json<Account>();
-    account$.set(account);
-
-    const tryLogin = async () => {
-      const isRegistered = await get(isRegistered$);
-      if (isRegistered || get(afterRegister$) >= 100) {
+    try {
+      loading = true;
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      isRegistered$.set(new Promise(() => {}));
+      const res = await fetchWithAuth(
+        'https://shrm-api.shrm.workers.dev/auth/register/near',
+        {
+          method: 'POST',
+          body: JSON.stringify(registerNear)
+        }
+      );
+      if (!res.ok) {
+        console.error(await res.text());
+        isRegistered$.set(Promise.resolve(false));
         loading = false;
         return;
       }
-      afterRegister$.update(prev => prev + 1);
-      setTimeout(tryLogin, 2_000);
-    };
-    tryLogin();
+      const account = await res.json<Account>();
+      isRegistered$.set(Promise.resolve(true));
+      account$.set(account);
+    } catch (err) {
+      isRegistered$.set(Promise.resolve(false));
+      loading = false;
+    }
   }
 
   function validateUsername(target: HTMLInputElement) {

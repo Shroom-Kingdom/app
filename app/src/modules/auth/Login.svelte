@@ -16,7 +16,6 @@
   import { ModalSize, modal$, modalSize$ } from '../layout/modal';
 
   import {
-    afterRegister$,
     isRegistered$,
     account$,
     accessToken$,
@@ -28,7 +27,7 @@
   let isSignedIn: boolean | null = null;
 
   $: setupWallet($selector$);
-  $: signTransaction($walletId$, $afterRegister$);
+  $: signTransaction($walletId$);
 
   onMount(async () => {
     const selector = await setupWalletSelector({
@@ -51,6 +50,10 @@
     const wallet = await $selector$.wallet();
     wallet.signOut();
     isSignedIn = false;
+    account$.set(null);
+    walletId$.set(null);
+    isRegistered$.set(Promise.resolve(false));
+    accessToken$.set(null);
   }
 
   async function setupWallet(selector: NearWalletSelector | null) {
@@ -66,11 +69,7 @@
     }
   }
 
-  async function signTransaction(
-    walletId: string | null,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _afterRegister: number
-  ) {
+  async function signTransaction(walletId: string | null) {
     if (!walletId) return;
     try {
       // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -86,6 +85,7 @@
         isRegistered$.set(Promise.resolve(false));
         return;
       }
+      accessToken$.set(accessToken);
 
       if (res.status === 204) {
         isRegistered$.set(Promise.resolve(false));
@@ -94,7 +94,6 @@
       isRegistered$.set(Promise.resolve(true));
       const user = await res.json<Account>();
       account$.set(user);
-      accessToken$.set(accessToken);
     } catch (err) {
       isRegistered$.set(Promise.resolve(false));
     }

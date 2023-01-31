@@ -14,13 +14,20 @@ export async function setSession(
 }
 
 export async function validateSession(
-  accountId: string,
-  accessToken: string,
+  req: Request,
   env: Env
-) {
-  const addr = env.SESSIONS.idFromName(accountId);
+): Promise<Response | undefined> {
+  const accessToken = req.headers.get('TOKEN');
+  const walletId = req.headers.get('WALLET_ID');
+  if (!accessToken || !walletId) {
+    return new Response('', { status: 401 });
+  }
+  const addr = env.SESSIONS.idFromName(walletId);
   const obj = env.SESSIONS.get(addr);
-  await obj.fetch(`http://session.com?access_token=${accessToken}`);
+  const res = await obj.fetch(`http://session.com?access_token=${accessToken}`);
+  if (!res.ok) {
+    return new Response('', { status: 401 });
+  }
 }
 
 export class Session {

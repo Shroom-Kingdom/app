@@ -36,6 +36,7 @@ function setupCORS(request: IRequest, headers: Headers) {
   const origin = request.headers.get('Origin');
   if (origin != null) {
     headers.set('Access-Control-Allow-Origin', origin);
+    headers.set('Access-Control-Allow-Headers', 'TOKEN,WALLET_ID');
   }
 }
 
